@@ -11,8 +11,8 @@ public class PlayerInputManager : MonoBehaviour
     private Action<InputAction.CallbackContext> PlayerInputAction = null;
     private Action ClearBufferAction = null;
 
-    private static Vector2 m_leftStick = new Vector2();
-    private static Vector2 m_rightStick = new Vector2();
+    private Vector2 m_leftStick = new Vector2();
+    private Vector2 m_rightStick = new Vector2();
 
     [SerializeField] private float m_inputBufferTime = 0.8f;
 
@@ -46,6 +46,9 @@ public class PlayerInputManager : MonoBehaviour
 
     private InputAction Options1ActionRef;
     private InputAction Options2ActionRef;
+
+
+    public Vector2 RightStick { get { return m_rightStick; } }
 
 
     private void Awake()
@@ -82,7 +85,10 @@ public class PlayerInputManager : MonoBehaviour
     {
 
         LeftStickActionRef.performed    += OnLeftStick;
+        LeftStickActionRef.canceled     += OnLeftStick;
         RightStickActionRef.performed   += OnRightStick;
+        RightStickActionRef.canceled    += OnRightStick;
+
         L3ActionRef.performed           += OnL3;
         R3ActionRef.performed           += OnR3;
         L1ActionRef.performed           += OnL1;
@@ -202,13 +208,14 @@ public class PlayerInputManager : MonoBehaviour
                 OnLeft(m_lastBuffedInput);
                 break;
             default:
+                Debug.Log("Last Input Check must be wrong?");
                 break;
         }
     }
 
     private bool SetBuffer(InputAction.CallbackContext context)
     {
-        if (1 == 1) ///////////check if Animation is currently not interuptable
+        if (1 != 1) ///////////check if Animation is currently not interuptable
         {
             m_lastInputIsUnread = true;
             m_lastBuffedInput = context;
@@ -232,38 +239,42 @@ public class PlayerInputManager : MonoBehaviour
     }
 
 
-
+    //Sticks
     private void OnLeftStick(InputAction.CallbackContext context)
     {
         m_leftStick = context.ReadValue<Vector2>();
-        Debug.Log($"AAAAAAAAAAAAAAAAAAAAA {m_leftStick}");
+        //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA {m_leftStick}");
     }
 
     private void OnRightStick(InputAction.CallbackContext context)
     {
         m_rightStick = context.ReadValue<Vector2>();
-        Debug.Log($"AAAAAAAAAAAAAAAAAAAAA {m_rightStick}");
+        //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA {m_rightStick}");
     }
 
+
+    //StickButtons
     private void OnL3(InputAction.CallbackContext context)
     {
         if (SetBuffer(context))
             return;
 
-        if(context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L3");
+        //if(context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L3");
     }
 
     private void OnR3(InputAction.CallbackContext context)
     {
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R3");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R3");
     }
 
+
+    //ShoulderButtons
     private void OnL1(InputAction.CallbackContext context)
     {
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L1");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L1");
     }
 
     private void OnR1(InputAction.CallbackContext context)
@@ -271,8 +282,8 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context))
             return;
 
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R1");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R1");
     }
 
     private void OnL2(InputAction.CallbackContext context)
@@ -280,8 +291,8 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context))
             return;
 
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L2");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L2");
     }
 
     private void OnR2(InputAction.CallbackContext context)
@@ -289,17 +300,20 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context))
             return;
 
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R2");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R2");
     }
 
+    
+    
+    //ActionButtons
     private void OnSouth(InputAction.CallbackContext context)
     {
         if (SetBuffer(context))
             return;
 
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA South");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA South");
     }
 
     private void OnEast(InputAction.CallbackContext context)
@@ -307,8 +321,8 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context))
             return;
 
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East");
     }
 
     private void OnWest(InputAction.CallbackContext context)
@@ -316,20 +330,22 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context))
             return;
 
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA West");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA West");
     }
 
     private void OnNorth(InputAction.CallbackContext context)
     {
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA North");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA North");
     }
 
+
+    //DPad
     private void OnDown(InputAction.CallbackContext context)
     {
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Down");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Down");
     }
 
     private void OnRight(InputAction.CallbackContext context)
@@ -337,8 +353,8 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context))
             return;
 
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Right");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Right");
     }
 
     private void OnLeft(InputAction.CallbackContext context)
@@ -346,26 +362,28 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context))
             return;
 
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Left");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Left");
     }
 
     private void OnUp(InputAction.CallbackContext context)
     {
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Up");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Up");
     }
 
+    
+    //Options
     private void OnOption1(InputAction.CallbackContext context)
     {
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Option1");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Option1");
     }
 
     private void OnOption2(InputAction.CallbackContext context)
     {
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Option2");
+        //if (context.performed)
+        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Option2");
     }
 
 

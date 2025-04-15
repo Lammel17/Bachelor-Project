@@ -3,24 +3,25 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager instance;
+    public static GameManager Instance;
 
     [SerializeField] private GameObject m_inputManagerObject;
 
-    public static PlayerInputManager InputManager { get; private set; }
+    private static PlayerInputManager m_inputManager;
+    public static PlayerInputManager InputManager { get => m_inputManager; }
 
 
     private void Awake()
     {
-        if (instance == null)
-            instance = this;
+        if (Instance == null)
+            Instance = this;
         else
             Destroy(gameObject);
 
         if (InputManager == null)
         {
             GameObject impMan = Instantiate(m_inputManagerObject);
-            InputManager = impMan.GetComponent<PlayerInputManager>();
+            m_inputManager = impMan.GetComponent<PlayerInputManager>();
         }
     }
     void Start()
