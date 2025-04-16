@@ -10,6 +10,37 @@ using Random = UnityEngine.Random;
 
 public static class UtilityFunctions
 {
+
+    public static float AngleClamping(float angle, float lowerClamp, float upperClamp)
+    {
+        if (angle > 180) angle -= 360; // jetzt in -180 bis +180
+
+        return Mathf.Clamp(angle, lowerClamp, upperClamp);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public static void BetterWhile(bool condition, Action action, int iterations = 10000, Action target = null, Action fallback = null)
     {
         var count = 0;
