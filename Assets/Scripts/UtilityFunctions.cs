@@ -6,19 +6,43 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Windows;
 using Random = UnityEngine.Random;
 
 public static class UtilityFunctions
 {
-
+    /// <summary>
+    /// This Function turns a (0° - 360°) into a (-180° - 180°) and then Clamps it between lowerClamp and upperClamp.
+    /// (a 5° angle stays 5°, but a 355° will be a -5°)
+    /// </summary>
     public static float AngleClamping(float angle, float lowerClamp, float upperClamp)
     {
-        if (angle > 180) angle -= 360; // jetzt in -180 bis +180
+        if (angle > 180) 
+            angle -= 360; // jetzt in -180 bis +180
 
         return Mathf.Clamp(angle, lowerClamp, upperClamp);
     }
 
+    /// <summary>
+    /// This squishes and stretches a value, depending if its closer to the min or max, or gets clamp when outside of range. (exponent: 0.5 => stretch to squish | exponent: 2 => squish to stretch)
+    /// </summary>
+    public static float CurveValue(float value, float rangeMin, float rangeMax, float exponent)
+    {
+        Mathf.Clamp(value, rangeMin, rangeMax);
+        float between0and1 = Mathf.InverseLerp(rangeMin, rangeMax, value);
+        float curved = Mathf.Pow(between0and1, exponent);
+        return Mathf.Lerp(rangeMin, rangeMax, curved);
+    }
 
+    /// <summary>
+    /// Define a range, if the Value is outside it gets clamp, then the value gets refittet to a new range. 
+    /// </summary>
+    public static float RefitRange(float value, float startRange, float endRange, float newMin, float newMax)
+    {
+        float valueClamped = Mathf.Clamp(value, startRange, endRange);
+        float relativeValue = Mathf.InverseLerp(startRange, endRange, valueClamped);
+        return Mathf.Lerp(newMin, newMax, relativeValue);
+    }
 
 
 
