@@ -5,10 +5,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
-    [SerializeField] private GameObject m_inputManagerObject;
-
-    private static PlayerInputManager m_inputManager;
-    public static PlayerInputManager InputManager { get => m_inputManager; }
+    [SerializeField] private GameObject m_playerInputManagerObject;
 
 
     private void Awake()
@@ -18,10 +15,9 @@ public class GameManager : MonoBehaviour
         else
             Destroy(gameObject);
 
-        if (InputManager == null)
+        if (PlayerInputManager.Instance == null)
         {
-            GameObject impMan = Instantiate(m_inputManagerObject);
-            m_inputManager = impMan.GetComponent<PlayerInputManager>();
+            Instantiate(m_playerInputManagerObject);
         }
     }
     void Start()

@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInput))]
 public class PlayerInputManager : MonoBehaviour
 {
+    public static PlayerInputManager Instance;
 
     [SerializeField] private InputActionAsset inputActions;
     private Action<InputAction.CallbackContext> PlayerInputAction = null;
@@ -49,12 +50,18 @@ public class PlayerInputManager : MonoBehaviour
 
 
     public Vector2 RightStick { get { return m_rightStick; } }
+    public Vector2 LeftStick { get { return m_leftStick; } }
 
 
     private void Awake()
     {
-        // Hole die Action Map 'Player' und die spezifischen Actions
-        var playerActionMap = inputActions.FindActionMap("MainPlayer");
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+
+            // Hole die Action Map 'Player' und die spezifischen Actions
+            var playerActionMap = inputActions.FindActionMap("MainPlayer");
 
         LeftStickActionRef      = playerActionMap.FindAction("LeftStick");
         RightStickActionRef     = playerActionMap.FindAction("RightStick");
