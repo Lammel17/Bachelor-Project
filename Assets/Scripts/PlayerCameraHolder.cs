@@ -88,7 +88,7 @@ public class PlayerCameraHolder : MonoBehaviour
         //Apply Clamping
         m_WIP_rotationVerX = Quaternion.Euler(UtilityFunctions.AngleClamping(m_WIP_rotationVerX.eulerAngles.x, -m_clampAngle, m_clampAngle),0,0);
 
-        //ConstantForceInDesiredRotation();
+        ConstantForceInDesiredRotation(input);
 
         // Die eigentliche Kamera-Rotation wird hier smooth zur WorkInProgress Rotation gezogen
         m_camRotationVerX = Quaternion.Slerp(Quaternion.Euler(transform.rotation.eulerAngles.x, 0, 0), m_WIP_rotationVerX, Time.deltaTime * m_slerpAcceleration);
@@ -97,19 +97,18 @@ public class PlayerCameraHolder : MonoBehaviour
         
     }
 
-    private void ConstantForceInDesiredRotation()
+    private void ConstantForceInDesiredRotation(Vector2 input)
     {
         //Die gewünschte ausgangsPosition wo hinter dem Player ist, zu der sich die camera gegebenfalls hinziehen soll
         Vector3 camRestDir = m_camRestDirection;
-        float turnDrag = 5f;
-        //float turnDrag2 = isLockOn ? turnDrag * 10 : turnDrag * 0.05f;
+        float desiredRotationForce = 0.2f * Mathf.Abs(m_playerInputManager.LeftStick.x); //here, abhängig nur von input.x
 
         //Die Gewünschte End-Drehung von der Aktuellen Dreh-Richtung aus
         Quaternion desiredRotation = m_playerTransform.transform.rotation * Quaternion.LookRotation(camRestDir);
 
         //Die InputRichtung wird hier beim Laufen smooth zu desiredRotation gelenkt
-        m_WIP_rotationVerX = Quaternion.Slerp(m_WIP_rotationVerX, Quaternion.Euler(desiredRotation.eulerAngles.x, 0, 0), Time.deltaTime * turnDrag); 
-        m_WIP_rotationHorY = Quaternion.Slerp(m_WIP_rotationHorY, Quaternion.Euler(0, desiredRotation.eulerAngles.y, 0), Time.deltaTime * turnDrag);
+        m_WIP_rotationVerX = Quaternion.Slerp(m_WIP_rotationVerX, Quaternion.Euler(desiredRotation.eulerAngles.x, 0, 0), Time.deltaTime * desiredRotationForce); 
+        m_WIP_rotationHorY = Quaternion.Slerp(m_WIP_rotationHorY, Quaternion.Euler(0, desiredRotation.eulerAngles.y, 0), Time.deltaTime * desiredRotationForce);
     }
 
     private float CalculateClampAngleVerX(float inputMagnitude, float verTurn)
@@ -126,19 +125,7 @@ public class PlayerCameraHolder : MonoBehaviour
 
     private float CalculateVerticalTurning(Vector2 input)
     {
-        float absInputY = Mathf.Abs(input.y);
-
-        if (absInputY <= 0.01f)
-            return 0f;
-
-        float signInputY = Mathf.Sign(input.y);
-        float absInputX = Mathf.Abs(input.x);
-
-        //return Mathf.InverseLerp(0.05f, 0.9f, absY) * signY; 
-        float angle = Vector2.Angle(Vector2.right, new Vector2(absInputX, absInputY));
-        float curveValueOfAngle = UtilityFunctions.CurveValue(angle, 0, 90, 0.5f); //wie stark der inputWinkel gesquisht und gestretcht wird
-        float yComponentOfAngle = (1 - Mathf.Cos(angle * Mathf.Deg2Rad));
-        return yComponentOfAngle * signInputY * absInputY; //wert ist zwischen 0 und 1
+        return input.y; 
     }
 
     //Diese funktion gibt entweder die magnitude vom input zurück, bei input.x > input.y, andernfalls smoothet es den wert ab von der Magnitude zu input.x hin
@@ -152,7 +139,10 @@ public class PlayerCameraHolder : MonoBehaviour
         float signInputX = Mathf.Sign(input.x);
         float absInputY = Mathf.Abs(input.y);
 
-        return (absInputX > absInputY) ? input.magnitude * signInputX : Mathf.Lerp(input.x, input.magnitude * signInputX, Vector2.Angle(Vector2.up, new Vector2(absInputX, absInputY)) / 45);
+        if (absInputX > absInputY)
+            return input.magnitude * signInputX;
+        else
+            return Mathf.Lerp(input.x, input.magnitude * signInputX, Vector2.Angle(Vector2.up, new Vector2(absInputX, absInputY)) / 45);
         //damit die x drehung gleich schnell bleibt, solange der stick unter 45° ist, also absInputX > absInputY.
     }
 

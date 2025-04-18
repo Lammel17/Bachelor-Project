@@ -35,7 +35,7 @@ public static class UtilityFunctions
     }
 
     /// <summary>
-    /// Define a range, if the Value is outside it gets clamp, then the value gets refittet to a new range. 
+    /// Define a range, if the Value is outside it gets clamp, then the value gets refittet (stretched or squished) to a new range. 
     /// </summary>
     public static float RefitRange(float value, float startRange, float endRange, float newMin, float newMax)
     {
