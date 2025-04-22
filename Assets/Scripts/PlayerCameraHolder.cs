@@ -8,6 +8,7 @@ public class PlayerCameraHolder : MonoBehaviour
 {
     public static PlayerCameraHolder Instance { get; private set; }
     private PlayerInputManager m_playerInputManager;
+    [SerializeField] private PlayerMovement m_playerMovement;
 
     [SerializeField] private GameObject m_camera;
     [SerializeField] private Transform m_playerTransform;
@@ -67,6 +68,10 @@ public class PlayerCameraHolder : MonoBehaviour
         //ControlCameraDistance();
     }
 
+
+
+
+
     private void CalculateCameraRotation()
     {
         Vector2 input = m_playerInputManager.RightStick;
@@ -101,7 +106,9 @@ public class PlayerCameraHolder : MonoBehaviour
     {
         //Die gewünschte ausgangsPosition wo hinter dem Player ist, zu der sich die camera gegebenfalls hinziehen soll
         Vector3 camRestDir = m_camRestDirection;
-        float desiredRotationForce = 0.2f * Mathf.Abs(m_playerInputManager.LeftStick.x); //here, abhängig nur von input.x
+
+        float forceFactor = 0.4f;
+        float desiredRotationForce = forceFactor * Mathf.Abs((m_playerMovement.InputDirection * m_playerMovement.MoveStrenght).x); //here, abhängig nur von input.x, weil beim seitswärts laufen die kamera gedreht wird
 
         //Die Gewünschte End-Drehung von der Aktuellen Dreh-Richtung aus
         Quaternion desiredRotation = m_playerTransform.transform.rotation * Quaternion.LookRotation(camRestDir);

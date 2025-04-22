@@ -1,15 +1,18 @@
 using UnityEngine;
 using System;
 using UnityEngine.InputSystem;
+using UnityEngine.Windows;
 
 
 [RequireComponent(typeof(PlayerInput))]
 public class PlayerInputManager : MonoBehaviour
 {
     public static PlayerInputManager Instance;
+    private PlayerMovement m_thePlayerMovement = null;
+    private PlayerCameraHolder m_thePlayerCameraHolder = null;
 
     [SerializeField] private InputActionAsset inputActions;
-    private Action<InputAction.CallbackContext> PlayerInputAction = null;
+    //private Action<InputAction.CallbackContext> PlayerInputAction = null; //??
     private Action ClearBufferAction = null;
 
     private Vector2 m_leftStick = new Vector2();
@@ -87,6 +90,61 @@ public class PlayerInputManager : MonoBehaviour
 
     }
 
+    
+    public void SetPlayerAndCamera(PlayerMovement player, PlayerCameraHolder camera)
+    {
+        m_thePlayerMovement = player;
+        m_thePlayerCameraHolder = camera;
+
+        EnableOrDisableInputs(true);
+    }
+
+    private void EnableOrDisableInputs(bool enable)
+    {
+        if (enable)
+        {
+            LeftStickActionRef.Enable();
+            RightStickActionRef.Enable();
+            L3ActionRef.Enable();
+            R3ActionRef.Enable();
+            L1ActionRef.Enable();
+            R1ActionRef.Enable();
+            L2ActionRef.Enable();
+            R2ActionRef.Enable();
+            SouthActionRef.Enable();
+            EastActionRef.Enable();
+            WestActionRef.Enable();
+            NorthActionRef.Enable();
+            DownActionRef.Enable();
+            RightActionRef.Enable();
+            LeftActionRef.Enable();
+            UpActionRef.Enable();
+            Options1ActionRef.Enable();
+            Options2ActionRef.Enable();
+        }
+        else
+        {
+            LeftStickActionRef.Disable();
+            RightStickActionRef.Disable();
+            L3ActionRef.Disable();
+            R3ActionRef.Disable();
+            L1ActionRef.Disable();
+            R1ActionRef.Disable();
+            L2ActionRef.Disable();
+            R2ActionRef.Disable();
+            SouthActionRef.Disable();
+            EastActionRef.Disable();
+            WestActionRef.Disable();
+            NorthActionRef.Disable();
+            DownActionRef.Disable();
+            RightActionRef.Disable();
+            LeftActionRef.Disable();
+            UpActionRef.Disable();
+            Options1ActionRef.Disable();
+            Options2ActionRef.Disable();
+        }
+
+    }
 
     private void OnEnable()
     {
@@ -113,26 +171,10 @@ public class PlayerInputManager : MonoBehaviour
         Options1ActionRef.performed     += OnOption1;
         Options2ActionRef.performed     += OnOption2;
 
-
-        LeftStickActionRef.Enable();
-        RightStickActionRef.Enable();
-        L3ActionRef.Enable();
-        R3ActionRef.Enable();
-        L1ActionRef.Enable();
-        R1ActionRef.Enable();
-        L2ActionRef.Enable();
-        R2ActionRef.Enable();
-        SouthActionRef.Enable();
-        EastActionRef.Enable();
-        WestActionRef.Enable();
-        NorthActionRef.Enable();
-        DownActionRef.Enable();
-        RightActionRef.Enable();
-        LeftActionRef.Enable();
-        UpActionRef.Enable();
-        Options1ActionRef.Enable();
-        Options2ActionRef.Enable();
-
+        if(m_thePlayerCameraHolder != null && m_thePlayerMovement != null) 
+            EnableOrDisableInputs(true);
+        else
+            EnableOrDisableInputs(false);
 
     }
 
@@ -157,30 +199,14 @@ public class PlayerInputManager : MonoBehaviour
         Options1ActionRef.performed     -= OnOption1;
         Options2ActionRef.performed     -= OnOption2;
 
+        EnableOrDisableInputs(false);
 
-        LeftStickActionRef.Disable();
-        RightStickActionRef.Disable();
-        L3ActionRef.Disable();
-        R3ActionRef.Disable();
-        L1ActionRef.Disable();
-        R1ActionRef.Disable();
-        L2ActionRef.Disable();
-        R2ActionRef.Disable();
-        SouthActionRef.Disable();
-        EastActionRef.Disable();
-        WestActionRef.Disable();
-        NorthActionRef. Disable();
-        DownActionRef.Disable();
-        RightActionRef. Disable();
-        LeftActionRef.Disable();
-        UpActionRef.Disable();
-        Options1ActionRef.Disable();
-        Options2ActionRef.Disable();
     }
 
 
 
-    public void RecallLatestInput()
+
+    public void RecallLatestBufferedInput()
     {
         if (!m_lastInputIsUnread)
             return;
@@ -250,7 +276,16 @@ public class PlayerInputManager : MonoBehaviour
     private void OnLeftStick(InputAction.CallbackContext context)
     {
         m_leftStick = context.ReadValue<Vector2>();
-        //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA {m_leftStick}");
+
+        Vector2 input = m_leftStick;
+
+        //m_input = m_input.normalized * UtilityFunctions.RefitRange(m_input.magnitude, 0.08f, 1, 0, 1); //maybe better in input script, bc in the 0.08, the camera still reacts
+        input = new Vector2(UtilityFunctions.RefitRange(Mathf.Abs(input.x), 0.1f * input.magnitude, 1, 0, 1) * Mathf.Sign(input.x), input.y);
+
+        m_thePlayerMovement.MoveStrenght = input.magnitude;
+
+        m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
+
     }
 
     private void OnRightStick(InputAction.CallbackContext context)

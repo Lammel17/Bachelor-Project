@@ -455,6 +455,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8065a68a85fee945b3672f58128eef5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_playerMovement: {fileID: 1756236762}
   m_camera: {fileID: 330585543}
   m_playerTransform: {fileID: 1756236761}
   m_camRestCenter: {x: 0, y: 1.6, z: 0}
@@ -491,6 +492,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_playerInputManagerObject: {fileID: 4259699807842034982, guid: a5a1d5645ed698741a0f2e65026ee93a, type: 3}
+  m_playerMovement: {fileID: 1756236762}
+  m_playerCameraHolder: {fileID: 638960047}
 --- !u!4 &761781383
 Transform:
   m_ObjectHideFlags: 0

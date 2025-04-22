@@ -7,6 +7,9 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private GameObject m_playerInputManagerObject;
 
+    [SerializeField] private PlayerMovement m_playerMovement;
+    [SerializeField] private PlayerCameraHolder m_playerCameraHolder;
+
 
     private void Awake()
     {
@@ -15,10 +18,15 @@ public class GameManager : MonoBehaviour
         else
             Destroy(gameObject);
 
+        //init InputManager
         if (PlayerInputManager.Instance == null)
         {
-            Instantiate(m_playerInputManagerObject);
+            GameObject inputManObj = Instantiate(m_playerInputManagerObject);
+            PlayerInputManager inputMan = inputManObj.GetComponent<PlayerInputManager>();
+            inputMan.SetPlayerAndCamera(m_playerMovement, m_playerCameraHolder);
         }
+
+
     }
     void Start()
     {
