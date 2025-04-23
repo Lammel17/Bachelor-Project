@@ -34,7 +34,7 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         Quaternion cameraRot = Quaternion.Euler(0, m_playerCameraHolder.CameraLookDirection.y, 0);
-        m_moveDir = cameraRot * m_inputDir;
+        m_moveDir = m_moveStrenght == 0 ? m_moveDir : cameraRot * m_inputDir;
 
         if (m_moveStrenght != 0 || m_move.magnitude > 0.0001f)
             MovingPlayer();
