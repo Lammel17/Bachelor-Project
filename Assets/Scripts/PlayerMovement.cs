@@ -6,6 +6,8 @@ using UnityEngine.EventSystems;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [SerializeField] private Animator m_animator;
+
     private CharacterController m_characterController;
 
     private PlayerCameraHolder m_playerCameraHolder;
@@ -21,6 +23,7 @@ public class PlayerMovement : MonoBehaviour
 
     private float m_speed = 6f;
 
+    public Animator Animator { get => m_animator; }
     public Vector3 InputDirection { get => m_inputDir; set { if (value.magnitude == 0) return; m_inputDir = value.normalized; }} //is always normalized
     public Vector3 MoveDirection { get => m_moveDir; } //is always normalized
     public float MoveStrenght { get => m_moveStrenght; set => m_moveStrenght = value; }
@@ -35,6 +38,8 @@ public class PlayerMovement : MonoBehaviour
     {
         Quaternion cameraRot = Quaternion.Euler(0, m_playerCameraHolder.CameraLookDirection.y, 0);
         m_moveDir = m_moveStrenght == 0 ? m_moveDir : cameraRot * m_inputDir;
+
+        m_animator.SetFloat("Vertical", m_moveStrenght, 0.1f, Time.deltaTime);
 
         if (m_moveStrenght != 0 || m_move.magnitude > 0.0001f)
             MovingPlayer();
