@@ -279,11 +279,11 @@ public class PlayerInputManager : MonoBehaviour
         m_leftStick = context.ReadValue<Vector2>();
 
         Vector2 input = m_leftStick;
+        float inputMagnitude = input.magnitude;
 
-        //m_input = m_input.normalized * UtilityFunctions.RefitRange(m_input.magnitude, 0.08f, 1, 0, 1); //maybe better in input script, bc in the 0.08, the camera still reacts
-        input = new Vector2(UtilityFunctions.RefitRange(Mathf.Abs(input.x), 0.1f * input.magnitude, 1, 0, 1) * Mathf.Sign(input.x), input.y);
+        input = new Vector2(UtilityFunctions.RefitRange(Mathf.Abs(input.x), 0.1f * inputMagnitude, 1, 0, 1) * Mathf.Sign(input.x), input.y);
 
-        m_thePlayerMovement.MoveStrenght = input.magnitude;
+        m_thePlayerMovement.MoveStrenght = inputMagnitude;
 
         m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
 
@@ -308,8 +308,8 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnR3(InputAction.CallbackContext context)
     {
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R3");
+        if (context.performed)
+            m_thePlayerCameraHolder.IsLockOn = !m_thePlayerCameraHolder.IsLockOn;
     }
 
 

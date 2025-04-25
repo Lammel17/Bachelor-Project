@@ -12,8 +12,20 @@ using Random = UnityEngine.Random;
 public static class UtilityFunctions
 {
     /// <summary>
-    /// This Function turns a (0° - 360°) into a (-180° - 180°) and then Clamps it between lowerClamp and upperClamp.
+    /// This Function turns a (0° - 360°) into a (-180° - 180°). 
     /// (a 5° angle stays 5°, but a 355° will be a -5°)
+    /// </summary>
+    public static float Angle180(float angle, bool isAbsValue)
+    {
+        if (angle > 180)
+            return angle = isAbsValue ? -angle + 360 : angle - 360; // jetzt in -180 bis +180
+
+        return angle;
+    }
+
+    /// <summary>
+    /// This Function turns a (0° - 360°) into a (-180° - 180°) and then Clamps it between lowerClamp and upperClamp.
+    /// (if lower clamp is -45°, a 300° (~-60°) will be clamped to -45°)
     /// </summary>
     public static float AngleClamping(float angle, float lowerClamp, float upperClamp)
     {
@@ -44,8 +56,55 @@ public static class UtilityFunctions
         return Mathf.Lerp(newMin, newMax, relativeValue);
     }
 
+    /// <summary>
+    /// This is like Vector3.Lerp, but when the changes are too small, it snaps to the end. (Only needed when t contains Time)
+    /// </summary>
+    public static Vector3 SmartLerp(Vector3 from, Vector3 to, float t, float snapThreshold = 0.0001f)
+    {
+        if ((to - from).sqrMagnitude < snapThreshold * snapThreshold)
+            return to; // snap directly if the difference is small enough
 
+        return Vector3.Lerp(from, to, t);
+    }
 
+    /// <summary>
+    /// This is like Mathf.Lerp, but when the changes are too small, it snaps to the final value. (Only needed when t contains Time)
+    /// </summary>
+    public static float SmartLerp(float from, float to, float t, float snapThreshold = 0.0001f)
+    {
+        if (Math.Abs(to - from) < snapThreshold)
+            return to; // snap directly if the difference is small enough
+
+        return Mathf.Lerp(from, to, t);
+    }
+
+    /// <summary>
+    /// This is like Quaternion.Serp, but when the changes are too small, it snaps to the final value. (Only needed when t contains Time)
+    /// </summary>
+    public static Quaternion SmartSlerp(Quaternion from, Quaternion to, float t, float snapThresholdDegrees = 0.0001f)
+    {
+        float angle = Quaternion.Angle(from, to);
+        if (angle < snapThresholdDegrees)
+            return to; // snap if angle is too small
+
+        return Quaternion.Slerp(from, to, t); // smooth rotate otherwise
+    }
+
+    public static float CalculateSideOfTriangle( float otherSide, float hypotenuse)
+    {
+        if (otherSide > hypotenuse)
+        {
+            Debug.LogWarning("Invalid triangle: other side cannot be longer than the hypotenuse.");
+            return 0f;
+        }
+
+        return (Mathf.Sqrt(hypotenuse * hypotenuse - otherSide * otherSide));
+    }
+
+    public static float CalculateHypotenuseOfTriangle(float side, float otherSide)
+    {
+        return (Mathf.Sqrt(side * side + otherSide * otherSide));
+    }
 
 
 
