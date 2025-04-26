@@ -523,8 +523,8 @@ MonoBehaviour:
   m_playerMovement: {fileID: 1756236762}
   m_camera: {fileID: 330585543}
   m_playerTransform: {fileID: 1756236761}
-  m_camHolderLocalCenter: {x: 0, y: 1.6, z: 0}
-  m_camHolderRestDirection: {x: 0, y: -1, z: 6.5}
+  m_camHolderLocalCenter: {x: 0, y: 1.5, z: 0}
+  m_camHolderRestDirection: {x: 0, y: -1, z: 4}
   m_camRestDist: 4
   m_camHolderClampAngleMax: 60
   m_testLockOnTransform: {fileID: 1176693130}

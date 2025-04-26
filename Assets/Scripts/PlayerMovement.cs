@@ -36,16 +36,36 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        Quaternion cameraRot = Quaternion.Euler(0, m_playerCameraHolder.CameraLookDirection.y, 0);
-        m_moveDir = m_moveStrenght == 0 ? m_moveDir : cameraRot * m_inputDir;
-
-        m_animator.SetFloat("Vertical", m_moveStrenght, 0.1f, Time.deltaTime);
+        SetMoveDirection();
+        SetAnimatorMoveValues();
 
         if (m_moveStrenght != 0 || m_move.sqrMagnitude > 0.0001f * 0.0001f)
             MovingPlayer();
 
         RotatingPlayer();
     }
+
+    private void SetAnimatorMoveValues()
+    {
+        if (!m_playerCameraHolder.IsLockOn)
+        {
+            m_animator.SetFloat("Vertical", m_moveStrenght, 0.1f, Time.deltaTime);
+            m_animator.SetFloat("Horizontal", 0, 0.1f, Time.deltaTime);
+        }
+        else
+        {
+            m_animator.SetFloat("Vertical", m_inputDir.y, 0.1f, Time.deltaTime);    //Here i stopped
+            m_animator.SetFloat("Horizontal", m_inputDir.x, 0.1f, Time.deltaTime);
+        }
+    }
+
+    private void SetMoveDirection()
+    {
+        Quaternion cameraRot = Quaternion.Euler(0, m_playerCameraHolder.CameraLookDirection.y, 0);
+        // wenn moveDir Vector2.Zero wäre, dann gäbe es probleme
+        m_moveDir = m_moveStrenght == 0 ? m_moveDir : cameraRot * m_inputDir; 
+    }
+
 
 
     private void MovingPlayer()
@@ -59,7 +79,19 @@ public class PlayerMovement : MonoBehaviour
     {
         float turningAcceleration = 15f;
 
-        transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(m_moveDir), Time.deltaTime * turningAcceleration );
+        if (!m_playerCameraHolder.IsLockOn)
+        {
+            transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(m_moveDir), Time.deltaTime * turningAcceleration);
+        }
+        else
+        {
+            Vector3 lockOnDir = new Vector3(m_playerCameraHolder.LockOnCoordinates.x - transform.position.x, 0, m_playerCameraHolder.LockOnCoordinates.z - transform.position.z);
+            transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(lockOnDir), Time.deltaTime * turningAcceleration);
+        }
+
+
+
+
     }
 
 

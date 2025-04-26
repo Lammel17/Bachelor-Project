@@ -15,7 +15,7 @@ public static class UtilityFunctions
     /// This Function turns a (0° - 360°) into a (-180° - 180°). 
     /// (a 5° angle stays 5°, but a 355° will be a -5°)
     /// </summary>
-    public static float Angle180(float angle, bool isAbsValue)
+    public static float Angle180(float angle, bool isAbsValue = false)
     {
         if (angle > 180)
             return angle = isAbsValue ? -angle + 360 : angle - 360; // jetzt in -180 bis +180

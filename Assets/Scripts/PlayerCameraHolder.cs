@@ -44,6 +44,7 @@ public class PlayerCameraHolder : MonoBehaviour
     public Vector3 CameraLookDirection { get { return m_camHolderLookDirection.eulerAngles; } }
     public Quaternion CameraTopDownForward { get { Vector3 lookDir = m_camHolderLookDirection.eulerAngles; return Quaternion.Euler(lookDir.x, 0, lookDir.z); } }
     public bool IsLockOn { get => m_isLockOn; set => m_isLockOn = value; }
+    public Vector3 LockOnCoordinates { get => m_testLockOnTransform.position;}
 
 
     private void Awake()
@@ -91,9 +92,9 @@ public class PlayerCameraHolder : MonoBehaviour
 
     private void CalculateCameraHolderRotation()
     {
-        Vector2 input = m_playerInputManager.RightStick;
         float verTurn = 0;
         float horTurn = 0;
+        Vector2 input = m_isLockOn ? Vector2.zero : m_playerInputManager.RightStick;
 
         if (input != Vector2.zero)
         {
@@ -110,7 +111,7 @@ public class PlayerCameraHolder : MonoBehaviour
         //Apply Clamping
         m_WIP_camHolderRotationVerX = Quaternion.Euler(UtilityFunctions.AngleClamping(m_WIP_camHolderRotationVerX.eulerAngles.x, -m_camHolderClampAngle, m_camHolderClampAngle),0,0);
 
-        ConstantDragInDesiredDir(input);
+        ForcingPosition(input);
 
         // Die eigentliche Kamera-Rotation wird hier smooth zur WorkInProgress Rotation gezogen
         m_camHolderRotationVerX = UtilityFunctions.SmartSlerp(Quaternion.Euler(transform.rotation.eulerAngles.x, 0, 0), m_WIP_camHolderRotationVerX, Time.deltaTime * m_camHolderRotationAcceleration);
@@ -123,8 +124,11 @@ public class PlayerCameraHolder : MonoBehaviour
 
 
 
-    private void ConstantDragInDesiredDir(Vector2 input)
+    private void ForcingPosition(Vector2 input)
     {
+        if (m_playerMovement.MoveStrenght == 0 && !IsLockOn)
+            return;
+
         float m_desiredDirForceFactor = 0.4f;
         float desiredRotationForce = 0;
         Quaternion desiredRotation = Quaternion.identity;
@@ -198,7 +202,10 @@ public class PlayerCameraHolder : MonoBehaviour
 
         if (m_isLockOn)
         {
-            m_camPos = new Vector3(0, 2f, -m_camRestDist);  //Hier Weiter Denken
+            //offset height is depending on angle
+            float camYOffset = UtilityFunctions.RefitRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x, false), 0, m_camHolderClampAngleMax, 0.5f, 2); 
+
+            m_camPos = new Vector3(0, camYOffset, -m_camRestDist); 
             lockOnParameter = UtilityFunctions.SmartLerp(lockOnParameter, 0.5f, Time.deltaTime * 2f);
         }
         else
@@ -210,13 +217,10 @@ public class PlayerCameraHolder : MonoBehaviour
         //cameraCenter gets an offset, to look over the players head a bit
         m_camera.transform.localPosition = UtilityFunctions.SmartLerp(m_camera.transform.localPosition, m_camPos, Time.deltaTime * m_camLocalPosAcceleration);
         
-        //cameraRotation follows the target a bit
-        //Quaternion lookForward = transform.rotation;
+        //cameraRotation follows the target and player a bit
         Quaternion lookTotarget = Quaternion.LookRotation(m_testLockOnTransform.position - m_camera.transform.position);
         Quaternion lookToPlayer = Quaternion.LookRotation(m_camHolderCenterPos - m_camera.transform.position);
         m_camera.transform.rotation = Quaternion.Slerp(lookToPlayer, lookTotarget, lockOnParameter);
-
-
 
     }
 
