@@ -281,7 +281,7 @@ public class PlayerInputManager : MonoBehaviour
         Vector2 input = m_leftStick;
         float inputMagnitude = input.magnitude;
 
-        input = new Vector2(UtilityFunctions.RefitRange(Mathf.Abs(input.x), 0.1f * inputMagnitude, 1, 0, 1) * Mathf.Sign(input.x), input.y);
+        input = new Vector2(UtilityFunctions.RefitRange(Mathf.Abs(input.x), 0.1f * inputMagnitude, 1, 0, 1) * Mathf.Sign(input.x), input.y); //HHHEEERE
 
         m_thePlayerMovement.MoveStrenght = inputMagnitude;
 

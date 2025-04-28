@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ConstrainedExecution;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
 using UnityEngine.UIElements;
@@ -18,7 +19,7 @@ public class PlayerCameraHolder : MonoBehaviour
     
     [Space]
     [SerializeField] private float m_camHolderClampAngleMax = 60f;
-    private float m_camHolderClampAngle;
+    private float m_camHolderClampAngle = 60;
 
     private float m_stickHorFactor = 0.5f;
     private float m_stickVerFactor = 0.5f;
@@ -83,11 +84,11 @@ public class PlayerCameraHolder : MonoBehaviour
         //ControlCameraDistance();
     }
 
+
     private void CalculateCameraHolderCenter()
     {
 
         m_camHolderCenterPosBase = UtilityFunctions.SmartLerp(m_camHolderCenterPosBase, m_playerTransform.position, Time.deltaTime * m_camHolderCenterFollowAcceleration);
-
         m_camHolderCenterPos = m_camHolderCenterPosBase + m_camHolderLocalCenter;
 
     }
@@ -104,7 +105,7 @@ public class PlayerCameraHolder : MonoBehaviour
             horTurn = CalculateHorizontalTurning(input);
         }
 
-        m_camHolderClampAngle = CalculateClampAngleVerX(input, verTurn); //sqrMagnitude, weil der Wert eh immer unter 1 ist
+        m_camHolderClampAngle = CalculateClampAngleVerX(input, verTurn); 
 
         //Kameraposition als Vertikal und Horizontal Drehung, da wo ich sie linear hinschiebe mit den Right-Stick Input
         m_WIP_camHolderRotationHorY *= Quaternion.Euler(0, horTurn * m_stickHorFactor, 0);
@@ -113,12 +114,11 @@ public class PlayerCameraHolder : MonoBehaviour
         //Apply Clamping
         m_WIP_camHolderRotationVerX = Quaternion.Euler(UtilityFunctions.AngleClamping(m_WIP_camHolderRotationVerX.eulerAngles.x, -m_camHolderClampAngle, m_camHolderClampAngle),0,0);
 
-        ForcingPosition(input);
+        ForcingPosition();
 
-        // Die eigentliche Kamera-Rotation wird hier smooth zur WorkInProgress Rotation gezogen
-        m_camHolderRotationVerX = UtilityFunctions.SmartSlerp(Quaternion.Euler(transform.rotation.eulerAngles.x, 0, 0), m_WIP_camHolderRotationVerX, Time.deltaTime * m_camHolderRotationAcceleration);
-        m_camHolderRotationHorY = UtilityFunctions.SmartSlerp(Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0), m_WIP_camHolderRotationHorY, Time.deltaTime * m_camHolderRotationAcceleration);
-
+        // Die eigentliche Kamera-Rotation wird hier smooth zur WorkInProgress Rotation gezogen | KEIN SMART SLERP HIER!!!
+        m_camHolderRotationVerX = Quaternion.Slerp(Quaternion.Euler(transform.rotation.eulerAngles.x, 0, 0), m_WIP_camHolderRotationVerX, Time.deltaTime * m_camHolderRotationAcceleration); 
+        m_camHolderRotationHorY = Quaternion.Slerp(Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0), m_WIP_camHolderRotationHorY, Time.deltaTime * m_camHolderRotationAcceleration);
         m_camHolderLookDirection = Quaternion.Euler(m_camHolderRotationVerX.eulerAngles.x, m_camHolderRotationHorY.eulerAngles.y, 0);
 
     }
@@ -126,7 +126,7 @@ public class PlayerCameraHolder : MonoBehaviour
 
 
 
-    private void ForcingPosition(Vector2 input)
+    private void ForcingPosition()
     {
         if (m_playerMovement == null || m_playerMovement.MoveStrenght == 0 && !IsLockOn)
             return;
@@ -138,7 +138,7 @@ public class PlayerCameraHolder : MonoBehaviour
         if (m_isLockOn)
         {
             Vector3 camRestDir = m_testLockOnTransform.transform.position - m_camHolderCenterPos;
-            desiredRotationForce = 5;
+            desiredRotationForce = 10;
             desiredRotation = Quaternion.LookRotation(camRestDir);
         }
         else 
@@ -150,9 +150,10 @@ public class PlayerCameraHolder : MonoBehaviour
             desiredRotation = m_playerTransform.transform.rotation * Quaternion.LookRotation(camRestDir);
         }
 
-        //Die InputRichtung wird hier beim Laufen smooth zu desiredRotation gelenkt
-        m_WIP_camHolderRotationVerX = UtilityFunctions.SmartSlerp(m_WIP_camHolderRotationVerX, Quaternion.Euler(desiredRotation.eulerAngles.x, 0, 0), Time.deltaTime * desiredRotationForce); 
-        m_WIP_camHolderRotationHorY = UtilityFunctions.SmartSlerp(m_WIP_camHolderRotationHorY, Quaternion.Euler(0, desiredRotation.eulerAngles.y, 0), Time.deltaTime * desiredRotationForce);
+        //Die InputRichtung wird hier beim Laufen smooth zu desiredRotation gelenkt | KEIN SMART SLERP HIER!!!
+        m_WIP_camHolderRotationVerX = Quaternion.Slerp(m_WIP_camHolderRotationVerX, Quaternion.Euler(desiredRotation.eulerAngles.x, 0, 0), Time.deltaTime * desiredRotationForce); 
+        m_WIP_camHolderRotationHorY = Quaternion.Slerp(m_WIP_camHolderRotationHorY, Quaternion.Euler(0, desiredRotation.eulerAngles.y, 0), Time.deltaTime * desiredRotationForce);
+
     }
 
     private float CalculateClampAngleVerX(Vector2 input, float verTurn)
@@ -217,13 +218,13 @@ public class PlayerCameraHolder : MonoBehaviour
         }
 
         //cameraCenter gets an offset, to look over the players head a bit
-        m_camera.transform.localPosition = UtilityFunctions.SmartLerp(m_camera.transform.localPosition, m_camPos, Time.deltaTime * m_camLocalPosAcceleration);
+        m_camera.transform.localPosition = UtilityFunctions.SmartLerp(m_camera.transform.localPosition, m_camPos, Time.deltaTime * m_camLocalPosAcceleration); //HHHEEERE
         
         //cameraRotation follows the target and player a bit
         Quaternion lookTotarget = Quaternion.LookRotation(m_testLockOnTransform.position - m_camera.transform.position);
         Quaternion lookToPlayer = Quaternion.LookRotation(m_camHolderCenterPos - m_camera.transform.position);
         Quaternion lookRotation = Quaternion.Slerp(lookToPlayer, lookTotarget, lockOnParameter);
-        m_camera.transform.rotation = lookRotation;
+        m_camera.transform.rotation = lookRotation; //HEEERE
 
         if (m_playerMovement != null)
             m_playerMovement.ContextRotation = lookRotation;

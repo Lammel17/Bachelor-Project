@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 m_moveDir = Vector3.forward;
     private float m_moveStrenght = 0f;
     private Vector3 m_move = Vector3.forward;
-    private float m_moveAcceleration = 12f;
+    private float m_moveAcceleration = 10f;
     private float m_turningAcceleration = 12f;
     private Quaternion m_contextRotation = Quaternion.identity;
 
@@ -42,8 +42,7 @@ public class PlayerMovement : MonoBehaviour
         m_moveDir = m_contextRotation * m_inputDir;
         SetAnimatorMoveValues();
 
-        if (m_moveStrenght != 0 || m_move.sqrMagnitude > 0.0001f * 0.0001f)
-            MovingPlayer();
+        MovingPlayer();
 
         RotatingPlayer();
     }
@@ -63,38 +62,37 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
-
     private void MovingPlayer()
     {
         m_move = UtilityFunctions.SmartLerp(m_move, m_moveDir * m_inputFactor * m_moveStrenght * m_speed, Time.deltaTime * m_moveAcceleration);
+        //m_move = m_moveDir * m_inputFactor * m_moveStrenght * m_speed;
         m_characterController.Move(m_move * Time.deltaTime);
     }
 
-    private float additionalTurningCorrection = 0;
+
+
+   [SerializeField] private AnimationCurve m_additionalRotation;
     private void RotatingPlayer()
     {
         float turningAcceleration = m_turningAcceleration;
 
-        int dir = (int)Mathf.Sign(m_inputDir.x);
-        if (m_inputDir.x > 0.001f) dir = -1;
-        else if (m_inputDir.x < -0.001f) dir = 1;
-        if (dir == 0) additionalTurningCorrection = Mathf.Lerp(additionalTurningCorrection, 0, Time.deltaTime * 6);
-
         if (m_moveStrenght == 0)
             return;
 
-        if (!m_playerCameraHolder.IsLockOn)
-        {
-            transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(m_moveDir), Time.deltaTime * turningAcceleration);
-        }
-        else
-        {
-            //Vector3 lockOnDir = new Vector3(m_playerCameraHolder.LockOnCoordinates.x - transform.position.x, 0, m_playerCameraHolder.LockOnCoordinates.z - transform.position.z);
-            //transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(lockOnDir), Time.deltaTime * turningAcceleration);
+        Vector3 desiredDirection = Vector3.zero;
 
-            additionalTurningCorrection = Mathf.Lerp(additionalTurningCorrection, 12f * dir * (4 * (22 - (m_playerCameraHolder.LockOnCoordinates-transform.position).magnitude) / 22), Time.deltaTime * 6);
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, m_contextRotation.eulerAngles.y + additionalTurningCorrection, 0), Time.deltaTime * 6);
+        if (!m_playerCameraHolder.IsLockOn) // no LockOn
+        {
+            desiredDirection = m_moveDir;
         }
+        else //LockOn
+        {
+            desiredDirection = new Vector3(m_playerCameraHolder.LockOnCoordinates.x - transform.position.x, 0, m_playerCameraHolder.LockOnCoordinates.z - transform.position.z);
+        }
+
+        transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(desiredDirection), Time.deltaTime * turningAcceleration);
+
+
     }
 
 
