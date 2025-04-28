@@ -40,9 +40,9 @@ public class PlayerCameraHolder : MonoBehaviour
     private bool m_isLockOn = false;
     private float lockOnParameter = 0;
 
-    public Vector3 CameraCenter { get { return m_camHolderCenterPosBase; } }
-    public Vector3 CameraLookDirection { get { return m_camHolderLookDirection.eulerAngles; } }
-    public Quaternion CameraTopDownForward { get { Vector3 lookDir = m_camHolderLookDirection.eulerAngles; return Quaternion.Euler(lookDir.x, 0, lookDir.z); } }
+    public Vector3 CameraHolderCenterBase { get => m_camHolderCenterPosBase; }
+    public Vector3 CameraHolderLookDirection { get => m_camHolderLookDirection.eulerAngles; }
+    public Quaternion CameraHolderForwardYAxis { get => Quaternion.Euler(0, m_camHolderLookDirection.eulerAngles.y, 0); }
     public bool IsLockOn { get => m_isLockOn; set => m_isLockOn = value; }
     public Vector3 LockOnCoordinates { get => m_testLockOnTransform.position;}
 
@@ -76,7 +76,9 @@ public class PlayerCameraHolder : MonoBehaviour
         CalculateCameraHolderRotation();
         CalculateCameraHolderCenter();
         SetCameraHolderCenterAndRotation();
-        CalculateAndSetCameraPos();
+        CalculateAndSetCameraPosAndRot();
+
+
         //CameraLookAt();
         //ControlCameraDistance();
     }
@@ -126,7 +128,7 @@ public class PlayerCameraHolder : MonoBehaviour
 
     private void ForcingPosition(Vector2 input)
     {
-        if (m_playerMovement.MoveStrenght == 0 && !IsLockOn)
+        if (m_playerMovement == null || m_playerMovement.MoveStrenght == 0 && !IsLockOn)
             return;
 
         float m_desiredDirForceFactor = 0.4f;
@@ -196,7 +198,7 @@ public class PlayerCameraHolder : MonoBehaviour
     }
 
 
-    private void CalculateAndSetCameraPos()
+    private void CalculateAndSetCameraPosAndRot()
     {
 
 
@@ -220,7 +222,11 @@ public class PlayerCameraHolder : MonoBehaviour
         //cameraRotation follows the target and player a bit
         Quaternion lookTotarget = Quaternion.LookRotation(m_testLockOnTransform.position - m_camera.transform.position);
         Quaternion lookToPlayer = Quaternion.LookRotation(m_camHolderCenterPos - m_camera.transform.position);
-        m_camera.transform.rotation = Quaternion.Slerp(lookToPlayer, lookTotarget, lockOnParameter);
+        Quaternion lookRotation = Quaternion.Slerp(lookToPlayer, lookTotarget, lockOnParameter);
+        m_camera.transform.rotation = lookRotation;
+
+        if (m_playerMovement != null)
+            m_playerMovement.ContextRotation = lookRotation;
 
     }
 

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.TextCore.Text;
 
 [RequireComponent(typeof(CharacterController))]
 
@@ -19,14 +20,16 @@ public class PlayerMovement : MonoBehaviour
     private float m_moveStrenght = 0f;
     private Vector3 m_move = Vector3.forward;
     private float m_moveAcceleration = 12f;
-    private float turningAcceleration = 60f;
+    private float m_turningAcceleration = 12f;
+    private Quaternion m_contextRotation = Quaternion.identity;
 
     private float m_speed = 6f;
 
     public Animator Animator { get => m_animator; }
-    public Vector3 InputDirection { get => m_inputDir; set { if (value.sqrMagnitude == 0) return; m_inputDir = value.normalized; }} //is always normalized
-    public Vector3 MoveDirection { get => m_moveDir; } //is always normalized
+    public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
+    public Vector3 MoveDirection { get => m_moveDir; } //is always normalized due to InputDirection
     public float MoveStrenght { get => m_moveStrenght; set => m_moveStrenght = value; }
+    public Quaternion ContextRotation { get => m_contextRotation; set => m_contextRotation = Quaternion.Euler(0, value.eulerAngles.y, 0); }
 
     void Start()
     {
@@ -36,7 +39,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        SetMoveDirection();
+        m_moveDir = m_contextRotation * m_inputDir;
         SetAnimatorMoveValues();
 
         if (m_moveStrenght != 0 || m_move.sqrMagnitude > 0.0001f * 0.0001f)
@@ -54,16 +57,9 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            m_animator.SetFloat("Vertical", m_inputDir.y, 0.1f, Time.deltaTime);    //Here i stopped
-            m_animator.SetFloat("Horizontal", m_inputDir.x, 0.1f, Time.deltaTime);
+            m_animator.SetFloat("Vertical", m_inputDir.z * m_moveStrenght, 0.1f, Time.deltaTime);    
+            m_animator.SetFloat("Horizontal", m_inputDir.x * m_moveStrenght, 0.1f, Time.deltaTime);
         }
-    }
-
-    private void SetMoveDirection()
-    {
-        Quaternion cameraRot = Quaternion.Euler(0, m_playerCameraHolder.CameraLookDirection.y, 0);
-        // wenn moveDir Vector2.Zero wäre, dann gäbe es probleme
-        m_moveDir = m_moveStrenght == 0 ? m_moveDir : cameraRot * m_inputDir; 
     }
 
 
@@ -72,12 +68,20 @@ public class PlayerMovement : MonoBehaviour
     {
         m_move = UtilityFunctions.SmartLerp(m_move, m_moveDir * m_inputFactor * m_moveStrenght * m_speed, Time.deltaTime * m_moveAcceleration);
         m_characterController.Move(m_move * Time.deltaTime);
-        //Debug.Log(m_moveDir);
     }
 
+    private float additionalTurningCorrection = 0;
     private void RotatingPlayer()
     {
-        float turningAcceleration = 15f;
+        float turningAcceleration = m_turningAcceleration;
+
+        int dir = (int)Mathf.Sign(m_inputDir.x);
+        if (m_inputDir.x > 0.001f) dir = -1;
+        else if (m_inputDir.x < -0.001f) dir = 1;
+        if (dir == 0) additionalTurningCorrection = Mathf.Lerp(additionalTurningCorrection, 0, Time.deltaTime * 6);
+
+        if (m_moveStrenght == 0)
+            return;
 
         if (!m_playerCameraHolder.IsLockOn)
         {
@@ -85,13 +89,12 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            Vector3 lockOnDir = new Vector3(m_playerCameraHolder.LockOnCoordinates.x - transform.position.x, 0, m_playerCameraHolder.LockOnCoordinates.z - transform.position.z);
-            transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(lockOnDir), Time.deltaTime * turningAcceleration);
+            //Vector3 lockOnDir = new Vector3(m_playerCameraHolder.LockOnCoordinates.x - transform.position.x, 0, m_playerCameraHolder.LockOnCoordinates.z - transform.position.z);
+            //transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(lockOnDir), Time.deltaTime * turningAcceleration);
+
+            additionalTurningCorrection = Mathf.Lerp(additionalTurningCorrection, 12f * dir * (4 * (22 - (m_playerCameraHolder.LockOnCoordinates-transform.position).magnitude) / 22), Time.deltaTime * 6);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, m_contextRotation.eulerAngles.y + additionalTurningCorrection, 0), Time.deltaTime * 6);
         }
-
-
-
-
     }
 
 
