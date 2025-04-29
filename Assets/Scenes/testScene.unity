@@ -530,7 +530,7 @@ MonoBehaviour:
   m_camHolderLocalCenter: {x: 0, y: 1.5, z: 0}
   m_camHolderRestDirection: {x: 0, y: -1, z: 4}
   m_camRestDist: 4
-  m_camHolderClampAngleMax: 60
+  m_camHolderClampAngleMax: 75
   m_testLockOnTransform: {fileID: 1176693130}
 --- !u!1 &761781380
 GameObject:
@@ -1283,12 +1283,12 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 1.8
-  m_Radius: 0.45
+  m_Radius: 0.37
   m_SlopeLimit: 45
   m_StepOffset: 0.3
-  m_SkinWidth: 0.08
+  m_SkinWidth: 0.05
   m_MinMoveDistance: 0.0001
-  m_Center: {x: 0, y: 0.9, z: 0}
+  m_Center: {x: 0, y: 0.95, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
