@@ -77,11 +77,12 @@ public class PlayerMovement : MonoBehaviour
     private void SetAnimatorMoveValues()
     {
         float animationDampTime = 0.1f; //smaller is faster transition
+        float VerticalMovement = m_moveStrenght; //is already snapped in inputmanager
+        m_animator.SetFloat("MoveMag", VerticalMovement, animationDampTime, Time.deltaTime);
+
         if (!m_playerCameraHolder.IsLockOn)
         {
-            float VerticalMovement = Snapping.Snap(m_moveStrenght, 0.5f);
-
-            m_animator.SetFloat("Vertical", VerticalMovement, animationDampTime, Time.deltaTime);
+            m_animator.SetFloat("Vertical", 1, animationDampTime, Time.deltaTime);
             m_animator.SetFloat("Horizontal", 0, animationDampTime, Time.deltaTime);
         }
         else
@@ -101,26 +102,23 @@ public class PlayerMovement : MonoBehaviour
 
             if (angle < firstThreshholdAngle) //forward walking
             {
-                verticalMovement = MoveStrenght;
+                verticalMovement = 1;
                 horizontalMovement = 0;
             }
             else if (angle < secondThreshholdAngle) //sideward walking
             {
                 verticalMovement = 0;
-                horizontalMovement = MoveStrenght * Mathf.Sign(m_inputDir.x);
+                horizontalMovement = Mathf.Sign(m_inputDir.x);
             }
             else //backward walking
             {
-                verticalMovement = -MoveStrenght;
+                verticalMovement = -1;
                 horizontalMovement = 0;
             }
 
             m_animator.SetFloat("Vertical", verticalMovement, animationDampTime, Time.deltaTime);    
             m_animator.SetFloat("Horizontal", horizontalMovement, animationDampTime, Time.deltaTime);
 
-            Debug.Log($"1: {firstThreshholdAngle}, 2: {secondThreshholdAngle}");
-            Debug.Log($"angle: {angle}");
-            Debug.Log($"vertical: {(int)verticalMovement}, horizontal: {(int)horizontalMovement}");
         }
     }
 
