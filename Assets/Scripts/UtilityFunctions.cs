@@ -29,6 +29,8 @@ public static class UtilityFunctions
     /// </summary>
     public static float AngleClamping(float angle, float lowerClamp, float upperClamp)
     {
+        angle = Mathf.Clamp(angle, 0, 360);
+
         if (angle > 180) 
             angle -= 360; // jetzt in -180 bis +180
 
@@ -36,12 +38,20 @@ public static class UtilityFunctions
     }
 
     /// <summary>
+    /// angle % 360
+    /// </summary>
+    public static float GetAngle(float angle)
+    {
+        return angle % 360;
+    }
+
+    /// <summary>
     /// This squishes and stretches a value, depending if its closer to the min or max, or gets clamp when outside of range. (exponent: 0.5 => stretch to squish | exponent: 2 => squish to stretch)
     /// </summary>
     public static float CurveValue(float value, float rangeMin, float rangeMax, float exponent)
     {
-        Mathf.Clamp(value, rangeMin, rangeMax);
-        float between0and1 = Mathf.InverseLerp(rangeMin, rangeMax, value);
+        float newValue = Mathf.Clamp(value, rangeMin, rangeMax);
+        float between0and1 = Mathf.InverseLerp(rangeMin, rangeMax, newValue);
         float curved = Mathf.Pow(between0and1, exponent);
         return Mathf.Lerp(rangeMin, rangeMax, curved);
     }

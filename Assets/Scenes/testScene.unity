@@ -527,11 +527,7 @@ MonoBehaviour:
   m_playerMovement: {fileID: 1756236762}
   m_camera: {fileID: 330585543}
   m_playerTransform: {fileID: 1756236761}
-  m_camHolderLocalCenter: {x: 0, y: 1.5, z: 0}
-  m_camHolderRestDirection: {x: 0, y: -1, z: 4}
-  m_camRestDist: 4
-  m_camHolderClampAngleMax: 75
-  m_testLockOnTransform: {fileID: 1176693130}
+  m_chosenLockOnTransform: {fileID: 1176693130}
 --- !u!1 &761781380
 GameObject:
   m_ObjectHideFlags: 0
@@ -848,9 +844,9 @@ Transform:
   m_GameObject: {fileID: 1176693126}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.06340691, y: 0.454, z: 2.492}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: -0.06340691, y: 1.38, z: 2.492}
+  m_LocalScale: {x: 0.57, y: 0.57, z: 0.57}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1136,7 +1132,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: c52a9c8cdda8ab94c8f7d20f8bf46c68, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1231,36 +1227,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_animator: {fileID: 1060078877}
-  m_additionalRotation:
+  m_additionalRotationCurve:
     serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 136
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.5
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 136
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 136
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
+    m_Curve: []
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4

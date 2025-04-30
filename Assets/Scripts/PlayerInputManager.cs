@@ -283,7 +283,7 @@ public class PlayerInputManager : MonoBehaviour
 
         input = new Vector2(UtilityFunctions.RefitRange(Mathf.Abs(input.x), 0.1f * inputMagnitude, 1, 0, 1) * Mathf.Sign(input.x), input.y); //HHHEEERE
 
-        m_thePlayerMovement.MoveStrenght = inputMagnitude;
+        m_thePlayerMovement.MoveStrenght = Snapping.Snap(inputMagnitude + 0.2f, 0.5f); 
 
         m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
 

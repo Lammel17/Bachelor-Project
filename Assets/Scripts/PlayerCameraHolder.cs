@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.TextCore.Text;
 using UnityEngine.UIElements;
 using UnityEngine.Windows;
+using static UnityEngine.GraphicsBuffer;
 
 public class PlayerCameraHolder : MonoBehaviour
 {
@@ -38,15 +39,20 @@ public class PlayerCameraHolder : MonoBehaviour
 
     private Vector3 m_camPos;
 
-    [SerializeField] private Transform m_testLockOnTransform;
+    [SerializeField] private Transform m_chosenLockOnTransform;
+     private Transform m_target;
+    private Vector3 m_lastTargetPos = Vector3.zero;
     private bool m_isLockOn = false;
     private float lockOnParameter = 0;
 
     public Vector3 CameraHolderCenterBase { get => m_camHolderCenterPosBase; }
     public Vector3 CameraHolderLookDirection { get => m_camHolderLookDirection.eulerAngles; }
     public Quaternion CameraHolderForwardYAxis { get => Quaternion.Euler(0, m_camHolderLookDirection.eulerAngles.y, 0); }
-    public bool IsLockOn { get => m_isLockOn; set => m_isLockOn = value; }
-    public Vector3 LockOnCoordinates { get => m_testLockOnTransform.position;}
+    //public float LockOnDistance { get => (m_testLockOnTransform.position - m_playerTransform.position).magnitude; }
+    public bool IsLockOn { get => m_isLockOn; set { m_isLockOn = value; if (m_isLockOn) m_playerMovement.Target = m_chosenLockOnTransform; else { m_lastTargetPos = TargetPos; m_playerMovement.Target = null; } } }
+    public Transform Target { get => m_target; set { m_target = value; m_isLockOn = (m_target != null); } }
+    public Vector3 TargetPos { get { if (m_target != null) return m_target.position; else { Debug.Log("target gets called, but is empty"); return m_lastTargetPos; } } }
+
 
 
     private void Awake()
@@ -65,6 +71,8 @@ public class PlayerCameraHolder : MonoBehaviour
         m_camera.transform.localPosition = new Vector3(0, 0, -s_camRestDist);
         m_camHolderClampAngle = s_camHolderClampAngleMax;
 
+        m_target = m_chosenLockOnTransform;///////////////////
+
     }
 
     private void OnEnable()
@@ -80,7 +88,6 @@ public class PlayerCameraHolder : MonoBehaviour
         CalculateCameraHolderCenter();
         SetCameraHolderCenterAndRotation();
         CalculateAndSetCameraPosAndRot();
-
 
         //CameraLookAt();
         //ControlCameraDistance();
@@ -140,7 +147,7 @@ public class PlayerCameraHolder : MonoBehaviour
 
         if (m_isLockOn)
         {
-            Vector3 camRestDir = m_testLockOnTransform.transform.position - m_camHolderCenterPos;
+            Vector3 camRestDir = TargetPos - m_camHolderCenterPos;
             desiredRotationForce = 10;
             desiredRotation = Quaternion.LookRotation(camRestDir);
         }
@@ -224,7 +231,7 @@ public class PlayerCameraHolder : MonoBehaviour
         m_camera.transform.localPosition = UtilityFunctions.SmartLerp(m_camera.transform.localPosition, m_camPos, Time.deltaTime * s_camLocalPosAcceleration);
         
         //cameraRotation follows the target and player a bit
-        Quaternion lookTotarget = Quaternion.LookRotation(m_testLockOnTransform.position - m_camera.transform.position);
+        Quaternion lookTotarget = lockOnParameter != 0 ? Quaternion.LookRotation(TargetPos - m_camera.transform.position) : Quaternion.identity;
         Quaternion lookToPlayer = Quaternion.LookRotation(m_camHolderCenterPos - m_camera.transform.position);
         Quaternion lookRotation = Quaternion.Slerp(lookToPlayer, lookTotarget, lockOnParameter);
         m_camera.transform.rotation = lookRotation;
