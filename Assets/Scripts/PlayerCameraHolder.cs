@@ -22,8 +22,8 @@ public class PlayerCameraHolder : MonoBehaviour
     private static readonly float s_camHolderClampAngleMax = 75f;
     private static readonly float s_stickHorFactor = 250f;
     private static readonly float s_stickVerFactor = 250f;
-    private static readonly float s_camHolderRotationAcceleration = 7f;
-    private static readonly float s_camHolderCenterFollowAcceleration = 15f;
+    private static readonly float s_camHolderCenterFollowAcceleration = 5f;
+    private static readonly float s_camHolderRotationAcceleration = 6f;
     [Space]
     private static readonly float s_camLocalPosAcceleration = 5f;
 
@@ -52,6 +52,7 @@ public class PlayerCameraHolder : MonoBehaviour
     public bool IsLockOn { get => m_isLockOn; set { m_isLockOn = value; if (m_isLockOn) m_playerMovement.Target = m_chosenLockOnTransform; else { m_lastTargetPos = TargetPos; m_playerMovement.Target = null; } } }
     public Transform Target { get => m_target; set { m_target = value; m_isLockOn = (m_target != null); } }
     public Vector3 TargetPos { get { if (m_target != null) return m_target.position; else { Debug.Log("target gets called, but is empty"); return m_lastTargetPos; } } }
+    public Vector3 CamPos { get => m_camera.transform.position; }
 
 
 
@@ -125,9 +126,10 @@ public class PlayerCameraHolder : MonoBehaviour
 
         ForcingPosition();
 
+        float camHolderRotAcc = m_isLockOn ? UtilityFunctions.SmartLerp(s_camHolderRotationAcceleration, 100f, Mathf.InverseLerp(200, 0, Vector3.Angle(CamPos - m_playerTransform.position, TargetPos - m_playerTransform.position) )) : s_camHolderRotationAcceleration;
         // Die eigentliche Kamera-Rotation wird hier smooth zur WorkInProgress Rotation gezogen | KEIN SMART SLERP HIER!!!
-        m_camHolderRotationVerX = Quaternion.Slerp(Quaternion.Euler(transform.rotation.eulerAngles.x, 0, 0), m_WIP_camHolderRotationVerX, Time.deltaTime * s_camHolderRotationAcceleration); 
-        m_camHolderRotationHorY = Quaternion.Slerp(Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0), m_WIP_camHolderRotationHorY, Time.deltaTime * s_camHolderRotationAcceleration);
+        m_camHolderRotationVerX = Quaternion.Slerp(Quaternion.Euler(transform.rotation.eulerAngles.x, 0, 0), m_WIP_camHolderRotationVerX, Time.deltaTime * camHolderRotAcc); 
+        m_camHolderRotationHorY = Quaternion.Slerp(Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0), m_WIP_camHolderRotationHorY, Time.deltaTime * camHolderRotAcc);
 
         m_camHolderLookDirection = Quaternion.Euler(m_camHolderRotationVerX.eulerAngles.x, m_camHolderRotationHorY.eulerAngles.y, 0);
         
@@ -212,14 +214,14 @@ public class PlayerCameraHolder : MonoBehaviour
     private void CalculateAndSetCameraPosAndRot()
     {
 
-
         if (m_isLockOn)
         {
+            float howMuchRotatingToTarget = 0.6f;
             //offset height is depending on angle
             float camYOffset = UtilityFunctions.RefitRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x, false), 0, s_camHolderClampAngleMax, 0.5f, 2); 
 
             m_camPos = new Vector3(0, camYOffset, -s_camRestDist); 
-            lockOnParameter = UtilityFunctions.SmartLerp(lockOnParameter, 0.5f, Time.deltaTime * 2f);
+            lockOnParameter = UtilityFunctions.SmartLerp(lockOnParameter, howMuchRotatingToTarget, Time.deltaTime * 2f);
         }
         else
         {
@@ -237,7 +239,7 @@ public class PlayerCameraHolder : MonoBehaviour
         m_camera.transform.rotation = lookRotation;
 
         if (m_playerMovement != null)
-            m_playerMovement.ContextRotation = lookRotation;
+            m_playerMovement.CameraContextRotation = lookRotation;
 
     }
 

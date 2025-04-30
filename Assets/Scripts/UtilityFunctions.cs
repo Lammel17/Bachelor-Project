@@ -40,7 +40,7 @@ public static class UtilityFunctions
     /// <summary>
     /// angle % 360
     /// </summary>
-    public static float GetAngle(float angle)
+    public static float GetAngleModulo360(float angle)
     {
         return angle % 360;
     }
@@ -50,19 +50,17 @@ public static class UtilityFunctions
     /// </summary>
     public static float CurveValue(float value, float rangeMin, float rangeMax, float exponent)
     {
-        float newValue = Mathf.Clamp(value, rangeMin, rangeMax);
-        float between0and1 = Mathf.InverseLerp(rangeMin, rangeMax, newValue);
+        float between0and1 = Mathf.InverseLerp(rangeMin, rangeMax, value);
         float curved = Mathf.Pow(between0and1, exponent);
         return Mathf.Lerp(rangeMin, rangeMax, curved);
     }
 
     /// <summary>
-    /// Define a range, if the Value is outside it gets clamp, then the value gets refittet (stretched or squished) to a new range. 
+    /// Define a range, if the Value is outside it gets clamp automatically, then the value gets refittet (stretched or squished) to a new range. 
     /// </summary>
     public static float RefitRange(float value, float startRange, float endRange, float newMin, float newMax)
     {
-        float valueClamped = Mathf.Clamp(value, startRange, endRange);
-        float relativeValue = Mathf.InverseLerp(startRange, endRange, valueClamped);
+        float relativeValue = Mathf.InverseLerp(startRange, endRange, value);
         return Mathf.Lerp(newMin, newMax, relativeValue);
     }
 
