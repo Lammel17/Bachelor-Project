@@ -33,10 +33,11 @@ public class PlayerMovement : MonoBehaviour
     public Animator Animator { get => m_animator; }
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
     public Vector3 MoveDirection { get => m_moveDir; } //is always normalized due to InputDirection
-    public float MoveStrenght { get => m_moveStrenght; set => m_moveStrenght = value; }
+    public float MoveStrenght { get => m_moveStrenght; set => m_moveStrenght = value; } //is already snapped by inputmanager
     public Quaternion ContextRotation { get => m_contextRotation; set => m_contextRotation = Quaternion.Euler(0, value.eulerAngles.y, 0); }
     public Transform Target { get => m_target; set { m_target = value; m_isLockOn = (m_target != null); } }
     public Vector3 TargetPos { get { if (m_target != null) return m_target.position; else { Debug.Log("target gets called, but is empty"); return Vector3.zero; } }}
+    public float TargetDist { get { if (m_target != null) return m_targetDist; else { Debug.Log("target gets called, but is empty"); return 0; } } set => m_targetDist = value; }
 
 
 
@@ -65,15 +66,17 @@ public class PlayerMovement : MonoBehaviour
             m_moveDir = m_contextRotation * m_inputDir;
         else
         {
+            TargetDist = (TargetPos - transform.position).magnitude;
+
             float sidewardSpeedFactorMinWhenClose = 0.4f; // this is because the sidewardmovement is too fast when being close
-            m_moveDir = transform.rotation * new Vector3(m_inputDir.x * Mathf.Lerp(sidewardSpeedFactorMinWhenClose, 1f, (TargetPos - transform.position).magnitude / 5), 0, m_inputDir.z);
+            m_moveDir = transform.rotation * new Vector3(m_inputDir.x * Mathf.Lerp(sidewardSpeedFactorMinWhenClose, 1f, TargetDist / 5), 0, m_inputDir.z);
         }
 
     }
 
     private void SetAnimatorMoveValues()
     {
-        float animationDampTime = 0.05f; //smaller is faster transition
+        float animationDampTime = 0.1f; //smaller is faster transition
         if (!m_playerCameraHolder.IsLockOn)
         {
             float VerticalMovement = Snapping.Snap(m_moveStrenght, 0.5f);
@@ -83,14 +86,41 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
+            //das setzt den threshhold für ab welchen winkel die vorwärts, seitswärt order rückwärts animation abgespielt wird
+            float firstThreshholdAngleMin = 15f;
+            float secondThreshholdAngleMin = 110f;
+            float distThreshhold = 10f;
+
+            float firstThreshholdAngle = Mathf.Lerp(firstThreshholdAngleMin, 45f, TargetDist / distThreshhold);
+            float secondThreshholdAngle = Mathf.Lerp(secondThreshholdAngleMin, 135f, TargetDist / distThreshhold);
+
             float angle = Vector3.Angle(Vector3.forward, m_inputDir);
-            Vector3 inputCurvedByDist =  Quaternion.Euler(0, UtilityFunctions.CurveValue(angle, 0, 180, Mathf.Lerp(0.5f, 1f, (TargetPos - transform.position).magnitude / 5)) * Mathf.Sign(m_inputDir.x), 0) * Vector3.forward;
 
-            float VerticalMovement = Snapping.Snap(inputCurvedByDist.z * m_moveStrenght, 0.5f);
-            float HorizontalMovement = Snapping.Snap(inputCurvedByDist.x * m_moveStrenght, 0.5f);
+            float verticalMovement = 0;
+            float horizontalMovement = 0;
 
-            m_animator.SetFloat("Vertical", VerticalMovement, animationDampTime, Time.deltaTime);    
-            m_animator.SetFloat("Horizontal", HorizontalMovement, animationDampTime, Time.deltaTime);
+            if (angle < firstThreshholdAngle) //forward walking
+            {
+                verticalMovement = MoveStrenght;
+                horizontalMovement = 0;
+            }
+            else if (angle < secondThreshholdAngle) //sideward walking
+            {
+                verticalMovement = 0;
+                horizontalMovement = MoveStrenght * Mathf.Sign(m_inputDir.x);
+            }
+            else //backward walking
+            {
+                verticalMovement = -MoveStrenght;
+                horizontalMovement = 0;
+            }
+
+            m_animator.SetFloat("Vertical", verticalMovement, animationDampTime, Time.deltaTime);    
+            m_animator.SetFloat("Horizontal", horizontalMovement, animationDampTime, Time.deltaTime);
+
+            Debug.Log($"1: {firstThreshholdAngle}, 2: {secondThreshholdAngle}");
+            Debug.Log($"angle: {angle}");
+            Debug.Log($"vertical: {(int)verticalMovement}, horizontal: {(int)horizontalMovement}");
         }
     }
 
