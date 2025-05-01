@@ -17,8 +17,8 @@ public class PlayerMovement : MonoBehaviour
     [Space]
     [Header("Costants / static readonly")]
     private static readonly float m_inputFactor = 1f;
-    private static readonly float m_moveAcceleration = 10f;
-    private static readonly float m_turningAcceleration = 10f;
+    private static readonly float m_moveAcceleration = 15f;
+    private static readonly float m_turningAcceleration = 7.5f;
 
     private Vector3 m_inputDir = Vector3.forward;
     private Vector3 m_moveDir = Vector3.forward;
@@ -66,20 +66,21 @@ public class PlayerMovement : MonoBehaviour
     {
         SetValues();
         
-        SetAnimatorMoveValues();
 
         MovingPlayer();
 
         RotatingPlayer();
 
+        SetAnimatorMoveValues();
     }
 
     private void SetValues() //moveDir, threshholds, TargetDist
     {
+        Vector3 prevmoveDir = m_moveDir;
 
         if (!m_isLockOn || m_isRunning)
         {
-            m_moveDir = m_cameraContextRotation * m_inputDir;
+            m_moveDir = m_moveStrenght != 0 ? m_cameraContextRotation * m_inputDir : m_moveDir;
             m_directionWhenLockOn = Direction.Forward;
         }
         else
@@ -93,27 +94,30 @@ public class PlayerMovement : MonoBehaviour
             m_moveDir = playerToTargetAndContextRotationSlerp * m_inputDir;
 
             SetDirection();
+            void SetDirection()
+            {
+                //das setzt den threshhold für ab welchen winkel die vorwärts, seitswärt order rückwärts animation abgespielt wird
+                float firstThreshholdAngleMin = 25f;
+                float secondThreshholdAngleMin = 110f;
+                float distThreshhold = 10f;
+                float additionalThreshhold = 7f;
+
+                if (m_directionWhenLockOn == Direction.Sideward) additionalThreshhold = -additionalThreshhold;
+
+                m_forwardSidewardThreshholdAngle = Mathf.Lerp(firstThreshholdAngleMin, 45f, TargetDist / distThreshhold) + additionalThreshhold;
+                m_sidewardBackwardThreshholdAngle = Mathf.Lerp(secondThreshholdAngleMin, 135f, TargetDist / distThreshhold) - additionalThreshhold;
+
+                float angle = InputAngleToForward;
+
+                if (angle < m_forwardSidewardThreshholdAngle) m_directionWhenLockOn = Direction.Forward;
+                else if (angle < m_sidewardBackwardThreshholdAngle) m_directionWhenLockOn = Direction.Sideward;
+                else m_directionWhenLockOn = Direction.Backward;
+            }
         }
 
-        void SetDirection()
-        {
-            //das setzt den threshhold für ab welchen winkel die vorwärts, seitswärt order rückwärts animation abgespielt wird
-            float firstThreshholdAngleMin = 25f;
-            float secondThreshholdAngleMin = 110f;
-            float distThreshhold = 10f;
-            float additionalThreshhold = 7f;
+        float angleMoveDirToPrevMoveDir = Vector3.Angle(m_moveDir, prevmoveDir);
+        if (!m_isLockOn && !m_isRunning && angleMoveDirToPrevMoveDir > 90) m_animator.SetTrigger("IsTurning");
 
-            if (m_directionWhenLockOn == Direction.Sideward) additionalThreshhold = -additionalThreshhold;
-
-            m_forwardSidewardThreshholdAngle =  Mathf.Lerp(firstThreshholdAngleMin, 45f, TargetDist / distThreshhold) + additionalThreshhold;
-            m_sidewardBackwardThreshholdAngle = Mathf.Lerp(secondThreshholdAngleMin, 135f, TargetDist / distThreshhold) -additionalThreshhold;
-
-            float angle = InputAngleToForward;
-
-            if      (angle < m_forwardSidewardThreshholdAngle)  m_directionWhenLockOn = Direction.Forward;
-            else if (angle < m_sidewardBackwardThreshholdAngle) m_directionWhenLockOn = Direction.Sideward;
-            else                                                m_directionWhenLockOn = Direction.Backward;
-        }
 
     }
 
@@ -127,6 +131,8 @@ public class PlayerMovement : MonoBehaviour
         {
             m_animator.SetFloat("Vertical", 1, animationDampTime, Time.deltaTime);
             m_animator.SetFloat("Horizontal", 0, animationDampTime, Time.deltaTime);
+
+            m_animator.SetFloat("TurningDir", InputAngleToForward > 0 ? 1 : -1, animationDampTime, Time.deltaTime);
         }
         else
         {
@@ -138,15 +144,17 @@ public class PlayerMovement : MonoBehaviour
 
             m_animator.SetFloat("Vertical", horAndVerMovement.y, animationDampTime, Time.deltaTime);    
             m_animator.SetFloat("Horizontal", horAndVerMovement.x, animationDampTime, Time.deltaTime);
-
         }
+
     }
 
 
     private void MovingPlayer()
     {
+        //less movement gets applied if the character is still not turned into moveDir //not sure if this is a nice solution
+        float forwardFactor = !(m_isLockOn && !m_isRunning) ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 180, 150, 0.4f, 1) : 1f;
 
-        m_move = UtilityFunctions.SmartLerp(m_move, m_moveDir * m_inputFactor * m_speed, Time.deltaTime * m_moveAcceleration);
+        m_move = UtilityFunctions.SmartLerp(m_move, m_moveDir * m_inputFactor * m_speed * forwardFactor, Time.deltaTime * m_moveAcceleration);
         m_characterController.Move(m_move * Time.deltaTime);
     }
 
@@ -154,9 +162,6 @@ public class PlayerMovement : MonoBehaviour
     private void RotatingPlayer()
     {
         float turningAcceleration = m_turningAcceleration;
-
-        if (m_moveStrenght == 0)
-            return;
 
         Vector3 desiredDirection = Vector3.zero;
 
