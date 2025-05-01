@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using UnityEngine;
@@ -18,12 +19,12 @@ public class PlayerMovement : MonoBehaviour
     [Header("Costants / static readonly")]
     private static readonly float m_inputFactor = 1f;
     private static readonly float m_moveAcceleration = 15f;
-    private static readonly float m_turningAcceleration = 7.5f;
+    private static readonly float m_turningAcceleration = 15f;
 
     private Vector3 m_inputDir = Vector3.forward;
     private Vector3 m_moveDir = Vector3.forward;
     private float m_moveStrenght = 0f;
-    private Vector3 m_move = Vector3.forward;
+    private Vector3 m_move = Vector3.zero;
 
     private Vector3 m_speedValues = new Vector3(2, 4, 6); //slow, walk, running
     private float m_speed = 0; //slow, walk, running
@@ -39,6 +40,9 @@ public class PlayerMovement : MonoBehaviour
 
     private bool m_isRunning = false;
     private int m_runningspeed = 2;
+
+    private Coroutine m_turningCoroutine;
+    private bool m_isTurning = false;
 
 
     public Animator Animator { get => m_animator; }
@@ -66,10 +70,9 @@ public class PlayerMovement : MonoBehaviour
     {
         SetValues();
         
+        RotatingPlayer();
 
         MovingPlayer();
-
-        RotatingPlayer();
 
         SetAnimatorMoveValues();
     }
@@ -80,7 +83,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (!m_isLockOn || m_isRunning)
         {
-            m_moveDir = m_moveStrenght != 0 ? m_cameraContextRotation * m_inputDir : m_moveDir;
+            m_moveDir = m_moveStrenght > 0 ? m_cameraContextRotation * m_inputDir : m_moveDir;
             m_directionWhenLockOn = Direction.Forward;
         }
         else
@@ -116,10 +119,27 @@ public class PlayerMovement : MonoBehaviour
         }
 
         float angleMoveDirToPrevMoveDir = Vector3.Angle(m_moveDir, prevmoveDir);
-        if (!m_isLockOn && !m_isRunning && angleMoveDirToPrevMoveDir > 90) m_animator.SetTrigger("IsTurning");
-
+        if (!m_isLockOn && !m_isRunning && angleMoveDirToPrevMoveDir > 90)
+        {
+            m_animator.SetTrigger("IsTurning");
+            m_turningCoroutine = StartCoroutine(TurningCoroutine(0.8f));
+        }
 
     }
+
+    IEnumerator TurningCoroutine(float turningTime)
+    {
+        m_isTurning = true;
+        float time = turningTime;
+        while(time > 0)
+        {
+            time -= Time.deltaTime;
+            yield return null;
+        }
+        m_isTurning = false;
+        m_turningCoroutine = null;
+    }
+
 
     private void SetAnimatorMoveValues()
     {
@@ -152,11 +172,22 @@ public class PlayerMovement : MonoBehaviour
     private void MovingPlayer()
     {
         //less movement gets applied if the character is still not turned into moveDir //not sure if this is a nice solution
-        float forwardFactor = !(m_isLockOn && !m_isRunning) ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 180, 150, 0.4f, 1) : 1f;
+        //float forwardFactor = !(m_isLockOn && !m_isRunning) && m_moveStrenght == 1 ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 60, 30, 0, 1) : 1f;
+        float forwardFactor = m_isTurning ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 50, 30, 0, 1) : 1f;
+        //float forwardFactor = 1f;
 
-        m_move = UtilityFunctions.SmartLerp(m_move, m_moveDir * m_inputFactor * m_speed * forwardFactor, Time.deltaTime * m_moveAcceleration);
+        m_move = UtilityFunctions.SmartLerp(m_move, transform.forward * m_inputFactor * m_speed * forwardFactor, Time.deltaTime * m_moveAcceleration);
         m_characterController.Move(m_move * Time.deltaTime);
     }
+
+    //private void MovingPlayer()
+    //{
+    //    //less movement gets applied if the character is still not turned into moveDir //not sure if this is a nice solution
+    //    float forwardFactor = !(m_isLockOn && !m_isRunning) ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 180, 150, 0.4f, 1) : 1f;
+
+    //    m_move = UtilityFunctions.SmartLerp(m_move, m_moveDir * m_inputFactor * m_speed * forwardFactor, Time.deltaTime * m_moveAcceleration);
+    //    m_characterController.Move(m_move * Time.deltaTime);
+    //}
 
 
     private void RotatingPlayer()
@@ -176,14 +207,42 @@ public class PlayerMovement : MonoBehaviour
             else                                                    desiredDirection = Quaternion.Euler(0, 180, 0) * m_moveDir;
 
             //the slerp makes the turning less extreme
-            desiredDirection = Vector3.Slerp(desiredDirection, PlayerToTargetXZVector, 0.0f); /////////////momantan zum testing auf 0, ist aber ehn nicht so ne schöne lösung
+            //desiredDirection = Vector3.Slerp(desiredDirection, PlayerToTargetXZVector, 0.0f); /////////////momantan zum testing auf 0, ist aber ehn nicht so ne schöne lösung
             //better solution: Bone look at + constrains
         }
 
-        transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(desiredDirection), Time.deltaTime * turningAcceleration);
+        float angle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, desiredDirection, Vector3.up), -35f, 35); //Only ever 5° steps, the turning speed
+        Quaternion newDirection = transform.rotation * Quaternion.Euler(0, angle, 0);
+
+        transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, newDirection, Time.deltaTime * turningAcceleration);
 
 
     }
 
+    //private void RotatingPlayer()
+    //{
+    //    float turningAcceleration = m_turningAcceleration;
+
+    //    Vector3 desiredDirection = Vector3.zero;
+
+    //    if (!m_isLockOn || m_isRunning) // no LockOn
+    //    {
+    //        desiredDirection = m_moveDir;
+    //    }
+    //    else //LockOn
+    //    {
+    //        if (m_directionWhenLockOn == Direction.Forward) desiredDirection = m_moveDir;
+    //        else if (m_directionWhenLockOn == Direction.Sideward) desiredDirection = Quaternion.Euler(0, 90 * -Mathf.Sign(m_inputDir.x), 0) * m_moveDir;
+    //        else desiredDirection = Quaternion.Euler(0, 180, 0) * m_moveDir;
+
+    //        //the slerp makes the turning less extreme
+    //        desiredDirection = Vector3.Slerp(desiredDirection, PlayerToTargetXZVector, 0.0f); /////////////momantan zum testing auf 0, ist aber ehn nicht so ne schöne lösung
+    //        //better solution: Bone look at + constrains
+    //    }
+
+    //    transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(desiredDirection), Time.deltaTime * turningAcceleration);
+
+
+    //}
 
 }
