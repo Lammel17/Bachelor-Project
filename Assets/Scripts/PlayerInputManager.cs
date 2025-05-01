@@ -40,6 +40,7 @@ public class PlayerInputManager : MonoBehaviour
 
     private InputAction SouthActionRef;
     private InputAction EastActionRef;
+    private InputAction EastHoldActionRef;
     private InputAction WestActionRef;
     private InputAction NorthActionRef;
 
@@ -52,8 +53,9 @@ public class PlayerInputManager : MonoBehaviour
     private InputAction Options2ActionRef;
 
 
-    public Vector2 RightStick { get { return m_rightStick; } }
-    public Vector2 LeftStick { get { return m_leftStick; } }
+    public Vector2 RightStick { get => m_rightStick;  }
+    public Vector2 LeftStick { get => m_leftStick;  }
+    public float LeftStickSnappedMag { get => Snapping.Snap(m_leftStick.magnitude + 0.2f, 0.5f); }
 
 
     private void Awake()
@@ -76,14 +78,15 @@ public class PlayerInputManager : MonoBehaviour
         R2ActionRef             = playerActionMap.FindAction("R2");
         SouthActionRef          = playerActionMap.FindAction("South");
         EastActionRef           = playerActionMap.FindAction("East");
+        EastHoldActionRef           = playerActionMap.FindAction("EastHold");
         WestActionRef           = playerActionMap.FindAction("West");
         NorthActionRef          = playerActionMap.FindAction("North");
         DownActionRef           = playerActionMap.FindAction("Down");
         RightActionRef          = playerActionMap.FindAction("Right");
         LeftActionRef           = playerActionMap.FindAction("Left");
         UpActionRef             = playerActionMap.FindAction("Up");
-        Options1ActionRef        = playerActionMap.FindAction("Options1");
-        Options2ActionRef        = playerActionMap.FindAction("Options2");
+        Options1ActionRef       = playerActionMap.FindAction("Options1");
+        Options2ActionRef       = playerActionMap.FindAction("Options2");
 
 
         ClearBufferAction = () => { m_lastInputIsUnread = false; c_inputBufferCoroutine = null; Debug.Log($"EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE  is {m_lastBuffedInput.action.name}"); };
@@ -163,6 +166,8 @@ public class PlayerInputManager : MonoBehaviour
         R2ActionRef.performed           += OnR2;
         SouthActionRef.performed        += OnSouth;
         EastActionRef.performed         += OnEast;
+        EastHoldActionRef.performed       += OnEastHold;
+        EastHoldActionRef.canceled        += OnEastHold;
         WestActionRef.performed         += OnWest;
         NorthActionRef.performed        += OnNorth;
         DownActionRef.performed         += OnDown;
@@ -172,7 +177,8 @@ public class PlayerInputManager : MonoBehaviour
         Options1ActionRef.performed     += OnOption1;
         Options2ActionRef.performed     += OnOption2;
 
-        if(m_thePlayerCameraHolder != null && m_thePlayerMovement != null) 
+
+        if (m_thePlayerCameraHolder != null && m_thePlayerMovement != null) 
             EnableOrDisableInputs(true);
         else
             EnableOrDisableInputs(false);
@@ -191,6 +197,8 @@ public class PlayerInputManager : MonoBehaviour
         R2ActionRef.performed           -= OnR2;
         SouthActionRef.performed        -= OnSouth;
         EastActionRef.performed         -= OnEast;
+        EastHoldActionRef.performed        -= OnEastHold;
+        EastHoldActionRef.canceled         -= OnEastHold;
         WestActionRef.performed         -= OnWest;
         NorthActionRef.performed        -= OnNorth;
         DownActionRef.performed         -= OnDown;
@@ -199,6 +207,7 @@ public class PlayerInputManager : MonoBehaviour
         UpActionRef.performed           -= OnUp;
         Options1ActionRef.performed     -= OnOption1;
         Options2ActionRef.performed     -= OnOption2;
+
 
         EnableOrDisableInputs(false);
 
@@ -283,7 +292,9 @@ public class PlayerInputManager : MonoBehaviour
 
         input = new Vector2(UtilityFunctions.RefitRange(Mathf.Abs(input.x), 0.1f * inputMagnitude, 1, 0, 1) * Mathf.Sign(input.x), input.y); //HHHEEERE
 
-        m_thePlayerMovement.MoveStrenght = Snapping.Snap(inputMagnitude + 0.2f, 0.5f); 
+        float magnitude = Snapping.Snap(inputMagnitude + 0.2f, 0.5f);
+        if (magnitude != m_thePlayerMovement.MoveStrenght) 
+            m_thePlayerMovement.MoveStrenght = magnitude; //only gets set, when it differns from current magnitude
 
         m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
 
@@ -364,8 +375,26 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context))
             return;
 
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East");
+        if (context.performed)
+            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East press"); 
+    }
+
+    private void OnEastHold(InputAction.CallbackContext context)
+    {
+        if (SetBuffer(context))
+            return;
+
+        if (context.performed)
+        {
+            //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East perf hold down");
+            m_thePlayerMovement.IsRunning = true;
+        }
+        if (context.canceled)
+        {
+            //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East hold up");
+            m_thePlayerMovement.IsRunning = false;
+            //Beware, this canceled gets called even if hold was not performed
+        }
     }
 
     private void OnWest(InputAction.CallbackContext context)

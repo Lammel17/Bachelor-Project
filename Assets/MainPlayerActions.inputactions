@@ -96,6 +96,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "EastHold",
+                    "type": "Button",
+                    "id": "ef85a9db-ec81-4284-bcba-97500a79defc",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "West",
                     "type": "Button",
                     "id": "b67d6db7-bb02-4ff7-9c8c-001faafe3e60",
@@ -272,10 +281,21 @@
                     "name": "",
                     "id": "806e1c96-1588-4f13-9502-036b8fc504c0",
                     "path": "<Gamepad>/buttonEast",
-                    "interactions": "",
+                    "interactions": "Tap",
                     "processors": "",
                     "groups": "",
                     "action": "East",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ef562b2e-9c1d-4d0a-8f95-3a19282ec175",
+                    "path": "<Gamepad>/buttonEast",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "",
+                    "action": "EastHold",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
