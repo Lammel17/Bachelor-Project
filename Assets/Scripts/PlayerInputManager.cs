@@ -282,25 +282,84 @@ public class PlayerInputManager : MonoBehaviour
     }
 
 
+    Vector2 m_lastExteremeInput = Vector2.zero;
+    Vector2 m_lastInput = Vector2.zero;
+    Vector2 m_veryLastInput = Vector2.zero;
+    float m_extremeInputMagnitude = 0;
+    float m_lastInputMagnitude = 0;
+    float m_veryLastInputMagnitude = 0;
     //Sticks
     private void OnLeftStick(InputAction.CallbackContext context)
     {
-        m_leftStick = context.ReadValue<Vector2>();
+        float deadZone = 0.2f;
 
-        Vector2 input = m_leftStick;
-        float inputMagnitude = input.magnitude;
+        m_leftStick = context.ReadValue<Vector2>();
+        float inputMagnitude = m_leftStick.magnitude;
+
+        m_extremeInputMagnitude = SetLastExtremeInput();
+        float SetLastExtremeInput()
+        {
+            //Wenn zuletzt unter deadzone war, dann ignoiren
+            if (m_lastInputMagnitude < deadZone) 
+                return 0;
+
+            //Wenn es inputMag kleiner als deadzone ist, dann wird es immer einletztes mal gesetzt gesetzt, dirakt auf 0
+            if (inputMagnitude < deadZone) 
+            {
+                m_lastExteremeInput = m_leftStick;
+                return 0;
+            }
+            // wenn stick fast 1 ist, dann wird es immer gesetzt gesetzt
+            if (inputMagnitude >= 0.9f)
+            {
+                m_lastExteremeInput = m_leftStick;
+                return inputMagnitude;
+            }
+            //wenn lastInput gleich lastExtremeInput ist, dann ignoiren
+            if (m_lastInput == m_lastExteremeInput)
+                return m_extremeInputMagnitude;
+
+
+            //Wenn umschwung, dann ignoiren
+            if ((m_leftStick.sqrMagnitude > m_lastInput.sqrMagnitude && m_lastInput.sqrMagnitude < m_veryLastInput.sqrMagnitude) || (m_leftStick.sqrMagnitude < m_lastInput.sqrMagnitude && m_lastInput.sqrMagnitude > m_lastExteremeInput.sqrMagnitude))
+            {
+                return m_extremeInputMagnitude;
+            }
+            //beim verlassen des Center muss man schneller werden
+            if (((m_leftStick - m_lastInput).sqrMagnitude > (m_lastInput - m_veryLastInput).sqrMagnitude) && (m_leftStick.sqrMagnitude > m_lastInput.sqrMagnitude && m_lastInput.sqrMagnitude > m_lastExteremeInput.sqrMagnitude))
+            {
+                m_lastExteremeInput = m_leftStick;
+                return inputMagnitude;
+            }
+            //beim nähern des Center muss man langsamer werden
+            if (((m_leftStick - m_lastInput).sqrMagnitude < (m_lastInput - m_veryLastInput).sqrMagnitude) && (m_leftStick.sqrMagnitude < m_lastInput.sqrMagnitude && m_lastInput.sqrMagnitude < m_lastExteremeInput.sqrMagnitude))
+            {
+                m_lastExteremeInput = m_leftStick;
+                return inputMagnitude;
+            }
+            
+            return m_extremeInputMagnitude;
+        }
+
 
         //this makes it easier to walk in a straight line
-        input = new Vector2(Mathf.InverseLerp(0.1f * inputMagnitude, 1, Mathf.Abs(input.x)) * Mathf.Sign(input.x), input.y);
+        Vector2 input = new Vector2(Mathf.InverseLerp(0.1f * m_extremeInputMagnitude, 1, Mathf.Abs(m_lastExteremeInput.x)) * Mathf.Sign(m_lastExteremeInput.x), m_lastExteremeInput.y);
 
         //Still! Stick value bounces when letting it go, thats sucks, problem for later?
-        float magnitude = Snapping.Snap(Mathf.InverseLerp(0.2f, 1, inputMagnitude) + 0.1f, 0.5f);
-        if (magnitude != m_thePlayerMovement.MoveStrenght) 
+        float magnitude = Snapping.Snap(Mathf.InverseLerp(0.2f, 1, m_extremeInputMagnitude) + 0.1f, 0.5f);
+        if (magnitude != m_thePlayerMovement.MoveStrenght)
             m_thePlayerMovement.MoveStrenght = magnitude; //only gets set, when it differns from current magnitude
-        if(magnitude > 0)
+        if (magnitude > 0)
             m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
 
-        Debug.Log($"mag: {magnitude}, dir: {m_thePlayerMovement.InputDirection}, input: {input}");
+        Debug.Log($"inputExtreme: {m_lastExteremeInput}");
+
+
+        m_veryLastInput = m_lastInput;
+        m_lastInput = m_leftStick;
+        m_veryLastInputMagnitude = m_lastInputMagnitude;
+        m_lastInputMagnitude = inputMagnitude;
+
     }
 
     private void OnRightStick(InputAction.CallbackContext context)

@@ -121,21 +121,22 @@ public class PlayerMovement : MonoBehaviour
         TriggerTurning();
         void TriggerTurning()
         {
+            if (m_isTurning)
+                return;
             //problem for tomorrow, i need a way to check if the stick gets flipped over instead of turned over, so i know if turning animation or not
             float angleMoveDirToPrevMoveDir = Vector3.Angle(m_moveDir, prevmoveDir);
-            if ( (!m_isLockOn && !m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && m_move.sqrMagnitude != 0 && angleMoveDirToPrevMoveDir > 150))
+            if ( (!m_isLockOn && (!m_isRunning || m_move.sqrMagnitude == 0) && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
             {
                 m_animator.SetTrigger("IsTurning");
-                m_turningCoroutine = StartCoroutine(TurningCoroutine( !m_isRunning ? 0.8f : 1.2f));
+                m_turningCoroutine = StartCoroutine(TurningCoroutine( !m_isRunning ? 0.45f : 0.45f));
             }
         }
-        Debug.Log(m_speed);
-
 
     }
 
     IEnumerator TurningCoroutine(float turningTime)
     {
+        m_animator.SetBool("IsTurningg", true);
         m_isTurning = true;
         float time = turningTime;
         while(time > 0)
@@ -144,6 +145,8 @@ public class PlayerMovement : MonoBehaviour
             yield return null;
         }
         m_isTurning = false;
+        m_animator.SetBool("IsTurningg", false);
+
         m_turningCoroutine = null;
     }
 
