@@ -57,7 +57,7 @@ public class PlayerMovement : MonoBehaviour
     public float TargetDist { get => m_targetDist; set => m_targetDist = value; }
     public float InputAngleToForward { get => m_inputAngleToForward; set => m_inputAngleToForward = value; }
     public Vector3 PlayerToTargetXZVector { get => new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z); }
-    public bool IsRunning { get => m_isRunning; set { m_isRunning = value; MoveStrenght = m_playerInputManager.LeftStickSnappedMag; } }
+    public bool IsRunning { get => m_isRunning; set { m_isRunning = value; MoveStrenght = m_playerInputManager.LeftStickSnappedMag; m_animator.SetBool("IsRunning", value); } }
 
 
     void Start()
@@ -123,12 +123,13 @@ public class PlayerMovement : MonoBehaviour
         {
             //problem for tomorrow, i need a way to check if the stick gets flipped over instead of turned over, so i know if turning animation or not
             float angleMoveDirToPrevMoveDir = Vector3.Angle(m_moveDir, prevmoveDir);
-            if (!m_isLockOn && !m_isRunning && angleMoveDirToPrevMoveDir > 90)
+            if ( (!m_isLockOn && !m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && m_move.sqrMagnitude != 0 && angleMoveDirToPrevMoveDir > 150))
             {
                 m_animator.SetTrigger("IsTurning");
-                m_turningCoroutine = StartCoroutine(TurningCoroutine(0.8f));
+                m_turningCoroutine = StartCoroutine(TurningCoroutine( !m_isRunning ? 0.8f : 1.2f));
             }
         }
+        Debug.Log(m_speed);
 
 
     }
@@ -157,8 +158,6 @@ public class PlayerMovement : MonoBehaviour
         {
             m_animator.SetFloat("Vertical", 1, animationDampTime, Time.deltaTime);
             m_animator.SetFloat("Horizontal", 0, animationDampTime, Time.deltaTime);
-
-            m_animator.SetFloat("TurningDir", InputAngleToForward > 0 ? 1 : -1, animationDampTime, Time.deltaTime);
         }
         else
         {
@@ -178,23 +177,12 @@ public class PlayerMovement : MonoBehaviour
     private void MovingPlayer()
     {
         //less movement gets applied if the character is still not turned into moveDir //not sure if this is a nice solution
-        //float forwardFactor = !(m_isLockOn && !m_isRunning) && m_moveStrenght == 1 ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 60, 30, 0, 1) : 1f;
-        float forwardFactor = m_isTurning ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 50, 30, 0, 1) : 1f;
-        //float forwardFactor = 1f;
+        float forwardFactor = m_isTurning ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 30, 20, 0, 1) : 1f;
 
         Vector3 direction = m_isLockOn && !m_isRunning ? m_moveDir : transform.forward;
         m_move =  UtilityFunctions.SmartLerp(m_move, direction * m_inputFactor * m_speed * forwardFactor, Time.deltaTime * m_moveAcceleration);
         m_characterController.Move(m_move * Time.deltaTime);
     }
-
-    //private void MovingPlayer()
-    //{
-    //    //less movement gets applied if the character is still not turned into moveDir //not sure if this is a nice solution
-    //    float forwardFactor = !(m_isLockOn && !m_isRunning) ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 180, 150, 0.4f, 1) : 1f;
-
-    //    m_move = UtilityFunctions.SmartLerp(m_move, m_moveDir * m_inputFactor * m_speed * forwardFactor, Time.deltaTime * m_moveAcceleration);
-    //    m_characterController.Move(m_move * Time.deltaTime);
-    //}
 
 
     private void RotatingPlayer()
@@ -223,33 +211,8 @@ public class PlayerMovement : MonoBehaviour
 
         transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, newDirection, Time.deltaTime * turningAcceleration);
 
-
+        if(angle != 0) m_animator.SetFloat("TurningDir", angle > 0 ? 1 : -1);
     }
 
-    //private void RotatingPlayer()
-    //{
-    //    float turningAcceleration = m_turningAcceleration;
-
-    //    Vector3 desiredDirection = Vector3.zero;
-
-    //    if (!m_isLockOn || m_isRunning) // no LockOn
-    //    {
-    //        desiredDirection = m_moveDir;
-    //    }
-    //    else //LockOn
-    //    {
-    //        if (m_directionWhenLockOn == Direction.Forward) desiredDirection = m_moveDir;
-    //        else if (m_directionWhenLockOn == Direction.Sideward) desiredDirection = Quaternion.Euler(0, 90 * -Mathf.Sign(m_inputDir.x), 0) * m_moveDir;
-    //        else desiredDirection = Quaternion.Euler(0, 180, 0) * m_moveDir;
-
-    //        //the slerp makes the turning less extreme
-    //        desiredDirection = Vector3.Slerp(desiredDirection, PlayerToTargetXZVector, 0.0f); /////////////momantan zum testing auf 0, ist aber ehn nicht so ne schöne lösung
-    //        //better solution: Bone look at + constrains
-    //    }
-
-    //    transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, Quaternion.LookRotation(desiredDirection), Time.deltaTime * turningAcceleration);
-
-
-    //}
 
 }
