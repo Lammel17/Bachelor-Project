@@ -1336,6 +1336,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_animator: {fileID: 1060078877}
+  m_speedValues: {x: 2, y: 4, z: 6}
+  m_moveAcceleration: 20
+  m_turningSpeed: 45
+  m_turningAcceleration: 15
 --- !u!143 &1756236763
 CharacterController:
   m_ObjectHideFlags: 0

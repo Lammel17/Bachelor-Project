@@ -293,14 +293,14 @@ public class PlayerInputManager : MonoBehaviour
         //this makes it easier to walk in a straight line
         input = new Vector2(Mathf.InverseLerp(0.1f * inputMagnitude, 1, Mathf.Abs(input.x)) * Mathf.Sign(input.x), input.y);
 
-        //this snaps the mag if the inputmag is 0.1f to 0.5f and 0.6f to 1f
-        float magnitude = Snapping.Snap(inputMagnitude + 0.15f, 0.5f);
+        //Still! Stick value bounces when letting it go, thats sucks, problem for later?
+        float magnitude = Snapping.Snap(Mathf.InverseLerp(0.2f, 1, inputMagnitude) + 0.1f, 0.5f);
         if (magnitude != m_thePlayerMovement.MoveStrenght) 
             m_thePlayerMovement.MoveStrenght = magnitude; //only gets set, when it differns from current magnitude
-
         if(magnitude > 0)
             m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
 
+        Debug.Log($"mag: {magnitude}, dir: {m_thePlayerMovement.InputDirection}, input: {input}");
     }
 
     private void OnRightStick(InputAction.CallbackContext context)
