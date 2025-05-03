@@ -352,8 +352,7 @@ public class PlayerInputManager : MonoBehaviour
         if (magnitude > 0)
             m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
 
-        Debug.Log($"inputExtreme: {m_lastExteremeInput}");
-
+        //Debug.Log($"inputExtreme: {m_lastExteremeInput}");
 
         m_veryLastInput = m_lastInput;
         m_lastInput = m_leftStick;

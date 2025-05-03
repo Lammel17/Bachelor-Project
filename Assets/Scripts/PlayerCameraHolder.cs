@@ -143,7 +143,7 @@ public class PlayerCameraHolder : MonoBehaviour
         if (m_playerMovement == null || m_playerMovement.MoveStrenght == 0 && !IsLockOn)
             return;
 
-        float m_desiredDirForceFactor = 0.4f;
+        float m_desiredDirForceFactor = 0.6f;
         float desiredRotationForce = 0;
         Quaternion desiredRotation = Quaternion.identity;
 
