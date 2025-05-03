@@ -24,7 +24,8 @@ public class PlayerMovement : MonoBehaviour
 
     private readonly float m_inputFactor = 1f;
     private Vector3 m_inputDir = Vector3.forward;
-    private Vector3 m_moveDir = Vector3.forward;
+    private Vector3 m_contextDir = Vector3.forward;
+    private Vector3 m_latestProcessedDir = Vector3.forward;
     private float m_moveStrenght = 0f;
     private Vector3 m_move = Vector3.zero;
     private float m_forwardSidewardThreshholdAngle = 45f;
@@ -48,7 +49,7 @@ public class PlayerMovement : MonoBehaviour
 
     public Animator Animator { get => m_animator; }
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
-    public Vector3 MoveDirection { get => m_moveDir; } //is always normalized due to InputDirection
+    public Vector3 MoveDirection { get => m_contextDir; } //is always normalized due to InputDirection
     public float MoveStrenght { get => m_moveStrenght; set { if (m_isRunning && value > 0f)  m_moveStrenght = 2; else m_moveStrenght = value; Speed = m_moveStrenght; } } //is already snapped by inputmanager
     public float Speed { get => m_speed; set { m_speed = value == 0 ? 0 : value == 0.5 ? m_speedValues.x : value == 1 ? m_speedValues.y : m_speedValues.z; } } //is already snapped by inputmanager
     public Quaternion CameraContextRotation { get => m_cameraContextRotation; set => m_cameraContextRotation = Quaternion.Euler(0, value.eulerAngles.y, 0); }
@@ -80,11 +81,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetValues() //moveDir, threshholds, TargetDist
     {
-        Vector3 prevmoveDir = m_moveDir;
+        Vector3 prevmoveDir = m_contextDir;
 
         if (!m_isLockOn || m_isRunning)
         {
-            m_moveDir = m_moveStrenght > 0 ? m_cameraContextRotation * m_inputDir : m_moveDir;
+            m_contextDir = m_moveStrenght > 0 ? m_cameraContextRotation * m_inputDir : m_contextDir;
             m_directionWhenLockOn = Direction.Forward;
         }
         else
@@ -95,7 +96,7 @@ public class PlayerMovement : MonoBehaviour
             //playerToTargetAndContextRotationSlerp: weil wenn man nah am target stand und vorwärts lief, dann zirkulierte man ewig um es rum anstatt straight drauf zu zu lenken, daher nun halb halb
             Quaternion playerToTargetLookRotation = Quaternion.LookRotation(PlayerToTargetXZVector);
             Quaternion playerToTargetAndContextRotationSlerp = Quaternion.Slerp(CameraContextRotation, playerToTargetLookRotation, 0.5f);
-            m_moveDir = playerToTargetAndContextRotationSlerp * m_inputDir;
+            m_contextDir = playerToTargetAndContextRotationSlerp * m_inputDir;
 
             SetDirection();
             void SetDirection()
@@ -124,7 +125,7 @@ public class PlayerMovement : MonoBehaviour
             if (m_isTurning)
                 return;
             //problem for tomorrow, i need a way to check if the stick gets flipped over instead of turned over, so i know if turning animation or not
-            float angleMoveDirToPrevMoveDir = Vector3.Angle(m_moveDir, prevmoveDir);
+            float angleMoveDirToPrevMoveDir = Vector3.Angle(m_contextDir, prevmoveDir);
             if ( (!m_isLockOn && (!m_isRunning || m_move.sqrMagnitude == 0) && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
             {
                 m_animator.SetTrigger("IsTurning");
@@ -180,9 +181,9 @@ public class PlayerMovement : MonoBehaviour
     private void MovingPlayer()
     {
         //less movement gets applied if the character is still not turned into moveDir //not sure if this is a nice solution
-        float forwardFactor = m_isTurning ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_moveDir), 30, 20, 0, 1) : 1f;
+        float forwardFactor = m_isTurning ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_contextDir), 30, 20, 0, 1) : 1f;
 
-        Vector3 direction = m_isLockOn && !m_isRunning ? m_moveDir : transform.forward;
+        Vector3 direction = m_isLockOn && !m_isRunning ? m_contextDir : transform.forward;
         m_move =  UtilityFunctions.SmartLerp(m_move, direction * m_inputFactor * m_speed * forwardFactor, Time.deltaTime * m_moveAcceleration);
         m_characterController.Move(m_move * Time.deltaTime);
     }
@@ -191,23 +192,31 @@ public class PlayerMovement : MonoBehaviour
     private void RotatingPlayer()
     {
         float turningAcceleration = m_turningAcceleration;
-
         Vector3 desiredDirection = Vector3.zero;
 
-        if (!m_isLockOn || m_isRunning) // no LockOn
+        //if no input, then it should not recalculate direction
+        if(m_moveStrenght <= 0)
+            desiredDirection = m_latestProcessedDir;
+        else
         {
-            desiredDirection = m_moveDir;
-        }
-        else //LockOn
-        {
-            if      (m_directionWhenLockOn == Direction.Forward)    desiredDirection = m_moveDir;
-            else if (m_directionWhenLockOn == Direction.Sideward)   desiredDirection = Quaternion.Euler(0, 90 * -Mathf.Sign(m_inputDir.x), 0) * m_moveDir;
-            else                                                    desiredDirection = Quaternion.Euler(0, 180, 0) * m_moveDir;
+            if (!m_isLockOn || m_isRunning) // no LockOn
+            {
+                desiredDirection = m_contextDir;
+            }
+            else //LockOn
+            {
+                if (m_directionWhenLockOn == Direction.Forward) desiredDirection = m_contextDir;
+                else if (m_directionWhenLockOn == Direction.Sideward) desiredDirection = Quaternion.Euler(0, 90 * -Mathf.Sign(m_inputDir.x), 0) * m_contextDir;
+                else desiredDirection = Quaternion.Euler(0, 180, 0) * m_contextDir;
 
-            //the slerp makes the turning less extreme
-            //desiredDirection = Vector3.Slerp(desiredDirection, PlayerToTargetXZVector, 0.0f); /////////////momantan zum testing auf 0, ist aber ehn nicht so ne schöne lösung
-            //better solution: Bone look at + constrains
+                //the slerp makes the turning less extreme
+                //desiredDirection = Vector3.Slerp(desiredDirection, PlayerToTargetXZVector, 0.0f); /////////////momantan zum testing auf 0, ist aber ehn nicht so ne schöne lösung
+                //better solution: Bone look at + constrains
+            }
+
+            m_latestProcessedDir = desiredDirection;
         }
+        
 
         float angle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, desiredDirection, Vector3.up), -m_turningSpeed, m_turningSpeed); //Only ever 5° steps, the turning speed
         Quaternion newDirection = transform.rotation * Quaternion.Euler(0, angle, 0);

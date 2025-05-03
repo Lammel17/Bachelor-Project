@@ -56,17 +56,17 @@ BlendTree:
   m_Name: Blend Tree
   m_Childs:
   - serializedVersion: 2
-    m_Motion: {fileID: -7166919184798939464, guid: f52655841988ddd46aef931aaa7c074e, type: 3}
+    m_Motion: {fileID: 488163077560427128, guid: f52655841988ddd46aef931aaa7c074e, type: 3}
     m_Threshold: -1
-    m_Position: {x: -1, y: 0}
+    m_Position: {x: 1, y: 0}
     m_TimeScale: 2
     m_CycleOffset: 0
     m_DirectBlendParameter: Horizontal
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 488163077560427128, guid: f52655841988ddd46aef931aaa7c074e, type: 3}
+    m_Motion: {fileID: -7166919184798939464, guid: f52655841988ddd46aef931aaa7c074e, type: 3}
     m_Threshold: 1
-    m_Position: {x: 1, y: 0}
+    m_Position: {x: -1, y: 0}
     m_TimeScale: 2
     m_CycleOffset: 0
     m_DirectBlendParameter: Horizontal
@@ -253,9 +253,6 @@ AnimatorStateTransition:
   - m_ConditionMode: 1
     m_ConditionEvent: IsTurning
     m_EventTreshold: 0
-  - m_ConditionMode: 3
-    m_ConditionEvent: MoveMag
-    m_EventTreshold: -1
   - m_ConditionMode: 1
     m_ConditionEvent: IsRunning
     m_EventTreshold: 0
