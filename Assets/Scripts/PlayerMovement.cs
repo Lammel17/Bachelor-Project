@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("")]
     [SerializeField] private Vector3 m_speedValues = new Vector3(2, 4, 6); //slow, walk, running
     [SerializeField] private float m_moveAcceleration = 20f;
-    [SerializeField] private float m_turningSpeed = 45f;
+    [SerializeField] private float m_turningSpeedBaseValue = 30f;
     [SerializeField] private float m_turningAcceleration = 15f;
 
     private readonly float m_inputFactor = 1f;
@@ -30,6 +30,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 m_move = Vector3.zero;
     private float m_forwardSidewardThreshholdAngle = 45f;
     private float m_sidewardBackwardThreshholdAngle = 135f;
+    private float m_turningSpeed;
 
     private float m_speed = 0; //slow, walk, running
     private Quaternion m_cameraContextRotation = Quaternion.identity;
@@ -37,6 +38,7 @@ public class PlayerMovement : MonoBehaviour
     private float m_targetDist = 0;
     private float m_inputAngleToForward = 0;
     private bool m_isLockOn = false;
+    private bool m_isForcedDirectedToTarget = false;
     private enum Direction { Forward, Sideward, Backward };
     private Direction m_directionWhenLockOn = Direction.Forward;
 
@@ -66,6 +68,8 @@ public class PlayerMovement : MonoBehaviour
         m_playerInputManager = PlayerInputManager.Instance;
         m_characterController = GetComponent<CharacterController>();
         m_playerCameraHolder = PlayerCameraHolder.Instance;
+
+        m_turningSpeed = m_turningSpeedBaseValue;
     }
 
     void Update()
@@ -82,10 +86,12 @@ public class PlayerMovement : MonoBehaviour
     private void SetValues() //moveDir, threshholds, TargetDist
     {
         Vector3 prevmoveDir = m_contextDir;
+        m_isForcedDirectedToTarget = (!m_isLockOn || m_isRunning);
 
-        if (!m_isLockOn || m_isRunning)
+        if (m_isForcedDirectedToTarget)
         {
-            m_contextDir = m_moveStrenght > 0 ? m_cameraContextRotation * m_inputDir : m_contextDir;
+            // contextDir is relative to cameraRotation, so it should not affect the contextDir when for example standing still
+            m_contextDir = m_moveStrenght > 0 ? m_cameraContextRotation * m_inputDir : m_contextDir; 
             m_directionWhenLockOn = Direction.Forward;
         }
         else
@@ -128,28 +134,17 @@ public class PlayerMovement : MonoBehaviour
             float angleMoveDirToPrevMoveDir = Vector3.Angle(m_contextDir, prevmoveDir);
             if ( (!m_isLockOn && (!m_isRunning || m_move.sqrMagnitude == 0) && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
             {
+                float turnAnimationTurningSpeed = 45f;
+                m_turningSpeed = turnAnimationTurningSpeed;
+
                 m_animator.SetTrigger("IsTurning");
-                m_turningCoroutine = StartCoroutine(TurningCoroutine( !m_isRunning ? 0.45f : 0.45f));
+                m_isTurning = true;
+                Action resetTurnAction = () => { m_isTurning = false; m_animator.SetBool("IsTurningg", false); m_turningSpeed = m_turningSpeedBaseValue; m_turningCoroutine = null;};
+                m_turningCoroutine = StartCoroutine(UtilityFunctions.Wait(0.45f, resetTurnAction));
             }
         }
-
     }
 
-    IEnumerator TurningCoroutine(float turningTime)
-    {
-        m_animator.SetBool("IsTurningg", true);
-        m_isTurning = true;
-        float time = turningTime;
-        while(time > 0)
-        {
-            time -= Time.deltaTime;
-            yield return null;
-        }
-        m_isTurning = false;
-        m_animator.SetBool("IsTurningg", false);
-
-        m_turningCoroutine = null;
-    }
 
 
     private void SetAnimatorMoveValues()
@@ -158,7 +153,7 @@ public class PlayerMovement : MonoBehaviour
         float VerticalMovement = m_moveStrenght; //is already snapped in inputmanager
         m_animator.SetFloat("MoveMag", VerticalMovement, animationDampTime, Time.deltaTime);
 
-        if (!m_isLockOn || m_isRunning)
+        if (m_isForcedDirectedToTarget)
         {
             m_animator.SetFloat("Vertical", 1, animationDampTime, Time.deltaTime);
             m_animator.SetFloat("Horizontal", 0, animationDampTime, Time.deltaTime);
@@ -183,7 +178,7 @@ public class PlayerMovement : MonoBehaviour
         //less movement gets applied if the character is still not turned into moveDir //not sure if this is a nice solution
         float forwardFactor = m_isTurning ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_contextDir), 30, 20, 0, 1) : 1f;
 
-        Vector3 direction = m_isLockOn && !m_isRunning ? m_contextDir : transform.forward;
+        Vector3 direction = !m_isForcedDirectedToTarget ? m_contextDir : transform.forward;
         m_move =  UtilityFunctions.SmartLerp(m_move, direction * m_inputFactor * m_speed * forwardFactor, Time.deltaTime * m_moveAcceleration);
         m_characterController.Move(m_move * Time.deltaTime);
     }
@@ -199,7 +194,7 @@ public class PlayerMovement : MonoBehaviour
             desiredDirection = m_latestProcessedDir;
         else
         {
-            if (!m_isLockOn || m_isRunning) // no LockOn
+            if (m_isForcedDirectedToTarget) // no LockOn
             {
                 desiredDirection = m_contextDir;
             }
