@@ -256,7 +256,7 @@ public class PlayerInputManager : MonoBehaviour
         }
     }
 
-    private bool SetBuffer(InputAction.CallbackContext context)
+    private bool SetBuffer(InputAction.CallbackContext context/*, int priority*/)
     {
         if (1 != 1) ///////////check if Animation is currently not interuptable
         {

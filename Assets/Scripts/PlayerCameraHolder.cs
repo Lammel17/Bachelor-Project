@@ -140,7 +140,7 @@ public class PlayerCameraHolder : MonoBehaviour
 
     private void ForcingPosition()
     {
-        if (m_playerMovement == null || m_playerMovement.MoveStrenght == 0 && !IsLockOn)
+        if (m_playerMovement == null || m_playerMovement.MoveStrenght == 0 && !IsLockOn || !m_isLockOn)
             return;
 
         float m_desiredDirForceFactor = 0.6f;

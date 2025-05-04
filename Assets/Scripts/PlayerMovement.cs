@@ -34,13 +34,6 @@ public class PlayerMovement : MonoBehaviour
     private float m_turningAcceleration;
     private float m_speed = 0; //slow, walk, running
 
-    //Action Influence Values
-    private Vector3 m_directionByAction = Vector3.forward;
-    private float m_actionInfluenceOverDirection = 0;
-    private float m_speedByAction = 0;
-    private float m_actionInfluenceOverSpeed = 0;
-    private float m_moveAccelerationByAction = 0;
-    private float m_actionInfluenceOverMoveAcceleration = 0;
 
     //Values Depending on Camera
     private Quaternion m_cameraYAxisRotationInWS = Quaternion.identity;
@@ -144,7 +137,7 @@ public class PlayerMovement : MonoBehaviour
 
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
         float angleMoveDirToPrevMoveDir = Vector3.Angle(m_desiredFacingRotationDirInWS, m_prevFacingRotationDir);
-        Debug.Log(angleMoveDirToPrevMoveDir);
+
         if (m_isFreelyMoving && (!m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
         {
             float turnAnimationTurningSpeed = 45f;
@@ -197,12 +190,34 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-    private enum InteruptableType { Always, SomeBit, Not , Never} //Not can be interrupted by outside means, like getting knocked away, never can never be interrupted
-    private InteruptableType m_currentInteruptability = InteruptableType.Always;
+    private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
+    
+    //Action Influence Values
+    private Vector3 m_directionByAction = Vector3.forward;
+    private float m_actionInfluenceOverMoveDirection = 0;
+
+    private float m_speedByAction = 0;
+    private float m_actionInfluenceOverMoveSpeed = 0;
+
+    private float m_moveAccelerationByAction = 0;
+    private float m_actionInfluenceOverMoveAcceleration = 0;
+
+    private Vector3 m_desiredFacingRotationDirInWSByAction = Vector3.forward;
+    private float m_actionInfluenceOverDesiredFacingRotationDirInWS = 0;
+
+    private float m_turningSpeedByAction = 0;
+    private float m_actionInfluenceOverTurningSpeed = 0;
+
+    private float m_turningAccelerationByAction = 0;
+    private float m_actionInfluenceOverTurningAcceleration = 0;
+
 
     public void Evading()
     {
+        if(m_currentInteruptability == AnimationInterruptableType.Always_Interruptable)
         m_animator.SetTrigger("TriggerEvade");
+
+
     }
 
 
@@ -225,20 +240,21 @@ public class PlayerMovement : MonoBehaviour
         //less movement gets applied if the character is still not turned into moveDir, but full movement is applied when facing in movement direction //not sure if this is a nice solution
         float forwardFactor = m_isTurning ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_inputDirInWS), 30, 20, 0, 1) : 1f;
 
-        //speed
-        float speedByInput = m_inputFactor * m_speed * forwardFactor;
-        float speedByAction = m_speedByAction;
-        float nowSpeed = Mathf.Lerp(speedByInput, speedByAction, m_actionInfluenceOverSpeed);
-
         //direction
         Vector3 directionByInput = !m_isFreelyMoving ? m_inputDirInWS : transform.forward;
         Vector3 directionByAction = m_directionByAction;
-        Vector3 nowMoveDirection = Vector3.Lerp(directionByInput, directionByAction, m_actionInfluenceOverDirection);
+        Vector3 nowMoveDirection = Vector3.Lerp(directionByInput, directionByAction, m_actionInfluenceOverMoveDirection);
+
+        //speed
+        float speedByInput = m_inputFactor * m_speed * forwardFactor;
+        float speedByAction = m_speedByAction;
+        float nowSpeed = Mathf.Lerp(speedByInput, speedByAction, m_actionInfluenceOverMoveSpeed);
 
         //acceleration
         float moveAccelerationByInput = m_moveAcceleration;
         float moveAccelerationByAction = m_moveAccelerationByAction;
         float nowMoveAcceleration = Mathf.Lerp(moveAccelerationByInput, moveAccelerationByAction, m_actionInfluenceOverMoveAcceleration);
+
 
         Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, nowMoveDirection * nowSpeed, Time.deltaTime * m_moveAcceleration);
         m_characterController.Move(nowMove * Time.deltaTime);
@@ -268,11 +284,28 @@ public class PlayerMovement : MonoBehaviour
         }
         m_desiredFacingRotationDirInWS = (m_moveStrenght > 0) ? SetDesiredFacingRotation() : m_desiredFacingRotationDirInWS;
 
-        float angle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, m_desiredFacingRotationDirInWS, Vector3.up), -m_turningSpeed, m_turningSpeed); //Only ever 5° steps, the turning speed
+
+        //direction
+        Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS;
+        Vector3 desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByAction;
+        Vector3 nowdesiredFacingRotationDirInWS = Vector3.Slerp(desiredFacingRotationDirInWSByInput, desiredFacingRotationDirInWSByAction, m_actionInfluenceOverDesiredFacingRotationDirInWS);
+
+        //Speed
+        float turningSpeedByInput = m_turningSpeed;
+        float turningSpeedByAction = m_turningSpeedByAction;
+        float nowTurningSpeed = Mathf.Lerp(turningSpeedByInput, turningSpeedByAction, m_actionInfluenceOverTurningSpeed);
+
+        //acceleration
+        float turningAccelerationByInput = m_turningAcceleration;
+        float turningAccelerationByAction = m_turningAccelerationByAction;
+        float nowTurningAcceleration = Mathf.Lerp(turningAccelerationByInput, turningAccelerationByAction, m_actionInfluenceOverTurningAcceleration);
+
+
+        float angle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up), -nowTurningSpeed, nowTurningSpeed); //Only ever 5° steps, the turning speed
         if(angle != 0) m_animator.SetFloat("TurningDir", angle > 0 ? 1 : -1);
 
         Quaternion nowDirection = transform.rotation * Quaternion.Euler(0, angle, 0);
-        transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, nowDirection, Time.deltaTime * m_turningAcceleration);
+        transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, nowDirection, Time.deltaTime * nowTurningAcceleration);
 
     }
 
