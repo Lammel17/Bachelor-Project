@@ -282,12 +282,12 @@ public class PlayerInputManager : MonoBehaviour
     }
 
 
+
     Vector2 m_lastExteremeInput = Vector2.zero;
     Vector2 m_lastInput = Vector2.zero;
     Vector2 m_veryLastInput = Vector2.zero;
     float m_extremeInputMagnitude = 0;
     float m_lastInputMagnitude = 0;
-    float m_veryLastInputMagnitude = 0;
     //Sticks
     private void OnLeftStick(InputAction.CallbackContext context)
     {
@@ -350,8 +350,8 @@ public class PlayerInputManager : MonoBehaviour
         }
 
 
-        //this makes it easier to walk in a straight line
-        Vector2 input = new Vector2(Mathf.InverseLerp(0.1f * m_extremeInputMagnitude, 1, Mathf.Abs(m_lastExteremeInput.x)) * Mathf.Sign(m_lastExteremeInput.x), m_lastExteremeInput.y);
+        //this makes it easier to walk in a straight line, because the x value of 0 stays 0 when the x is under 0.1, but only if the magnitude is 1, thsi is Lerped
+        Vector2 input = new Vector2(    Mathf.InverseLerp(0.1f * m_extremeInputMagnitude,    1,     Mathf.Abs(m_lastExteremeInput.x)) * Mathf.Sign(m_lastExteremeInput.x), m_lastExteremeInput.y);
 
         //Still! Stick value bounces when letting it go, thats sucks, problem for later?
         float magnitude = Snapping.Snap(Mathf.InverseLerp(0.2f, 1, m_extremeInputMagnitude) + 0.1f, 0.5f);
@@ -360,11 +360,8 @@ public class PlayerInputManager : MonoBehaviour
         if (magnitude > 0)
             m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
 
-        //Debug.Log($"inputExtreme: {m_lastExteremeInput}");
-
         m_veryLastInput = m_lastInput;
         m_lastInput = m_leftStick;
-        m_veryLastInputMagnitude = m_lastInputMagnitude;
         m_lastInputMagnitude = inputMagnitude;
 
     }

@@ -17,17 +17,17 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Animator m_animator;
     [Space]
     [Header("")] //DONT CHANGE THEM HERE! DO IT IN INSPECTOR!
+    private float m_inputFactor = 1f; //should stay 1
     [SerializeField] private Vector3 m_speedValues = new Vector3(2, 4, 6); //slow, walk, running
     [SerializeField] private float m_moveAcceleration = 20f;
     [SerializeField] private float m_turningSpeedBaseValue = 45f;
     [SerializeField] private float m_turningAccelerationBaseValue = 10f;
-    private float m_inputFactor = 1f;
     private const int m_runningMoveStrenght = 2;
 
     private float m_moveStrenght = 0f;
     private Vector3 m_inputDir = Vector3.forward;
     private Vector3 m_inputDirInWS = Vector3.forward;
-    private Vector3 m_desiredFacingRotationDir = Vector3.forward;
+    private Vector3 m_desiredFacingRotationDirInWS = Vector3.forward;
     private Vector3 m_move = Vector3.zero;
     private float m_forwardSidewardThreshholdAngle = 45f;
     private float m_sidewardBackwardThreshholdAngle = 135f;
@@ -36,10 +36,9 @@ public class PlayerMovement : MonoBehaviour
     private float m_speed = 0; //slow, walk, running
 
     //Values Depending on Camera
-    private Quaternion m_cameraRotationYAxisInWS = Quaternion.identity;
+    private Quaternion m_cameraYAxisRotationInWS = Quaternion.identity;
     private Transform m_target;
     private float m_targetDist = 0;
-    private float m_inputAngleToForward = 0;
     private enum Direction { Forward, Sideward, Backward };
     private Direction m_facingDirectionType = Direction.Forward;
 
@@ -58,7 +57,7 @@ public class PlayerMovement : MonoBehaviour
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
     public float MoveStrenght { get => m_moveStrenght; set { if (m_isRunning && value > 0f)  m_moveStrenght = m_runningMoveStrenght; else m_moveStrenght = value; Speed = m_moveStrenght; } } //is already snapped by inputmanager
     public float Speed { get => m_speed; set { m_speed = value == 0 ? 0 : value == 0.5 ? m_speedValues.x : value == 1 ? m_speedValues.y : m_speedValues.z; } } //is already snapped by inputmanager
-    public Quaternion CameraRotationYAxis { get => m_cameraRotationYAxisInWS; set => m_cameraRotationYAxisInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
+    public Quaternion CameraYAxisRotation { get => m_cameraYAxisRotationInWS; set => m_cameraYAxisRotationInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
     public Transform Target { get { if (m_target != null) return m_target; else { Debug.Log("target gets called, but is empty"); return null; } } set { m_target = value; m_isLockOn = (m_target != null); } }
     public Vector3 TargetPos { get => Target.position; }
     public Vector3 PlayerToTargetXZVector { get => new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z); }
@@ -94,17 +93,17 @@ public class PlayerMovement : MonoBehaviour
         if (m_isFreelyMoving)
         {
             // InputDirRelativeToCam is relative to cameraRotation, so it should not affect the InputDirRelativeToCam when for example standing still
-            m_inputDirInWS = m_moveStrenght > 0 ? m_cameraRotationYAxisInWS * m_inputDir : m_inputDirInWS; 
+            m_inputDirInWS = m_moveStrenght > 0 ? m_cameraYAxisRotationInWS * m_inputDir : m_inputDirInWS; 
+
             m_facingDirectionType = Direction.Forward;
         }
         else
         {
-            m_inputAngleToForward = Vector3.Angle(Vector3.forward, m_inputDir);
             m_targetDist = (TargetPos - transform.position).magnitude;
 
             //playerToTargetAndContextRotationSlerp: weil wenn man nah am target stand und vorwärts lief, dann zirkulierte man ewig um es rum anstatt straight drauf zu zu lenken, daher nun halb halb
             Quaternion playerToTargetLookRotation = Quaternion.LookRotation(PlayerToTargetXZVector);
-            Quaternion playerToTargetAndCameraForwardSlerp = Quaternion.Slerp(m_cameraRotationYAxisInWS, playerToTargetLookRotation, 0.5f);
+            Quaternion playerToTargetAndCameraForwardSlerp = Quaternion.Slerp(m_cameraYAxisRotationInWS, playerToTargetLookRotation, 0.5f);
             m_inputDirInWS = playerToTargetAndCameraForwardSlerp * m_inputDir;
 
             SetFacingDirectionType();
@@ -121,8 +120,9 @@ public class PlayerMovement : MonoBehaviour
                 m_forwardSidewardThreshholdAngle = Mathf.Lerp(firstThreshholdAngleMin, 45f, m_targetDist / distThreshhold) + additionalThreshhold;
                 m_sidewardBackwardThreshholdAngle = Mathf.Lerp(secondThreshholdAngleMin, 135f, m_targetDist / distThreshhold) - additionalThreshhold;
 
-                if (m_inputAngleToForward < m_forwardSidewardThreshholdAngle) m_facingDirectionType = Direction.Forward;
-                else if (m_inputAngleToForward < m_sidewardBackwardThreshholdAngle) m_facingDirectionType = Direction.Sideward;
+                float inputAngleToForward = Vector3.Angle(Vector3.forward, m_inputDir);
+                if (inputAngleToForward < m_forwardSidewardThreshholdAngle) m_facingDirectionType = Direction.Forward;
+                else if (inputAngleToForward < m_sidewardBackwardThreshholdAngle) m_facingDirectionType = Direction.Sideward;
                 else m_facingDirectionType = Direction.Backward;
             }
         }
@@ -135,7 +135,7 @@ public class PlayerMovement : MonoBehaviour
             return;
 
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
-        float angleMoveDirToPrevMoveDir = Vector3.Angle(m_desiredFacingRotationDir, m_prevFacingRotationDir);
+        float angleMoveDirToPrevMoveDir = Vector3.Angle(m_desiredFacingRotationDirInWS, m_prevFacingRotationDir);
         Debug.Log(angleMoveDirToPrevMoveDir);
         if (m_isFreelyMoving && (!m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
         {
@@ -229,20 +229,20 @@ public class PlayerMovement : MonoBehaviour
     {
         float turningAcceleration = m_turningAcceleration;
 
-        m_prevFacingRotationDir = m_desiredFacingRotationDir;
+        m_prevFacingRotationDir = m_desiredFacingRotationDirInWS;
 
         //if no input, then it should not recalculate the desired facing direction, because what if i stand still and then lock on something behind me, it should not affect any calculation as long as i dont move
         if(m_moveStrenght > 0)
         {
             if (m_isFreelyMoving) // no LockOn
             {
-                m_desiredFacingRotationDir = m_inputDirInWS;
+                m_desiredFacingRotationDirInWS = m_inputDirInWS;
             }
             else //LockOn
             {
-                if      (m_facingDirectionType == Direction.Forward)    m_desiredFacingRotationDir = m_inputDirInWS;
-                else if (m_facingDirectionType == Direction.Sideward)   m_desiredFacingRotationDir = Quaternion.Euler(0, 90 * -Mathf.Sign(m_inputDir.x), 0) * m_inputDirInWS;
-                else                                                    m_desiredFacingRotationDir = Quaternion.Euler(0, 180, 0) * m_inputDirInWS;
+                if      (m_facingDirectionType == Direction.Forward)    m_desiredFacingRotationDirInWS = m_inputDirInWS;
+                else if (m_facingDirectionType == Direction.Sideward)   m_desiredFacingRotationDirInWS = Quaternion.Euler(0, 90 * -Mathf.Sign(m_inputDir.x), 0) * m_inputDirInWS;
+                else                                                    m_desiredFacingRotationDirInWS = Quaternion.Euler(0, 180, 0) * m_inputDirInWS;
 
                 //the slerp makes the turning less extreme. better solution: Bone look at + constrains
                 //desiredDirection = Vector3.Slerp(desiredDirection, PlayerToTargetXZVector, 0.0f); /////////////momantan zum testing auf 0, ist aber ehn nicht so ne schöne lösung
@@ -251,7 +251,7 @@ public class PlayerMovement : MonoBehaviour
         }
         
 
-        float angle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, m_desiredFacingRotationDir, Vector3.up), -m_turningSpeed, m_turningSpeed); //Only ever 5° steps, the turning speed
+        float angle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, m_desiredFacingRotationDirInWS, Vector3.up), -m_turningSpeed, m_turningSpeed); //Only ever 5° steps, the turning speed
         Quaternion newDirection = transform.rotation * Quaternion.Euler(0, angle, 0);
         transform.rotation = UtilityFunctions.SmartSlerp(transform.rotation, newDirection, Time.deltaTime * turningAcceleration);
 
