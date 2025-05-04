@@ -239,7 +239,7 @@ public class PlayerCameraHolder : MonoBehaviour
         m_camera.transform.rotation = lookRotation;
 
         if (m_playerMovement != null)
-            m_playerMovement.CameraContextRotation = lookRotation;
+            m_playerMovement.CameraRotationYAxis = lookRotation;
 
     }
 

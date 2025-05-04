@@ -296,49 +296,57 @@ public class PlayerInputManager : MonoBehaviour
         m_leftStick = context.ReadValue<Vector2>();
         float inputMagnitude = m_leftStick.magnitude;
 
-        m_extremeInputMagnitude = SetLastExtremeInput();
-        float SetLastExtremeInput()
+        SetLastExtremeInput();
+        void SetLastExtremeInput()
         {
             //Wenn zuletzt unter deadzone war, dann ignoiren
-            if (m_lastInputMagnitude < deadZone) 
-                return 0;
+            if (m_lastInputMagnitude < deadZone)
+            {
+                m_extremeInputMagnitude = 0;
+                return;
+            }
 
             //Wenn es inputMag kleiner als deadzone ist, dann wird es immer einletztes mal gesetzt gesetzt, dirakt auf 0
             if (inputMagnitude < deadZone) 
             {
                 m_lastExteremeInput = m_leftStick;
-                return 0;
+                m_extremeInputMagnitude = 0;
+                return;
             }
             // wenn stick fast 1 ist, dann wird es immer gesetzt gesetzt
             if (inputMagnitude >= 0.9f)
             {
                 m_lastExteremeInput = m_leftStick;
-                return inputMagnitude;
+                m_extremeInputMagnitude = inputMagnitude;
+                return;
             }
             //wenn lastInput gleich lastExtremeInput ist, dann ignoiren
             if (m_lastInput == m_lastExteremeInput)
-                return m_extremeInputMagnitude;
+                return;
 
 
             //Wenn umschwung, dann ignoiren
             if ((m_leftStick.sqrMagnitude > m_lastInput.sqrMagnitude && m_lastInput.sqrMagnitude < m_veryLastInput.sqrMagnitude) || (m_leftStick.sqrMagnitude < m_lastInput.sqrMagnitude && m_lastInput.sqrMagnitude > m_lastExteremeInput.sqrMagnitude))
             {
-                return m_extremeInputMagnitude;
+                return;
             }
             //beim verlassen des Center muss man schneller werden
             if (((m_leftStick - m_lastInput).sqrMagnitude > (m_lastInput - m_veryLastInput).sqrMagnitude) && (m_leftStick.sqrMagnitude > m_lastInput.sqrMagnitude && m_lastInput.sqrMagnitude > m_lastExteremeInput.sqrMagnitude))
             {
                 m_lastExteremeInput = m_leftStick;
-                return inputMagnitude;
+                m_extremeInputMagnitude = inputMagnitude;
+                return;
             }
             //beim nähern des Center muss man langsamer werden
             if (((m_leftStick - m_lastInput).sqrMagnitude < (m_lastInput - m_veryLastInput).sqrMagnitude) && (m_leftStick.sqrMagnitude < m_lastInput.sqrMagnitude && m_lastInput.sqrMagnitude < m_lastExteremeInput.sqrMagnitude))
             {
                 m_lastExteremeInput = m_leftStick;
-                return inputMagnitude;
+                m_extremeInputMagnitude = inputMagnitude;
+                return;
             }
-            
-            return m_extremeInputMagnitude;
+
+            return;
+
         }
 
 
@@ -436,8 +444,10 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context))
             return;
 
-        if (context.performed)
-            Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East press"); 
+        if (!context.performed)
+            return;
+        Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East press");
+        m_thePlayerMovement.Evading();
     }
 
     private void OnEastHold(InputAction.CallbackContext context)
