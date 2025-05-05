@@ -189,7 +189,6 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-
     private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
     
     //Action Influence Values
@@ -211,14 +210,85 @@ public class PlayerMovement : MonoBehaviour
     private float m_turningAccelerationByAction = 0;
     private float m_actionInfluenceOverTurningAcceleration = 0;
 
+    [SerializeField] private AnimationMovementData m_evadeDataTest;
 
     public void Evading()
     {
-        if(m_currentInteruptability == AnimationInterruptableType.Always_Interruptable)
+        if (m_evadeDataTest == null)
+            return;
+
+        AnimationMovementData animData = m_evadeDataTest;
+
+        if (m_currentInteruptability == AnimationInterruptableType.Always_Interruptable)
         m_animator.SetTrigger("TriggerEvade");
 
+        int predefinitionMoveType       = (int)animData.movePredefinition;
+        int predefinitionTurningType    = (int)animData.turningPredefinition;
+        float startMoveInfluence        = predefinitionMoveType != 3 ? 1 : 0;       //If inputOnly"3", then Influence is 0;
+        float startTurningInfluence     = predefinitionTurningType != 3 ? 1 : 0;    //If inputOnly"3", then Influence is 0;
 
-    }
+
+        m_directionByAction                                         = (predefinitionMoveType == 1 || predefinitionMoveType == 3) ? m_inputDirInWS : transform.forward;
+        m_actionInfluenceOverMoveDirection                          = startMoveInfluence;
+        m_speedByAction                                             = startMoveInfluence * m_speed; // is set to current if is inputOnly"3"
+        m_actionInfluenceOverMoveSpeed                              = startMoveInfluence;
+        m_moveAccelerationByAction                                  = m_moveAcceleration;
+        m_actionInfluenceOverMoveAcceleration                       = startMoveInfluence;
+
+        m_desiredFacingRotationDirInWSByAction                      = (predefinitionTurningType == 1 || predefinitionTurningType == 3) ? m_desiredFacingRotationDirInWS : transform.forward;
+        m_actionInfluenceOverDesiredFacingRotationDirInWS           = startTurningInfluence;
+        m_turningSpeedByAction                                      = startTurningInfluence * m_turningSpeed;
+        m_actionInfluenceOverTurningSpeed                           = startTurningInfluence;
+        m_turningAccelerationByAction                               = m_turningAcceleration;
+        m_actionInfluenceOverTurningAcceleration                    = startTurningInfluence;
+
+
+
+
+
+        foreach (var valueData in animData.variableValue)
+        {
+            switch (valueData.valueName)
+            {
+                case AnimationMovementData.ValueName.Move_Direction_Angle:
+
+                    if(valueData.settings.valueType == AnimationMovementData.ValueType.ConstantValue) 
+                        m_directionByAction = Quaternion.Euler(0, valueData.settings.value, 0) * m_directionByAction;
+                    
+                    m_actionInfluenceOverMoveDirection = valueData.settings.influenceValue;
+
+                    break;
+                case AnimationMovementData.ValueName.Move_Speed:
+
+                    break;
+                case AnimationMovementData.ValueName.Move_Acceleration:
+
+                    break;
+                case AnimationMovementData.ValueName.Turning_Direction_Angle:
+
+                    break;
+                case AnimationMovementData.ValueName.Turning_Speed:
+
+                    break;
+                case AnimationMovementData.ValueName.Turning_Acceleration:
+
+                    break;
+
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+}
 
 
 

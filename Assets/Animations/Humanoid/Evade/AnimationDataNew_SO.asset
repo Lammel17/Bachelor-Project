@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
+  m_Name: AnimationDataNew_SO
+  m_EditorClassIdentifier: 
+  ActionDescription: humanoid_evade_sideward
+  movePredefinition: 1
+  turningPredefinition: 1
+  variableValue:
+  - valueName: 0
+    settings:
+      valueType: 0
+      value: 0
+      valueSettings:
+        startEnd: {x: 0, y: 0}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0
+      influenceValueType: 0
+      influenceValue: 1
+      influenceSettings:
+        startEnd: {x: 0, y: 0}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0
+  - valueName: 1
+    settings:
+      valueType: 1
+      value: 0
+      valueSettings:
+        startEnd: {x: 0, y: 0.69}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0
+      influenceValueType: 0
+      influenceValue: 1
+      influenceSettings:
+        startEnd: {x: 0, y: 0}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0

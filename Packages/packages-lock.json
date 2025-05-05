@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.guciodevs.simple-min-max-slider": {
+      "version": "https://github.com/GucioDevs/SimpleMinMaxSlider.git#upm",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "46ff35d22982657d55f7861ddc01b115a2db1554"
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.6",
       "depth": 0,
@@ -90,6 +97,13 @@
     "com.unity.nuget.mono-cecil": {
       "version": "1.11.4",
       "depth": 3,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "3.2.1",
+      "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -196,7 +210,7 @@
       }
     },
     "com.unity.visualscripting": {
-      "version": "1.9.5",
+      "version": "1.9.6",
       "depth": 0,
       "source": "registry",
       "dependencies": {
