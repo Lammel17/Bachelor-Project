@@ -443,8 +443,8 @@ public class PlayerInputManager : MonoBehaviour
 
         if (!context.performed)
             return;
-        Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East press");
-        m_thePlayerMovement.Evading();
+        Debug.Log($"ON EAST");
+        m_thePlayerMovement.TriggerEvading();
     }
 
     private void OnEastHold(InputAction.CallbackContext context)

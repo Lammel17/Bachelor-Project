@@ -1297,7 +1297,6 @@ GameObject:
   - component: {fileID: 1756236761}
   - component: {fileID: 1756236762}
   - component: {fileID: 1756236763}
-  - component: {fileID: 1756236764}
   m_Layer: 0
   m_Name: TestPlayer
   m_TagString: Untagged
@@ -1341,7 +1340,8 @@ MonoBehaviour:
   m_moveAcceleration: 20
   m_turningSpeedBaseValue: 45
   m_turningAccelerationBaseValue: 10
-  m_evadeDataTest: {fileID: 0}
+  m_evadeDataTest: {fileID: 11400000, guid: 6ee937aa03e98a24380d71d23d531e52, type: 2}
+  m_evateAnimationClip: {fileID: 3304532412000461976, guid: f52655841988ddd46aef931aaa7c074e, type: 3}
 --- !u!143 &1756236763
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1367,27 +1367,6 @@ CharacterController:
   m_SkinWidth: 0.05
   m_MinMoveDistance: 0.0001
   m_Center: {x: 0, y: 0.95, z: 0}
---- !u!114 &1756236764
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1756236756}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0714f518b28f194bb749626e09c7470, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  intField01: 0
-  stringField01: 
-  boolField01: 0
-  intField02: 0
-  stringField02: 
-  boolField02: 0
-  intField03: 0
-  stringField03: 
-  boolField03: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

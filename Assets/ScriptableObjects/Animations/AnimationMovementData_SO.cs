@@ -18,7 +18,7 @@ public class AnimationMovementData : ScriptableObject
     [SerializeField] public Predefinitions turningPredefinition;
     [Space]
     [Header("Animation Parameters for Movement and Rotation")]
-    [SerializeField] public Value[] variableValue;
+    [SerializeField] public Values[] variableValue;
 
     public enum Predefinitions
     {
@@ -53,7 +53,7 @@ public class AnimationMovementData : ScriptableObject
 
 
     [System.Serializable]
-    public class Value
+    public class Values
     {
 
         [SerializeField] public ValueName valueName;

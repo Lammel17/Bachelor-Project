@@ -5,6 +5,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.TextCore.Text;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(CharacterController))]
 
@@ -149,7 +150,6 @@ public class PlayerMovement : MonoBehaviour
             m_isTurning = true;
             Action resetTurnAction = () =>
             {
-                m_isTurning = false; m_animator.SetBool("IsTurningg", false);
                 m_turningSpeed = m_turningSpeedBaseValue;
                 m_turningAcceleration = m_turningAccelerationBaseValue;
                 m_turningCoroutine = null;
@@ -190,7 +190,151 @@ public class PlayerMovement : MonoBehaviour
 
 
     private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
-    
+
+
+    [SerializeField] private AnimationMovementData m_evadeDataTest;
+
+    public void TriggerEvading()
+    {
+        if (m_evadeDataTest == null)
+            return;
+
+        AnimationMovementData animData = m_evadeDataTest;
+
+        if (m_currentInteruptability == AnimationInterruptableType.Always_Interruptable)
+            m_animator.SetTrigger("TriggerEvade");
+
+        int predefinitionMoveType = (int)animData.movePredefinition;
+        int predefinitionTurningType = (int)animData.turningPredefinition;
+        float startMoveInfluence = predefinitionMoveType != 3 ? 1 : 0;       //If inputOnly"3", then Influence is 0;
+        float startTurningInfluence = predefinitionTurningType != 3 ? 1 : 0;    //If inputOnly"3", then Influence is 0;
+
+
+        m_directionByAction = (predefinitionMoveType == 1 || predefinitionMoveType == 3) ? m_inputDirInWS : transform.forward;
+        m_actionInfluenceOverMoveDirection = startMoveInfluence;
+        m_speedByAction = startMoveInfluence * m_speed; // is set to current speed if is inputOnly"3"
+        m_actionInfluenceOverMoveSpeed = startMoveInfluence;
+        m_moveAccelerationByAction = m_moveAcceleration;
+        m_actionInfluenceOverMoveAcceleration = startMoveInfluence;
+
+        m_desiredFacingRotationDirInWSByAction = (predefinitionTurningType == 1 || predefinitionTurningType == 3) ? m_desiredFacingRotationDirInWS : transform.forward;
+        m_actionInfluenceOverDesiredFacingRotationDirInWS = startTurningInfluence;
+        m_turningSpeedByAction = startTurningInfluence * m_turningSpeed; // is set to current speed if is inputOnly"3"
+        m_actionInfluenceOverTurningSpeed = startTurningInfluence;
+        m_turningAccelerationByAction = m_turningAcceleration;
+        m_actionInfluenceOverTurningAcceleration = startTurningInfluence;
+
+        List<ProcessedAnimationMovementData> CurveValuesList = new List<ProcessedAnimationMovementData>(); //For future, store this list and use it instead of rebuilding it
+
+
+        foreach (var value in animData.variableValue)
+        {
+            AnimationMovementData.Values.Settings valueData = value.settings;
+            bool valueTypeIsConstant = valueData.valueType == AnimationMovementData.ValueType.ConstantValue;
+            //bool valueTypeIsCurved = valueData.valueType == AnimationMovementData.ValueType.CurvedValue;
+
+            bool influenceValueTypeIsConstant = valueData.influenceValueType == AnimationMovementData.InfluenceValueType.ConstantInfluence;
+            //bool influenceValueTypeIsCurved = valueData.influenceValueType == AnimationMovementData.InfluenceValueType.CurvedInfluence;
+
+            switch (value.valueName)
+            {
+                case AnimationMovementData.ValueName.Move_Direction_Angle:
+                    if (valueTypeIsConstant) { m_directionByAction = Quaternion.Euler(0, valueData.value, 0) * m_directionByAction; m_directionByActionBaseValue = m_directionByAction;  }
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    
+                    if (influenceValueTypeIsConstant) m_actionInfluenceOverMoveDirection = valueData.influenceValue;
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    break;
+                case AnimationMovementData.ValueName.Move_Speed:
+                    Debug.Log($"valueData: {valueData.value}");
+                    if (valueTypeIsConstant) m_speedByAction = valueData.value;
+                    else  CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Move_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    if (influenceValueTypeIsConstant) m_actionInfluenceOverMoveSpeed = valueData.influenceValue;
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Move_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    break;
+                case AnimationMovementData.ValueName.Move_Acceleration:
+
+                    if (valueTypeIsConstant) m_moveAccelerationByAction = valueData.value;
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Move_Acceleration, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    if (influenceValueTypeIsConstant) m_actionInfluenceOverMoveAcceleration = valueData.influenceValue;
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Move_Acceleration, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    break;
+                case AnimationMovementData.ValueName.Turning_Direction_Angle:
+
+                    if (valueTypeIsConstant) { m_desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, valueData.value, 0) * m_desiredFacingRotationDirInWSByAction; m_desiredFacingRotationDirInWSByActionBaseValue = m_desiredFacingRotationDirInWSByAction; }
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    if (influenceValueTypeIsConstant) m_actionInfluenceOverDesiredFacingRotationDirInWS = valueData.influenceValue;
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    break;
+                case AnimationMovementData.ValueName.Turning_Speed:
+
+                    if (valueTypeIsConstant) m_turningSpeedByAction = valueData.value;
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Turning_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    if (influenceValueTypeIsConstant) m_actionInfluenceOverTurningSpeed = valueData.influenceValue;
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Turning_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    break;
+                case AnimationMovementData.ValueName.Turning_Acceleration:
+
+                    if (valueTypeIsConstant) m_turningAccelerationByAction = valueData.value;
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Turning_Acceleration, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    if (influenceValueTypeIsConstant) m_actionInfluenceOverTurningAcceleration = valueData.influenceValue;
+                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Turning_Acceleration, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+
+                    break;
+
+            }
+        }
+
+        m_evadeCoroutine = StartCoroutine(PerformAction(CurveValuesList));
+
+    }
+
+
+    private class ProcessedAnimationMovementData
+    {
+        public ValueName name;
+        public float value;
+        public Vector2 startEnd;
+        public AnimationCurve curve;
+        public float TimeFactor = 1;
+
+        public ProcessedAnimationMovementData(ValueName n, float v, Vector2 se, AnimationCurve c)
+        {
+            name = n;
+            value = v;
+            startEnd = se;
+            curve = c;
+        }
+    }
+
+
+
+    public enum ValueName
+    {
+        Move_Direction_Angle,
+        InfluenceOn_Move_Direction_Angle,
+        Move_Speed,
+        InfluenceOn_Move_Speed,
+        Move_Acceleration,
+        InfluenceOn_Move_Acceleration,
+        Turning_Direction_Angle,
+        InfluenceOn_Turning_Direction_Angle,
+        Turning_Speed,
+        InfluenceOn_Turning_Speed,
+        Turning_Acceleration,
+        InfluenceOn_Turning_Acceleration,
+    }
+
     //Action Influence Values
     private Vector3 m_directionByAction = Vector3.forward;
     private float m_actionInfluenceOverMoveDirection = 0;
@@ -210,85 +354,71 @@ public class PlayerMovement : MonoBehaviour
     private float m_turningAccelerationByAction = 0;
     private float m_actionInfluenceOverTurningAcceleration = 0;
 
-    [SerializeField] private AnimationMovementData m_evadeDataTest;
+    private Vector3 m_directionByActionBaseValue = Vector3.forward;
+    private Vector3 m_desiredFacingRotationDirInWSByActionBaseValue = Vector3.forward;
 
-    public void Evading()
+    Coroutine m_evadeCoroutine = null;
+
+    [SerializeField] private AnimationClip m_evateAnimationClip;
+
+    private IEnumerator PerformAction(List<ProcessedAnimationMovementData> curveValueList)
     {
-        if (m_evadeDataTest == null)
-            return;
+        float time = 0;
+        float animationTime = m_evateAnimationClip.length; //what about blendtrees?
 
-        AnimationMovementData animData = m_evadeDataTest;
+        //Debug.Log(m_evateAnimationClip.length);
 
-        if (m_currentInteruptability == AnimationInterruptableType.Always_Interruptable)
-        m_animator.SetTrigger("TriggerEvade");
-
-        int predefinitionMoveType       = (int)animData.movePredefinition;
-        int predefinitionTurningType    = (int)animData.turningPredefinition;
-        float startMoveInfluence        = predefinitionMoveType != 3 ? 1 : 0;       //If inputOnly"3", then Influence is 0;
-        float startTurningInfluence     = predefinitionTurningType != 3 ? 1 : 0;    //If inputOnly"3", then Influence is 0;
-
-
-        m_directionByAction                                         = (predefinitionMoveType == 1 || predefinitionMoveType == 3) ? m_inputDirInWS : transform.forward;
-        m_actionInfluenceOverMoveDirection                          = startMoveInfluence;
-        m_speedByAction                                             = startMoveInfluence * m_speed; // is set to current if is inputOnly"3"
-        m_actionInfluenceOverMoveSpeed                              = startMoveInfluence;
-        m_moveAccelerationByAction                                  = m_moveAcceleration;
-        m_actionInfluenceOverMoveAcceleration                       = startMoveInfluence;
-
-        m_desiredFacingRotationDirInWSByAction                      = (predefinitionTurningType == 1 || predefinitionTurningType == 3) ? m_desiredFacingRotationDirInWS : transform.forward;
-        m_actionInfluenceOverDesiredFacingRotationDirInWS           = startTurningInfluence;
-        m_turningSpeedByAction                                      = startTurningInfluence * m_turningSpeed;
-        m_actionInfluenceOverTurningSpeed                           = startTurningInfluence;
-        m_turningAccelerationByAction                               = m_turningAcceleration;
-        m_actionInfluenceOverTurningAcceleration                    = startTurningInfluence;
-
-
-
-
-
-        foreach (var valueData in animData.variableValue)
+        while (time < animationTime)
         {
-            switch (valueData.valueName)
+            foreach (var curveData in curveValueList)
             {
-                case AnimationMovementData.ValueName.Move_Direction_Angle:
 
-                    if(valueData.settings.valueType == AnimationMovementData.ValueType.ConstantValue) 
-                        m_directionByAction = Quaternion.Euler(0, valueData.settings.value, 0) * m_directionByAction;
-                    
-                    m_actionInfluenceOverMoveDirection = valueData.settings.influenceValue;
+                AnimationCurve curve = curveData.curve;
+                /*if (curve == null)*/ curve = AnimationCurve.Linear(0,1,1,1); //problem here
 
-                    break;
-                case AnimationMovementData.ValueName.Move_Speed:
+                float relativeTimeValue = time / animationTime;
+                float activeFactor = relativeTimeValue > curveData.startEnd.x && relativeTimeValue < curveData.startEnd.y ? 1 : 0;
+                //Debug.Log(ValueName.Move_Speed == curveData.name);
 
-                    break;
-                case AnimationMovementData.ValueName.Move_Acceleration:
+                Debug.Log($"curveData.value: {curveData.value}");
+                //Debug.Log($"INVERSE: {Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeTimeValue)}");
+                Debug.Log($"EVALUATE: {curve.Evaluate(0.5f)}");
+                float curveValue = curveData.value * curve.Evaluate(Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeTimeValue)) * activeFactor;
+                Debug.Log($"curveValue: {curveValue}");
 
-                    break;
-                case AnimationMovementData.ValueName.Turning_Direction_Angle:
-
-                    break;
-                case AnimationMovementData.ValueName.Turning_Speed:
-
-                    break;
-                case AnimationMovementData.ValueName.Turning_Acceleration:
-
-                    break;
+                switch (curveData.name)
+                {
+                    case ValueName.Move_Direction_Angle:                    m_directionByAction = Quaternion.Euler(0, curveValue, 0) * m_directionByActionBaseValue ;               break;
+                    case ValueName.InfluenceOn_Move_Direction_Angle:        m_actionInfluenceOverMoveDirection = curveValue;                                                        break;
+                    case ValueName.Move_Speed:                              m_speedByAction = curveValue;                                   Debug.Log($"curveValue: {curveValue}"); break;
+                    case ValueName.InfluenceOn_Move_Speed:                  m_actionInfluenceOverMoveSpeed = curveValue;                                                            break;
+                    case ValueName.Move_Acceleration:                       m_moveAccelerationByAction = curveValue;                                                                break;
+                    case ValueName.InfluenceOn_Move_Acceleration:           m_actionInfluenceOverMoveAcceleration = curveValue;                                                     break;
+                    case ValueName.Turning_Direction_Angle:                 m_desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, curveValue, 0) * m_desiredFacingRotationDirInWSByActionBaseValue; break;
+                    case ValueName.InfluenceOn_Turning_Direction_Angle:     m_actionInfluenceOverDesiredFacingRotationDirInWS = curveValue;                                         break;
+                    case ValueName.Turning_Speed:                           m_turningSpeedByAction = curveValue;                                                                    break;
+                    case ValueName.InfluenceOn_Turning_Speed:               m_actionInfluenceOverTurningSpeed = curveValue;                                                         break;
+                    case ValueName.Turning_Acceleration:                    m_turningAccelerationByAction = curveValue;                                                             break;
+                    case ValueName.InfluenceOn_Turning_Acceleration:        m_actionInfluenceOverTurningAcceleration = curveValue;                                                  break;
+                }
 
             }
+
+            
+            time += Time.deltaTime;
+            yield return null;
         }
 
+        m_actionInfluenceOverMoveDirection = 0;
+        m_actionInfluenceOverMoveSpeed = 0;
+        m_actionInfluenceOverMoveAcceleration = 0;
+        m_actionInfluenceOverDesiredFacingRotationDirInWS = 0;
+        m_actionInfluenceOverTurningSpeed = 0;
+        m_actionInfluenceOverTurningAcceleration = 0;
 
-
-
-
-
-
-
-
-
-
-
-}
+        Debug.Log("EvadeEnd");
+        m_evadeCoroutine = null;
+    }
 
 
 
@@ -337,7 +467,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void RotatingPlayer()
     {
-        m_prevFacingRotationDir = m_desiredFacingRotationDirInWS;
+        m_prevFacingRotationDir = m_desiredFacingRotationDirInWS; //hmm, vielleicht von dem nehmen: nowdesiredFacingRotationDirInWS
 
         //if no input, then it should not recalculate the desired facing direction, because what if i stand still and then lock on something behind me, it should not affect any calculation as long as i dont move
 

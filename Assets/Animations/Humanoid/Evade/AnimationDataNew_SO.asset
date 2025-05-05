@@ -41,7 +41,7 @@ MonoBehaviour:
   - valueName: 1
     settings:
       valueType: 1
-      value: 0
+      value: 10
       valueSettings:
         startEnd: {x: 0, y: 0.69}
         curveValue:
