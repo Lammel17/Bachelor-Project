@@ -148,11 +148,13 @@ public class PlayerMovement : MonoBehaviour
 
             m_animator.SetTrigger("TriggerTurning");
             m_isTurning = true;
+
             Action resetTurnAction = () =>
             {
                 m_turningSpeed = m_turningSpeedBaseValue;
                 m_turningAcceleration = m_turningAccelerationBaseValue;
                 m_turningCoroutine = null;
+                m_isTurning = false;
             };
             m_turningCoroutine = StartCoroutine(UtilityFunctions.Wait(0.45f, resetTurnAction));
         }
@@ -196,13 +198,16 @@ public class PlayerMovement : MonoBehaviour
 
     public void TriggerEvading()
     {
+        if ((int)m_currentInteruptability >= 3)
+            return;
+        m_currentInteruptability = AnimationInterruptableType.Not_Interruptable;
+
         if (m_evadeDataTest == null)
             return;
 
         AnimationMovementData animData = m_evadeDataTest;
 
-        if (m_currentInteruptability == AnimationInterruptableType.Always_Interruptable)
-            m_animator.SetTrigger("TriggerEvade");
+        m_animator.SetTrigger("TriggerEvade");
 
         int predefinitionMoveType = (int)animData.movePredefinition;
         int predefinitionTurningType = (int)animData.turningPredefinition;
@@ -225,12 +230,14 @@ public class PlayerMovement : MonoBehaviour
         m_actionInfluenceOverTurningAcceleration = startTurningInfluence;
 
         List<ProcessedAnimationMovementData> CurveValuesList = new List<ProcessedAnimationMovementData>(); //For future, store this list and use it instead of rebuilding it
+        List<ProcessedAnimationMovementData> RangeValuesList = new List<ProcessedAnimationMovementData>(); //For future, store this list and use it instead of rebuilding it
 
 
         foreach (var value in animData.variableValue)
         {
             AnimationMovementData.Values.Settings valueData = value.settings;
             bool valueTypeIsConstant = valueData.valueType == AnimationMovementData.ValueType.ConstantValue;
+            bool valueTypeIsStartEnd = valueData.valueType == AnimationMovementData.ValueType.StartEndValue;
             //bool valueTypeIsCurved = valueData.valueType == AnimationMovementData.ValueType.CurvedValue;
 
             bool influenceValueTypeIsConstant = valueData.influenceValueType == AnimationMovementData.InfluenceValueType.ConstantInfluence;
@@ -239,17 +246,17 @@ public class PlayerMovement : MonoBehaviour
             switch (value.valueName)
             {
                 case AnimationMovementData.ValueName.Move_Direction_Angle:
-                    if (valueTypeIsConstant) { m_directionByAction = Quaternion.Euler(0, valueData.value, 0) * m_directionByAction; m_directionByActionBaseValue = m_directionByAction;  }
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    if (valueTypeIsConstant)            {   m_directionByAction = Quaternion.Euler(0, valueData.value, 0) * m_directionByAction; m_directionByActionBaseValue = m_directionByAction; }
+                    else if (valueTypeIsStartEnd)       CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, null));
+                    else                                CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
                     
-                    if (influenceValueTypeIsConstant) m_actionInfluenceOverMoveDirection = valueData.influenceValue;
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    if (influenceValueTypeIsConstant)   m_actionInfluenceOverMoveDirection = valueData.influenceValue;
+                    else                                CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
 
                     break;
                 case AnimationMovementData.ValueName.Move_Speed:
-                    Debug.Log($"valueData: {valueData.value}");
-                    if (valueTypeIsConstant) m_speedByAction = valueData.value;
-                    else  CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Move_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    if (valueTypeIsConstant)            m_speedByAction = valueData.value;
+                    else                                CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.Move_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
 
                     if (influenceValueTypeIsConstant) m_actionInfluenceOverMoveSpeed = valueData.influenceValue;
                     else CurveValuesList.Add(new ProcessedAnimationMovementData(ValueName.InfluenceOn_Move_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
@@ -305,14 +312,16 @@ public class PlayerMovement : MonoBehaviour
         public ValueName name;
         public float value;
         public Vector2 startEnd;
-        public AnimationCurve curve;
+        public bool isCurve = false;
+        public AnimationCurve curve = null;
         public float TimeFactor = 1;
 
-        public ProcessedAnimationMovementData(ValueName n, float v, Vector2 se, AnimationCurve c)
+        public ProcessedAnimationMovementData(ValueName n, float v, Vector2 se, AnimationCurve c = null)
         {
             name = n;
             value = v;
             startEnd = se;
+            isCurve = c != null;
             curve = c;
         }
     }
@@ -364,7 +373,7 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator PerformAction(List<ProcessedAnimationMovementData> curveValueList)
     {
         float time = 0;
-        float animationTime = m_evateAnimationClip.length; //what about blendtrees?
+        float animationTime = m_evateAnimationClip.length/1.2f; //what about blendtrees?
 
         //Debug.Log(m_evateAnimationClip.length);
 
@@ -374,23 +383,23 @@ public class PlayerMovement : MonoBehaviour
             {
 
                 AnimationCurve curve = curveData.curve;
-                /*if (curve == null)*/ curve = AnimationCurve.Linear(0,1,1,1); //problem here
+                if (curve.length == 0) curve = AnimationCurve.Linear(0,1,1,1); //problem here
 
                 float relativeTimeValue = time / animationTime;
                 float activeFactor = relativeTimeValue > curveData.startEnd.x && relativeTimeValue < curveData.startEnd.y ? 1 : 0;
                 //Debug.Log(ValueName.Move_Speed == curveData.name);
 
-                Debug.Log($"curveData.value: {curveData.value}");
+                //Debug.Log($"curveData.value: {curveData.value}");
                 //Debug.Log($"INVERSE: {Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeTimeValue)}");
-                Debug.Log($"EVALUATE: {curve.Evaluate(0.5f)}");
+                //Debug.Log($"EVALUATE: {curve.Evaluate(0.5f)}");
                 float curveValue = curveData.value * curve.Evaluate(Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeTimeValue)) * activeFactor;
-                Debug.Log($"curveValue: {curveValue}");
+                //Debug.Log($"curveValue: {curveValue}");
 
                 switch (curveData.name)
                 {
                     case ValueName.Move_Direction_Angle:                    m_directionByAction = Quaternion.Euler(0, curveValue, 0) * m_directionByActionBaseValue ;               break;
                     case ValueName.InfluenceOn_Move_Direction_Angle:        m_actionInfluenceOverMoveDirection = curveValue;                                                        break;
-                    case ValueName.Move_Speed:                              m_speedByAction = curveValue;                                   Debug.Log($"curveValue: {curveValue}"); break;
+                    case ValueName.Move_Speed:                              m_speedByAction = curveValue;                                                                           break;
                     case ValueName.InfluenceOn_Move_Speed:                  m_actionInfluenceOverMoveSpeed = curveValue;                                                            break;
                     case ValueName.Move_Acceleration:                       m_moveAccelerationByAction = curveValue;                                                                break;
                     case ValueName.InfluenceOn_Move_Acceleration:           m_actionInfluenceOverMoveAcceleration = curveValue;                                                     break;
@@ -416,7 +425,7 @@ public class PlayerMovement : MonoBehaviour
         m_actionInfluenceOverTurningSpeed = 0;
         m_actionInfluenceOverTurningAcceleration = 0;
 
-        Debug.Log("EvadeEnd");
+        m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
         m_evadeCoroutine = null;
     }
 
