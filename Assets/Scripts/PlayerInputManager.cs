@@ -443,7 +443,7 @@ public class PlayerInputManager : MonoBehaviour
 
         if (!context.performed)
             return;
-        Debug.Log($"ON EAST");
+        //Debug.Log($"ON EAST");
         m_thePlayerMovement.TriggerEvading();
     }
 

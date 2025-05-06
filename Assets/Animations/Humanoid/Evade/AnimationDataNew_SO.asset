@@ -38,10 +38,32 @@ MonoBehaviour:
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
-  - valueName: 2
+  - valueName: 0
     settings:
       valueType: 0
-      value: 0
+      value: 180
+      valueSettings:
+        startEnd: {x: 0, y: 1}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+      influenceValueType: 0
+      influenceValue: 0
+      influenceSettings:
+        startEnd: {x: 0, y: 0}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+  - valueName: 3
+    settings:
+      valueType: 0
+      value: 180
       valueSettings:
         startEnd: {x: 0, y: 1}
         curveValue:
