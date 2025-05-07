@@ -13,10 +13,14 @@ MonoBehaviour:
   m_Name: AnimationDataNew_SO
   m_EditorClassIdentifier: 
   ActionDescription: humanoid_evade_sideward
-  movePredefinition: 1
-  turningPredefinition: 1
+  moveDirPredefinition: 1
+  moveInfluence: 1
+  turningDirPredefinition: 1
+  turningInfluence: 1
+  relations: 1
   variableValue:
   - valueName: 1
+    ignore: 0
     settings:
       valueType: 1
       value: 8
@@ -28,8 +32,8 @@ MonoBehaviour:
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
-      influenceValueType: 0
-      influenceValue: 1
+      influenceType: 0
+      influence: 1
       influenceSettings:
         startEnd: {x: 0, y: 0}
         curveValue:
@@ -39,19 +43,20 @@ MonoBehaviour:
           m_PostInfinity: 0
           m_RotationOrder: 4
   - valueName: 0
+    ignore: 1
     settings:
       valueType: 0
       value: 180
       valueSettings:
-        startEnd: {x: 0, y: 1}
+        startEnd: {x: 0.5258216, y: 1}
         curveValue:
           serializedVersion: 2
           m_Curve: []
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
-      influenceValueType: 0
-      influenceValue: 0
+      influenceType: 0
+      influence: 1
       influenceSettings:
         startEnd: {x: 0, y: 0}
         curveValue:
@@ -60,25 +65,4 @@ MonoBehaviour:
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
-  - valueName: 3
-    settings:
-      valueType: 0
-      value: 180
-      valueSettings:
-        startEnd: {x: 0, y: 1}
-        curveValue:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 0
-          m_PostInfinity: 0
-          m_RotationOrder: 4
-      influenceValueType: 0
-      influenceValue: 1
-      influenceSettings:
-        startEnd: {x: 0, y: 0}
-        curveValue:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 0
-          m_PostInfinity: 0
-          m_RotationOrder: 4
+  timeStepsForCurves: 0.05

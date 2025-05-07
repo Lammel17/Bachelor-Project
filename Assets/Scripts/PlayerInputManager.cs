@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using UnityEngine.InputSystem;
 using UnityEngine.Windows;
+using Unity.IO.LowLevel.Unsafe;
 
 
 [RequireComponent(typeof(PlayerInput))]
@@ -18,7 +19,7 @@ public class PlayerInputManager : MonoBehaviour
     private Vector2 m_leftStick = new Vector2();
     private Vector2 m_rightStick = new Vector2();
 
-    [SerializeField] private float m_inputBufferTime = 0.8f;
+    /*[SerializeField] */private float m_inputBufferTime = 0.5f;
 
     private InputAction.CallbackContext m_lastBuffedInput = new();
     private Coroutine c_inputBufferCoroutine;
@@ -89,12 +90,11 @@ public class PlayerInputManager : MonoBehaviour
         Options2ActionRef       = playerActionMap.FindAction("Options2");
 
 
-        ClearBufferAction = () => { m_lastInputIsUnread = false; c_inputBufferCoroutine = null; Debug.Log($"EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE  is {m_lastBuffedInput.action.name}"); };
+        ClearBufferAction = () => { m_lastInputIsUnread = false; c_inputBufferCoroutine = null; /*Debug.Log($"{m_lastBuffedInput.action.name} in buffer is getting cleared");*/ };
        
 
     }
 
-    
     public void SetPlayerAndCamera(PlayerMovement player, PlayerCameraHolder camera)
     {
         m_thePlayerMovement = player;
@@ -102,6 +102,8 @@ public class PlayerInputManager : MonoBehaviour
 
         EnableOrDisableInputs(true);
     }
+
+
 
     private void EnableOrDisableInputs(bool enable)
     {
@@ -117,6 +119,7 @@ public class PlayerInputManager : MonoBehaviour
             R2ActionRef.Enable();
             SouthActionRef.Enable();
             EastActionRef.Enable();
+                EastHoldActionRef.Enable();
             WestActionRef.Enable();
             NorthActionRef.Enable();
             DownActionRef.Enable();
@@ -138,6 +141,7 @@ public class PlayerInputManager : MonoBehaviour
             R2ActionRef.Disable();
             SouthActionRef.Disable();
             EastActionRef.Disable();
+                EastHoldActionRef.Disable();
             WestActionRef.Disable();
             NorthActionRef.Disable();
             DownActionRef.Disable();
@@ -221,6 +225,8 @@ public class PlayerInputManager : MonoBehaviour
         if (!m_lastInputIsUnread)
             return;
 
+        //Debug.Log("Recall");
+
         switch (m_lastBuffedInput.action.name)
         {
             case "L3":
@@ -256,19 +262,11 @@ public class PlayerInputManager : MonoBehaviour
         }
     }
 
-    private bool SetBuffer(InputAction.CallbackContext context/*, int priority*/)
+    private bool SetBuffer(InputAction.CallbackContext context, int priority)
     {
-        if (1 != 1) ///////////check if Animation is currently not interuptable
-        {
-            m_lastInputIsUnread = true;
-            m_lastBuffedInput = context;
 
-            //the last input only stays readable for an amount of time;
-            c_inputBufferCoroutine = StartCoroutine(UtilityFunctions.Wait(m_inputBufferTime, ClearBufferAction));
 
-            return true;
-        }
-        else // check with something with priority like dodge here
+        if (priority > (int)m_thePlayerMovement.CurrentInteruptability) ///////////check if Animation is currently interuptable
         {
             m_lastInputIsUnread = false;            //not sure if needed
             if (c_inputBufferCoroutine != null)
@@ -276,6 +274,15 @@ public class PlayerInputManager : MonoBehaviour
                 StopCoroutine(c_inputBufferCoroutine);
                 c_inputBufferCoroutine = null;
             }
+        }
+        else // check with something with priority like dodge here
+        {
+            m_lastInputIsUnread = true;
+            m_lastBuffedInput = context;
+
+            //the last input only stays readable for an amount of time;
+            c_inputBufferCoroutine = StartCoroutine(UtilityFunctions.Wait(m_inputBufferTime, ClearBufferAction));
+            return true;
         }
         
         return false;
@@ -376,7 +383,9 @@ public class PlayerInputManager : MonoBehaviour
     //StickButtons
     private void OnL3(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
+        int priority = 0;
+
+        if (SetBuffer(context, priority))
             return;
 
         //if(context.performed)
@@ -385,6 +394,7 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnR3(InputAction.CallbackContext context)
     {
+
         if (context.performed)
             m_thePlayerCameraHolder.IsLockOn = !m_thePlayerCameraHolder.IsLockOn;
     }
@@ -399,7 +409,9 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnR1(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
+        int priority = 2;
+
+        if (SetBuffer(context, priority))
             return;
 
         //if (context.performed)
@@ -408,7 +420,9 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnL2(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
+        int priority = 2;
+
+        if (SetBuffer(context, priority))
             return;
 
         //if (context.performed)
@@ -417,7 +431,9 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnR2(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
+        int priority = 2;
+
+        if (SetBuffer(context, priority))
             return;
 
         //if (context.performed)
@@ -429,7 +445,10 @@ public class PlayerInputManager : MonoBehaviour
     //ActionButtons
     private void OnSouth(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
+
+        int priority = 0;
+
+        if (SetBuffer(context, priority))
             return;
 
         //if (context.performed)
@@ -438,19 +457,16 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnEast(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
+        int priority = 3;
+
+        if (SetBuffer(context, priority))
             return;
 
-        if (!context.performed)
-            return;
-        //Debug.Log($"ON EAST");
         m_thePlayerMovement.TriggerEvading();
     }
 
     private void OnEastHold(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
-            return;
 
         if (context.performed)
         {
@@ -467,7 +483,9 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnWest(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
+        int priority = 2;
+
+        if (SetBuffer(context, priority))
             return;
 
         //if (context.performed)
@@ -490,7 +508,9 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnRight(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
+        int priority = 0;
+
+        if (SetBuffer(context, priority))
             return;
 
         //if (context.performed)
@@ -499,7 +519,9 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnLeft(InputAction.CallbackContext context)
     {
-        if (SetBuffer(context))
+        int priority = 0;
+
+        if (SetBuffer(context, priority))
             return;
 
         //if (context.performed)
