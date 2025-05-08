@@ -1,13 +1,12 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
-using static AnimationData;
 using EditorAttributes;
 using GD.MinMaxSlider;
 
 
 
-[CreateAssetMenu(fileName = "AnimationMovement", menuName = "Scriptable Objects/AnimationMovement_SO")]
+[CreateAssetMenu(fileName = "MovementData", menuName = "Scriptable Objects/MovementData")]
 public class AnimationMovementData : ScriptableObject
 {
     [SerializeField] public string ActionDescription = "";

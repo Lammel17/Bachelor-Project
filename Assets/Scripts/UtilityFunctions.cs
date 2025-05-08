@@ -86,6 +86,7 @@ public static class UtilityFunctions
         return Mathf.Lerp(from, to, t);
     }
 
+
     /// <summary>
     /// This is like Quaternion.Serp, but when the changes are too small, it snaps to the final value. (Only needed when t contains Time)
     /// </summary>

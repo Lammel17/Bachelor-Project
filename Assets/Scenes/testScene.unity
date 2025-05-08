@@ -1335,13 +1335,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8ce5e307e8f7f546b160c125e20b5a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_characterMovesetData: {fileID: 11400000, guid: c207c47cd1da71f42a05d15f2e1819c1, type: 2}
   m_animator: {fileID: 1060078877}
   m_speedValues: {x: 2, y: 4, z: 6}
   m_moveAcceleration: 20
   m_turningSpeedBaseValue: 45
   m_turningAccelerationBaseValue: 10
-  m_evadeDataTest: {fileID: 11400000, guid: 6ee937aa03e98a24380d71d23d531e52, type: 2}
   m_evateAnimationClip: {fileID: 3304532412000461976, guid: f52655841988ddd46aef931aaa7c074e, type: 3}
+  m_evadeDataTest: {fileID: 11400000, guid: 6ee937aa03e98a24380d71d23d531e52, type: 2}
 --- !u!143 &1756236763
 CharacterController:
   m_ObjectHideFlags: 0

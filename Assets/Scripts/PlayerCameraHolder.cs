@@ -14,18 +14,17 @@ public class PlayerCameraHolder : MonoBehaviour
     [SerializeField] private GameObject m_camera;
     [SerializeField] private Transform m_playerTransform;
     [Space]
-    [Header("Constants / static readonly")] //its the same apparently
-    private static readonly Vector3 s_camHolderLocalCenter = new Vector3(0, 1.5f, 0);
-    private static readonly Vector3 s_camHolderRestDirection = new Vector3(0, -1, 4f);
-    private static readonly float s_camRestDist = 4f;
+    private Vector3 s_camHolderLocalCenter = new Vector3(0, 1.5f, 0);
+    private Vector3 s_camHolderRestDirection = new Vector3(0, -2, 4f);
+    private float s_camRestDist = 4f;
     [Space]
-    private static readonly float s_camHolderClampAngleMax = 75f;
-    private static readonly float s_stickHorFactor = 250f;
-    private static readonly float s_stickVerFactor = 250f;
-    private static readonly float s_camHolderCenterFollowAcceleration = 5f;
-    private static readonly float s_camHolderRotationAcceleration = 6f;
+    private float s_camHolderClampAngleMax = 75f;
+    private float s_stickHorFactor = 250f;
+    private float s_stickVerFactor = 250f;
+    private float s_camHolderCenterFollowAcceleration = 5f;
+    private float s_camHolderRotationAcceleration = 6f;
     [Space]
-    private static readonly float s_camLocalPosAcceleration = 5f;
+    private float s_camLocalPosAcceleration = 5f;
 
     private float m_camHolderClampAngle;
     private Vector3 m_camHolderCenterPosBase;
@@ -140,31 +139,33 @@ public class PlayerCameraHolder : MonoBehaviour
 
     private void ForcingPosition()
     {
-        if (m_playerMovement == null || m_playerMovement.MoveStrenght == 0 && !IsLockOn || !m_isLockOn)
-            return;
+        //if (m_playerMovement == null || m_playerMovement.MoveStrenght == 0 && !IsLockOn || !m_isLockOn)
+        //    return;
 
         float m_desiredDirForceFactor = 0.6f;
-        float desiredRotationForce = 0;
+        float desiredRotationForceVerX = 0;
+        float desiredRotationForceHorY = 0;
         Quaternion desiredRotation = Quaternion.identity;
 
         if (m_isLockOn)
         {
             Vector3 camRestDir = TargetPos - m_camHolderCenterPos;
-            desiredRotationForce = 10;
+            desiredRotationForceVerX =  10;
+            desiredRotationForceHorY = Mathf.InverseLerp(5, 45, Vector2.Angle(new Vector2(camRestDir.x, camRestDir.z), new Vector2(transform.forward.x, transform.forward.z))) * 10; //if almost in center, force drops down
             desiredRotation = Quaternion.LookRotation(camRestDir);
         }
         else 
         {
             Vector3 camRestDir = s_camHolderRestDirection;
             //here, abhängig nur von input.x, weil beim seitswärts laufen die kamera gedreht wird
-            desiredRotationForce = m_desiredDirForceFactor * Mathf.Abs((m_playerMovement.InputDirection * m_playerMovement.MoveStrenght).x); 
+            desiredRotationForceVerX = desiredRotationForceHorY = m_desiredDirForceFactor * Mathf.Abs((m_playerMovement.InputDirection * m_playerMovement.MoveStrenght).x); 
             //Die Gewünschte End-Drehung von der Aktuellen Dreh-Richtung aus
             desiredRotation = m_playerTransform.transform.rotation * Quaternion.LookRotation(camRestDir);
         }
 
         //Die InputRichtung wird hier beim Laufen smooth zu desiredRotation gelenkt | KEIN SMART SLERP HIER!!!
-        m_WIP_camHolderRotationVerX = Quaternion.Slerp(m_WIP_camHolderRotationVerX, Quaternion.Euler(desiredRotation.eulerAngles.x, 0, 0), Time.deltaTime * desiredRotationForce); 
-        m_WIP_camHolderRotationHorY = Quaternion.Slerp(m_WIP_camHolderRotationHorY, Quaternion.Euler(0, desiredRotation.eulerAngles.y, 0), Time.deltaTime * desiredRotationForce);
+        m_WIP_camHolderRotationVerX = Quaternion.Slerp(m_WIP_camHolderRotationVerX, Quaternion.Euler(desiredRotation.eulerAngles.x, 0, 0), Time.deltaTime * desiredRotationForceVerX); 
+        m_WIP_camHolderRotationHorY = Quaternion.Slerp(m_WIP_camHolderRotationHorY, Quaternion.Euler(0, desiredRotation.eulerAngles.y, 0), Time.deltaTime * desiredRotationForceHorY);
 
     }
 

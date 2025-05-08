@@ -14,6 +14,7 @@ public class PlayerMovement : MonoBehaviour
     private CharacterController m_characterController;
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
+    [SerializeField] private CharacterMovesetData m_characterMovesetData;
 
     [SerializeField] private Animator m_animator;
     [Space]
@@ -25,7 +26,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float m_turningAccelerationBaseValue = 20f;
     private const int m_runningMoveStrenght = 2;
 
-    private float m_moveStrenght = 0f;
+    private float m_moveStrength = 0f;
     private Vector3 m_inputDir = Vector3.forward;
     private Vector3 m_inputDirInWS = Vector3.forward;
     private Vector3 m_desiredFacingRotationDirInWS = Vector3.forward;
@@ -62,7 +63,7 @@ public class PlayerMovement : MonoBehaviour
 
 
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
-    public float MoveStrenght { get => m_moveStrenght; set { if (m_isRunning && value > 0f)  m_moveStrenght = m_runningMoveStrenght; else m_moveStrenght = value; Speed = m_moveStrenght; } } //is already snapped by inputmanager
+    public float MoveStrenght { get => m_moveStrength; set { if (m_isRunning && value > 0f)  m_moveStrength = m_runningMoveStrenght; else m_moveStrength = value; Speed = m_moveStrength; } } //is already snapped by inputmanager
     public float Speed { get => m_speed; set { m_speed = value == 0 ? 0 : value == 0.5 ? m_speedValues.x : value == 1 ? m_speedValues.y : m_speedValues.z; } } //is already snapped by inputmanager
     public Quaternion CameraYAxisRotation { get => m_cameraYAxisRotationInWS; set => m_cameraYAxisRotationInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
     public Transform Target { get { if (m_target != null) return m_target; else { Debug.Log("target gets called, but is empty"); return null; } } set { m_target = value; m_isLockOn = (m_target != null); } }
@@ -102,7 +103,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_isFreelyMoving)
         {
             // InputDirRelativeToCam is relative to cameraRotation, so it should not affect the InputDirRelativeToCam when for example standing still
-            m_inputDirInWS = m_moveStrenght > 0 ? m_cameraYAxisRotationInWS * m_inputDir : m_inputDirInWS; 
+            m_inputDirInWS = m_moveStrength > 0 ? m_cameraYAxisRotationInWS * m_inputDir : m_inputDirInWS; 
 
             m_facingDirectionType = Direction.Forward;
         }
@@ -172,15 +173,21 @@ public class PlayerMovement : MonoBehaviour
         if ((int)m_currentInteruptability >= 3)
             return;
         
+        if (m_characterMovesetData == null)
+        {
+            Debug.Log("MISSING ANIMATION DATA");
+            return;
+        }
+
         m_currentInteruptability = AnimationInterruptableType.Not_Interruptable;
 
-        if (m_evadeDataTest == null) //later unecessary to ask
-            return;
 
         m_animator.SetTrigger("TriggerEvade");
 
-        AnimationMovementData animData = m_evadeDataTest;
-        SetActionValues(animData);
+        
+        AnimationMovementData animData = m_characterMovesetData.evadeForward.AnimationMovementData;
+        float animationDuration = m_characterMovesetData.evadeForward.animationClip.length / m_characterMovesetData.evadeForward.animationSpeed;
+        SetActionValues(animData, animationDuration);
 
     }
 
@@ -192,15 +199,15 @@ public class PlayerMovement : MonoBehaviour
     private void SetAnimatorMoveValues()
     {
         float animationDampTime = 0.15f; //smaller is faster transition
-        float VerticalMovement = m_moveStrenght; //is already snapped in inputmanager
-        m_animator.SetFloat("MoveMag", VerticalMovement, animationDampTime, Time.deltaTime);
+        float MoveStrength = m_moveStrength; //is already snapped in inputmanager
+        m_animator.SetFloat("MoveMag", MoveStrength, animationDampTime, Time.deltaTime);
 
         if (m_isFreelyMoving)
         {
             m_animator.SetFloat("Vertical", 1, animationDampTime, Time.deltaTime);
             m_animator.SetFloat("Horizontal", 0, animationDampTime, Time.deltaTime);
         }
-        else
+        else                                                                                                    // PROBLEM MAY BE HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         {
             Vector2 horAndVerMovement = Vector2.zero;
 
@@ -273,7 +280,7 @@ public class PlayerMovement : MonoBehaviour
             //the slerp makes the turning less extreme. better solution: Bone look at + constrains
             //m_desiredFacingRotationDirInWS = Vector3.Slerp(m_desiredFacingRotationDirInWS, PlayerToTargetXZVector, 0.0f); /////////////momantan zum testing auf 0, ist aber ehn nicht so ne schöne lösung
         }
-        m_desiredFacingRotationDirInWS = (m_moveStrenght > 0) ? SetDesiredFacingRotation() : m_desiredFacingRotationDirInWS;
+        m_desiredFacingRotationDirInWS = (m_moveStrength > 0) ? SetDesiredFacingRotation() : m_desiredFacingRotationDirInWS;
 
 
         //direction
@@ -397,7 +404,7 @@ public class PlayerMovement : MonoBehaviour
     #endregion
 
 
-    private void SetActionValues(AnimationMovementData animData)
+    private void SetActionValues(AnimationMovementData animData, float animationDuration)
     {
 
         int moveDirPredefinition = (int)animData.moveDirPredefinition;
@@ -510,18 +517,18 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        m_evadeCoroutine = StartCoroutine(PerformAction(RangeValuesList, CurveValuesList, (int)animData.relations, animData.timeStepsForCurves));
+        m_evadeCoroutine = StartCoroutine(PerformAction(RangeValuesList, CurveValuesList, (int)animData.relations, animData.timeStepsForCurves, animationDuration));
 
     }
         
-    private IEnumerator PerformAction(List<ProcessedAnimationMovementDataStartEnd> rangeValuesList, List<ProcessedAnimationMovementDataCurves> curveValuesList, int noneMoveTurningRelations, float timeSteps)
+    private IEnumerator PerformAction(List<ProcessedAnimationMovementDataStartEnd> rangeValuesList, List<ProcessedAnimationMovementDataCurves> curveValuesList, int noneMoveTurningRelations, float timeSteps, float animationDuration)
     {
         float elapsedTime = 0;
         float startTime = Time.time;
         float timeToWait = timeSteps;
 
 
-        float animationduration = m_evateAnimationClip.length/1.2f; //what about blendtrees?
+        float duration = animationDuration; //what about blendtrees?
 
         void SetValueByName(ValueName name, float newValue)
         {
@@ -547,11 +554,11 @@ public class PlayerMovement : MonoBehaviour
 
         //Debug.Log($"time: {Time.time}, < start: {startTime} + elapsed: {elapsedTime}");
 
-        while (elapsedTime <= animationduration)
+        while (elapsedTime <= duration)
         {
-            float timeTillEnd = (animationduration - elapsedTime);
+            float timeTillEnd = (duration - elapsedTime);
             float waitForTime = timeTillEnd; 
-            float relativeTimeValue = elapsedTime / animationduration;
+            float relativeTimeValue = elapsedTime / duration;
 
             //STARTEND VALUES
             foreach (var rangeData in rangeValuesList)
@@ -562,8 +569,8 @@ public class PlayerMovement : MonoBehaviour
 
                 //this calculates how long to wait for the next necessary canculation
                 float waitForTimeByRangeValues = timeTillEnd;
-                if(relativeTimeValue < rangeData.startEnd.x)                waitForTimeByRangeValues = (rangeData.startEnd.x * animationduration) - elapsedTime; //wait till range start
-                else if (relativeTimeValue < rangeData.startEnd.y)          waitForTimeByRangeValues = (rangeData.startEnd.y * animationduration) - elapsedTime; //wait till range end
+                if(relativeTimeValue < rangeData.startEnd.x)                waitForTimeByRangeValues = (rangeData.startEnd.x * duration) - elapsedTime; //wait till range start
+                else if (relativeTimeValue < rangeData.startEnd.y)          waitForTimeByRangeValues = (rangeData.startEnd.y * duration) - elapsedTime; //wait till range end
                                                                         waitForTime = Math.Min(waitForTime, waitForTimeByRangeValues);
                 SetValueByName(rangeData.name, valueInRange);
             }
@@ -578,8 +585,8 @@ public class PlayerMovement : MonoBehaviour
 
                 //this calculates how long to wait for the next necessary canculation
                 float waitForTimeByCurveValues = timeToWait;
-                if (relativeTimeValue < curveData.startEnd.x)               waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.x * animationduration) - elapsedTime); //wait till range start or timeToWait
-                else if (relativeTimeValue < curveData.startEnd.y)          waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.y * animationduration) - elapsedTime); //wait till range end or timeToWait                                                                        //wait till timeToWait
+                if (relativeTimeValue < curveData.startEnd.x)               waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.x * duration) - elapsedTime); //wait till range start or timeToWait
+                else if (relativeTimeValue < curveData.startEnd.y)          waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.y * duration) - elapsedTime); //wait till range end or timeToWait                                                                        //wait till timeToWait
                                                                         waitForTime = Mathf.Min(waitForTime, waitForTimeByCurveValues);                                                                                                   
 
 
@@ -588,7 +595,7 @@ public class PlayerMovement : MonoBehaviour
 
             //End of Frame
             //Debug.Log($" relativeTime: { relativeTimeValue}");
-            if (elapsedTime > animationduration - 0.001f)
+            if (elapsedTime > duration - 0.001f)
                 yield return null;
             else
                 yield return new WaitForSeconds(waitForTime);
@@ -598,9 +605,9 @@ public class PlayerMovement : MonoBehaviour
 
 
         //At the end
-        m_inputDirInWS = m_moveStrenght > 0 ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward; 
+        m_inputDirInWS = m_moveStrength > 0 ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward; 
         m_prevFacingRotationDir = transform.forward;
-        m_desiredFacingRotationDirInWS = m_moveStrenght > 0 ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
+        m_desiredFacingRotationDirInWS = m_moveStrength > 0 ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
 
         m_animator.ResetTrigger("TriggerTurning");
 
