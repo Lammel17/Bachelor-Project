@@ -5,26 +5,31 @@ public class CharacterMovesetData : ScriptableObject
 {
 
     public string Description = "";
-
-    public AnimationClip idle;
+    [Header("AnimationData Files")]
+    public AnimationData idle;
     [Space]
-    public AnimationClip slowWalkingForward;
-    public AnimationClip slowWalkingLeft;
-    public AnimationClip slowWalkingRight;
-    public AnimationClip slowWalkingBack;
+    public AnimationData turningLeft;
+    public AnimationData turningRight;
     [Space]
-    public AnimationClip walkingForward;
-    public AnimationClip walkingLeft;
-    public AnimationClip walkingRight;
-    public AnimationClip walkingBack;
+    public AnimationData slowWalkingForward;
+    public AnimationData slowWalkingLeft;
+    public AnimationData slowWalkingRight;
+    public AnimationData slowWalkingBackwards;
     [Space]
-    public AnimationClip Running;
+    public AnimationData walkingForward;
+    public AnimationData walkingLeft;
+    public AnimationData walkingRight;
+    public AnimationData walkingBackwards;
+    [Space]
+    public AnimationData running;
+    public AnimationData turningRunningLeft;
+    public AnimationData turningRunningRight;
     [Space]
     [Space]
-    public ActionData evadeForward;
-    public ActionData evadeLeft;
-    public ActionData evadeRight;
-    public ActionData evadeBack;
+    public AnimationData evadeForward;
+    public AnimationData evadeLeft;
+    public AnimationData evadeRight;
+    public AnimationData evadeBackwards;
 
 
 

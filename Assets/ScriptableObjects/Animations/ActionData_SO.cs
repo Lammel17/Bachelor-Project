@@ -1,7 +1,7 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ActionData", menuName = "Scriptable Objects/ActionData")]
-public class ActionData : ScriptableObject
+[CreateAssetMenu(fileName = "AnimationData", menuName = "Scriptable Objects/AnimationData")]
+public class AnimationData : ScriptableObject
 {
 
     public string ActionDescription = "";
@@ -10,7 +10,10 @@ public class ActionData : ScriptableObject
     [Header("Animation Data")]
     public AnimationClip animationClip = null;
     public float animationSpeed = 1;
+    public bool mirrorAnimation = false;
     public AnimationMovementData AnimationMovementData;
+    public bool mirrorMovement = false;
+
 
 
     [Header("Invincibility")]
