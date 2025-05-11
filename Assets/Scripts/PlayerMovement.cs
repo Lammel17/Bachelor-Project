@@ -300,7 +300,7 @@ public class PlayerMovement : MonoBehaviour
         float nowTurningAcceleration = Mathf.Lerp(turningAccelerationByInput, turningAccelerationByAction, m_actionInfluenceOverTurningAcceleration);
 
 
-        float angle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up), -nowTurningSpeed, nowTurningSpeed); //Only ever 5° steps, the turning speed
+        float angle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up), -nowTurningSpeed, nowTurningSpeed); //Only ever speed° steps, the turning speed
         if(angle != 0) m_animator.SetFloat("TurningDir", angle > 0 ? 1 : -1);
 
         Quaternion nowDirection = transform.rotation * Quaternion.Euler(0, angle, 0);
