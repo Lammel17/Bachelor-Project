@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
-  m_Name: TestEvadeForward MovementData
+  m_Name: TestEvadeLeft MovementData
   m_EditorClassIdentifier: 
   ActionDescription: humanoid_evade_forward
   moveDirPredefinition: 1
@@ -66,7 +66,30 @@ MonoBehaviour:
       valueType: 0
       value: 15
       valueSettings:
-        startEnd: {x: 0, y: 0.99999994}
+        startEnd: {x: 0, y: 1}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+      influenceType: 0
+      influence: 0.493
+      influenceSettings:
+        startEnd: {x: 0, y: 0}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+  - valueName: 3
+    ignore: 1
+    settings:
+      valueType: 0
+      value: 90
+      valueSettings:
+        startEnd: {x: 0, y: 1}
         curveValue:
           serializedVersion: 2
           m_Curve: []

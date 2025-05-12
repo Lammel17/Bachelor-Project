@@ -6,7 +6,7 @@ public class ProcessedAnimationMovementData
 
     public List<DataStartEnd> rangeValuesList;
     public List<DataCurves> curveValuesList;
-    public int noneMoveTurningRelations;
+    public int turningRelations;
     public float timeSteps;
     public float animationDuration;
 
@@ -14,7 +14,7 @@ public class ProcessedAnimationMovementData
     {
         rangeValuesList = se;
         curveValuesList = c;
-        noneMoveTurningRelations = r;
+        turningRelations = r;
         timeSteps = t;
         animationDuration = d;
     }
@@ -62,9 +62,9 @@ public class ProcessedAnimationMovementData
         InfluenceOn_Move_Acceleration,
         Turning_Direction_Angle,
         InfluenceOn_Turning_Direction_Angle,
-        Turning_Speed,
-        InfluenceOn_Turning_Speed,
-        Turning_Acceleration,
-        InfluenceOn_Turning_Acceleration,
+        Turning_Strenght,
+        InfluenceOn_Turning_Strenght,
+        Max_Turning_Speed,
+        InfluenceOn_Max_Turning_Speed,
     }
 }

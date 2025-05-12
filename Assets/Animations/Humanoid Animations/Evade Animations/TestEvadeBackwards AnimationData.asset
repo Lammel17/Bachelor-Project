@@ -16,7 +16,7 @@ MonoBehaviour:
   animationClip: {fileID: 7400000, guid: 5a784b0d3ae9e384e850014ad34184f6, type: 2}
   animationSpeed: 1.2
   mirrorAnimation: 0
-  AnimationMovementData: {fileID: 11400000, guid: 6ee937aa03e98a24380d71d23d531e52, type: 2}
+  AnimationMovementData: {fileID: 11400000, guid: bbf4809a02a45c64a9178f158d1c765f, type: 2}
   mirrorMovement: 0
   invincibilitySettings:
     hasInvincibilityFrames: 0

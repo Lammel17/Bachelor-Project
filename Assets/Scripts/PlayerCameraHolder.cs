@@ -14,6 +14,7 @@ public class PlayerCameraHolder : MonoBehaviour
     [SerializeField] private GameObject m_camera;
     [SerializeField] private Transform m_playerTransform;
     [Space]
+    //[Header("Camera Holder")]
     private Vector3 s_camHolderLocalCenter = new Vector3(0, 1.5f, 0);
     private Vector3 s_camHolderRestDirection = new Vector3(0, -2, 4f);
     private float s_camRestDist = 4f;
@@ -36,7 +37,10 @@ public class PlayerCameraHolder : MonoBehaviour
     private Quaternion m_camHolderRotationVerX;
     private Quaternion m_camHolderRotationHorY;
 
+    [Header("Camera itfelf")]
     private Vector3 m_camPos;
+    [SerializeField] private float m_additionalHeightWhenLockOn = 0.5f;
+    [SerializeField] [Range(0,1)]private float m_lookToPlayerOrTargetFactor = 0.6f;
 
     [SerializeField] private Transform m_chosenLockOnTransform;
      private Transform m_target;
@@ -217,9 +221,10 @@ public class PlayerCameraHolder : MonoBehaviour
 
         if (m_isLockOn)
         {
-            float howMuchRotatingToTarget = 0.6f;
+            float camAdditionalHeight = m_additionalHeightWhenLockOn;
+            float howMuchRotatingToTarget = m_lookToPlayerOrTargetFactor;
             //offset height is depending on angle
-            float camYOffset = UtilityFunctions.RefitRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x, false), 0, s_camHolderClampAngleMax, 0.5f, 2); 
+            float camYOffset = UtilityFunctions.RefitRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x, false), 0, s_camHolderClampAngleMax, camAdditionalHeight, 2); 
 
             m_camPos = new Vector3(0, camYOffset, -s_camRestDist); 
             lockOnParameter = UtilityFunctions.SmartLerp(lockOnParameter, howMuchRotatingToTarget, Time.deltaTime * 2f);
