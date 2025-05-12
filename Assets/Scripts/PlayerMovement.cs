@@ -152,12 +152,14 @@ public class PlayerMovement : MonoBehaviour
         if (inputAngleToForward < m_forwardSidewardThreshholdAngle)                                             m_facingDirectionType = Direction.Forward;
         else if (inputAngleToForward < m_sidewardBackwardThreshholdAngle && Mathf.Sign(m_inputDir.x) >= 0)      m_facingDirectionType = Direction.Right;
         else if (inputAngleToForward < m_sidewardBackwardThreshholdAngle)                                       m_facingDirectionType = Direction.Left;
-        else                                                                                                  { m_facingDirectionType = Direction.Backward; Debug.Log($"EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");}
+        else                                                                                                    m_facingDirectionType = Direction.Backward; 
 
 
     }
 
 
+    [SerializeField] float turningStrenght = 2f;
+    [SerializeField] float maxTurningSpeed = 10f;
     void TriggerTurning()
     {
         if (m_isTurning || m_currentInteruptability != AnimationInterruptableType.Always_Interruptable)
@@ -168,9 +170,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (m_isFreelyMoving && (!m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
         {
-            float turnAnimationTurningSpeed = 10f;
-            float maxTurningSpeed = 50f;
-            m_turningStrenght = turnAnimationTurningSpeed;
+
+            m_turningStrenght = turningStrenght;
             m_maxTurningSpeed = maxTurningSpeed;
 
             m_animator.SetTrigger("TriggerTurning");
@@ -327,16 +328,17 @@ public class PlayerMovement : MonoBehaviour
         //acceleration
         float maxTurningSpeedByInput = m_maxTurningSpeed;
         float maxTurningSpeedByAction = m_maxTurningSpeedByInputByAction;
-        float nowMaxTurningSpeed = Mathf.Lerp(maxTurningSpeedByInput, maxTurningSpeedByAction, m_actionInfluenceOverMaxTurningSpeed) * 600 * Time.deltaTime; //600 als faktor, damit maxspeed nicht so groﬂ sein muss
+        float nowMaxTurningSpeed = Mathf.Lerp(maxTurningSpeedByInput, maxTurningSpeedByAction, m_actionInfluenceOverMaxTurningSpeed) * 60 * Time.deltaTime; //60 als faktor, damit maxspeed nicht so groﬂ sein muss
 
-        float angle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up), -nowMaxTurningSpeed, nowMaxTurningSpeed); //Only ever 90∞ steps max per seconds, the turning speed
-        if(angle != 0) m_animator.SetFloat("TurningDir", Mathf.Sign(angle));
+        float angle = Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up); 
+        float newAngle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up) * Time.deltaTime * nowTurningStrenght, -nowMaxTurningSpeed, nowMaxTurningSpeed); //Only ever 90∞ steps max per seconds, the turning speed
+        if (newAngle != 0) m_animator.SetFloat("TurningDir", Mathf.Sign(newAngle));
 
         //this makes the car rotate not around it center when walking and turning, but rotates around a pont slightly to the side
-        float turnRotationPointOffsetXAxis = Mathf.Sign(angle) * 0.1f * m_prevMove.magnitude / 0.18f;
+        float turnRotationPointOffsetXAxis = Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f;
         Vector3 rotationCenterOffset = new Vector3(turnRotationPointOffsetXAxis, 0, 0);
 
-        transform.RotateAround(transform.position + (transform.rotation * rotationCenterOffset), Vector3.up, angle * Time.deltaTime * nowTurningStrenght);
+        transform.RotateAround(transform.position + (transform.rotation * rotationCenterOffset), Vector3.up, newAngle);
 
 
     }
