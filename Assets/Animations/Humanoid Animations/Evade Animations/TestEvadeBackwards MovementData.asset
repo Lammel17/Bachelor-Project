@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
   m_Name: TestEvadeBackwards MovementData
   m_EditorClassIdentifier: 
-  ActionDescription: humanoid_evade_forward
+  ActionDescription: humanoid_evade_backwards
   moveDirPredefinition: 1
   turningDirPredefinition: 1
   moveInfluence: 1
@@ -76,7 +76,7 @@ MonoBehaviour:
       influenceType: 0
       influence: 1
       influenceSettings:
-        startEnd: {x: 0, y: 0}
+        startEnd: {x: 0, y: 1}
         curveValue:
           serializedVersion: 2
           m_Curve: []
@@ -99,7 +99,7 @@ MonoBehaviour:
       influenceType: 0
       influence: 1
       influenceSettings:
-        startEnd: {x: 0, y: 0}
+        startEnd: {x: 0, y: 1}
         curveValue:
           serializedVersion: 2
           m_Curve: []

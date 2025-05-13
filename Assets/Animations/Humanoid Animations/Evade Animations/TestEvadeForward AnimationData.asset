@@ -20,6 +20,6 @@ MonoBehaviour:
   mirrorMovement: 0
   invincibilitySettings:
     hasInvincibilityFrames: 0
-    invincibilityStart: 0
+    invincibilityStart: 0.249
     invincibilityDuration: 0
   effectsList: []

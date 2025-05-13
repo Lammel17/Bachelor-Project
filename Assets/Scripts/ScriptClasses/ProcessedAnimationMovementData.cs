@@ -9,14 +9,16 @@ public class ProcessedAnimationMovementData
     public int turningRelations;
     public float timeSteps;
     public float animationDuration;
+    //public float applyTurningRelationsAt;
 
-    public ProcessedAnimationMovementData(List<DataStartEnd> se, List<DataCurves> c, int r, float t, float d)
+    public ProcessedAnimationMovementData(List<DataStartEnd> se, List<DataCurves> c, int r, float t, float d/*, float atr*/)
     {
         rangeValuesList = se;
         curveValuesList = c;
         turningRelations = r;
         timeSteps = t;
         animationDuration = d;
+        //applyTurningRelationsAt = atr;
     }
 
     public class DataCurves

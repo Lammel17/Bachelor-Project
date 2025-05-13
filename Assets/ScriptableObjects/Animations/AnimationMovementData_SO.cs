@@ -24,7 +24,8 @@ public class AnimationMovementData : ScriptableObject
     [SerializeField] public InfluenceValuePredefinitions turningInfluence = InfluenceValuePredefinitions.NoInputInfluence;
     [Space]
     [Tooltip("  ")]
-    [SerializeField] public InitialRelations turningRelations = InitialRelations.None;
+    [SerializeField] public TurningRelations turningRelations = TurningRelations.None;
+    //[SerializeField][Range(0, 1)] public float applyRelationAt = 0;
     [Space]
     [Header("Animation Parameters for Movement and Rotation")]
     [SerializeField] public Values[] variableValue;
@@ -47,10 +48,10 @@ public class AnimationMovementData : ScriptableObject
 
     }
 
-    public enum InitialRelations
+    public enum TurningRelations
     {
-        None = 1,
-        TurningDirFollowsTarget,    //Will use the latest inputDir and TurningDir as StartingPoint
+        None = 0,
+        TurningDirFollowsTarget,   
         TurningDirFollowsMoveDir,    //Will use the latest inputDir and TurningDir as StartingPoint
         //MoveDirFollowsTurningDir
 

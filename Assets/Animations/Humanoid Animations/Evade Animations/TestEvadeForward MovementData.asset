@@ -25,7 +25,7 @@ MonoBehaviour:
       valueType: 2
       value: 10
       valueSettings:
-        startEnd: {x: 0.20332693, y: 0.93}
+        startEnd: {x: 0.19986498, y: 0.93}
         curveValue:
           serializedVersion: 2
           m_Curve:
@@ -64,7 +64,30 @@ MonoBehaviour:
     ignore: 0
     settings:
       valueType: 0
-      value: 15
+      value: 10
+      valueSettings:
+        startEnd: {x: 0, y: 0.99999994}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+      influenceType: 0
+      influence: 1
+      influenceSettings:
+        startEnd: {x: 0, y: 0}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+  - valueName: 5
+    ignore: 0
+    settings:
+      valueType: 0
+      value: 20
       valueSettings:
         startEnd: {x: 0, y: 0.99999994}
         curveValue:

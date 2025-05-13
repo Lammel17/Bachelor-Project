@@ -334,7 +334,7 @@ public class PlayerMovement : MonoBehaviour
 
         //direction
         Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS; 
-        Vector3 desiredFacingRotationDirInWSByAction = m_turningFollowsTarget && m_isLockOn ? PlayerToTargetXZVector : m_desiredFacingRotationDirInWSByAction;
+        Vector3 desiredFacingRotationDirInWSByAction = (m_isTurningFollowsTarget && m_isLockOn) ? PlayerToTargetXZVector : m_desiredFacingRotationDirInWSByAction;
         Vector3 nowdesiredFacingRotationDirInWS = Vector3.Slerp(desiredFacingRotationDirInWSByInput, desiredFacingRotationDirInWSByAction, m_actionInfluenceOverDesiredFacingRotationDirInWS);
         //Debug.Log(m_desiredFacingRotationDirInWSByAction);
         //Speed
@@ -352,7 +352,7 @@ public class PlayerMovement : MonoBehaviour
         if (newAngle != 0) m_animator.SetFloat("TurningDir", Mathf.Sign(newAngle));
 
         //this makes the car rotate not around it center when walking and turning, but rotates around a pont slightly to the side
-        float turnRotationPointOffsetXAxis = Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f;
+        float turnRotationPointOffsetXAxis = !m_isAction ? (Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f) : 0;
         Vector3 rotationCenterOffset = new Vector3(turnRotationPointOffsetXAxis, 0, 0);
 
         transform.RotateAround(transform.position + (transform.rotation * rotationCenterOffset), Vector3.up, newAngle);
@@ -399,7 +399,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 m_directionByActionBaseValue = Vector3.forward;
     private Vector3 m_desiredFacingRotationDirInWSByActionBaseValue = Vector3.forward;
 
-    private bool m_turningFollowsTarget = false;
+    private bool m_isTurningFollowsTarget = false;
 
     Coroutine m_ActionCoroutine = null;
 
@@ -414,7 +414,7 @@ public class PlayerMovement : MonoBehaviour
         float startMoveInfluence = animData.moveInfluence  == AnimationMovementData.InfluenceValuePredefinitions.NoInputInfluence ? 1 : 0;  
         float startTurningInfluence = animData.turningInfluence == AnimationMovementData.InfluenceValuePredefinitions.NoInputInfluence ? 1 : 0;
 
-        m_turningFollowsTarget = animData.turningRelations == AnimationMovementData.InitialRelations.TurningDirFollowsTarget;
+        m_isTurningFollowsTarget = animData.turningRelations == AnimationMovementData.TurningRelations.TurningDirFollowsTarget /*&& animData.applyRelationAt == 0*/;
 
         //move
         m_directionByAction = m_directionByActionBaseValue = (moveDirPredefinition == 1) ? m_inputDirInWS : transform.forward;
@@ -425,7 +425,7 @@ public class PlayerMovement : MonoBehaviour
         m_actionInfluenceOverMoveAcceleration = startMoveInfluence;
 
         //turning
-        m_desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByActionBaseValue = (turningDirPredefinition == 1) ? m_desiredFacingRotationDirInWS : transform.forward;
+        m_desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByActionBaseValue = (int)animData.turningRelations == 2 ? m_inputDirInWS : (turningDirPredefinition == 1) ? m_desiredFacingRotationDirInWS : transform.forward;
         m_actionInfluenceOverDesiredFacingRotationDirInWS = startTurningInfluence;
         m_turningStrenghtByAction = m_turningStrenght; // is set to current speed 
         m_actionInfluenceOverTurningStrenght = startTurningInfluence;
@@ -458,8 +458,6 @@ public class PlayerMovement : MonoBehaviour
                     if (influenceValueTypeIsConstant)   m_actionInfluenceOverMoveDirection = valueData.influence;
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
-
-                    if ((int)animData.turningRelations == 3)   { m_desiredFacingRotationDirInWSByAction = m_directionByAction; /*m_actionInfluenceOverDesiredFacingRotationDirInWS = 1;*/ }
 
                     break;
                 case AnimationMovementData.ValueName.Move_Speed:
@@ -521,7 +519,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, (int)animData.turningRelations, animData.timeStepsForCurves, animationDuration); //This could be saved somewhere in future!
+        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, (int)animData.turningRelations, animData.timeStepsForCurves, animationDuration /*, animData.turningRelations == AnimationMovementData.InitialRelations.TurningDirFollowsTarget ? animData.applyRelationAt : 0*/); //This could be saved somewhere in future!
 
         m_ActionCoroutine = StartCoroutine(PerformAction(processedData));
 
@@ -532,6 +530,7 @@ public class PlayerMovement : MonoBehaviour
         float elapsedTime = 0;
         float startTime = Time.time;
         float timeToWait = processedData.timeSteps;
+        //bool turningFollowsTargetWasApplied = processedData.applyTurningRelationsAt == 0;
 
 
         float duration = processedData.animationDuration; //what about blendtrees?
@@ -540,16 +539,24 @@ public class PlayerMovement : MonoBehaviour
         {
             switch (name)
             {
-                case ProcessedAnimationMovementData.ValueName.Move_Direction_Angle:                     m_directionByAction                                     = Quaternion.Euler(0, newValue, 0) * m_directionByActionBaseValue; 
-                                                                        if (processedData.turningRelations == 3) m_desiredFacingRotationDirInWSByAction = m_directionByAction; break;
+                case ProcessedAnimationMovementData.ValueName.Move_Direction_Angle:                     
+                    if (processedData.turningRelations == 2) 
+                    { //the facingdirBase value must be updated, and then the turning also needs to be recalculated
+                        m_desiredFacingRotationDirInWSByActionBaseValue = m_directionByAction; 
+                        Quaternion presumableTurningValueOfData = Quaternion.FromToRotation(m_directionByAction, m_desiredFacingRotationDirInWSByAction);
+                        m_directionByAction = Quaternion.Euler(0, newValue, 0) * m_directionByActionBaseValue;
+                        m_desiredFacingRotationDirInWSByAction = presumableTurningValueOfData * m_desiredFacingRotationDirInWSByActionBaseValue;
+                    }
+                    else 
+                        m_directionByAction = Quaternion.Euler(0, newValue, 0) * m_directionByActionBaseValue;
+                    break;
                 case ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle:         m_actionInfluenceOverMoveDirection                      = newValue; break;
                 case ProcessedAnimationMovementData.ValueName.Move_Speed:                               m_speedByAction                                         = newValue; break;
                 case ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Speed:                   m_actionInfluenceOverMoveSpeed                          = newValue; break;
                 case ProcessedAnimationMovementData.ValueName.Move_Acceleration:                        m_moveAccelerationByAction                              = newValue; break;
                 case ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Acceleration:            m_actionInfluenceOverMoveAcceleration                   = newValue; break;
                 
-                case ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle:                  m_desiredFacingRotationDirInWSByAction                  = Quaternion.Euler(0, newValue, 0) * m_desiredFacingRotationDirInWSByActionBaseValue;
-                                                                        /*if (processedData.turningRelations == 4) m_directionByAction = transform.forward;*/ break; 
+                case ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle:                  m_desiredFacingRotationDirInWSByAction                  = Quaternion.Euler(0, newValue, 0) * m_desiredFacingRotationDirInWSByActionBaseValue; break; 
                 case ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle:      m_actionInfluenceOverDesiredFacingRotationDirInWS       = newValue; break;
                 case ProcessedAnimationMovementData.ValueName.Turning_Strenght:                         m_turningStrenghtByAction                               = newValue; break;
                 case ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Strenght:             m_actionInfluenceOverTurningStrenght                    = newValue; break;
@@ -564,19 +571,23 @@ public class PlayerMovement : MonoBehaviour
         {
             float timeTillEnd = (duration - elapsedTime);
             float waitForTime = timeTillEnd; 
-            float relativeTimeValue = elapsedTime / duration;
+            float relativeElapsedTime = elapsedTime / duration;
+
+            //apply special turning behavior
+            //if (!turningFollowsTargetWasApplied && relativeElapsedTime < processedData.applyTurningRelationsAt) waitForTime = processedData.applyTurningRelationsAt * duration - elapsedTime;
+            //if (!turningFollowsTargetWasApplied && relativeElapsedTime >= processedData.applyTurningRelationsAt && !m_turningFollowsTarget) { turningFollowsTargetWasApplied = true; m_turningFollowsTarget = true;Debug.Log(relativeElapsedTime);}
 
             //STARTEND VALUES
             foreach (var rangeData in processedData.rangeValuesList)
             {
                 
-                float activeFactor = relativeTimeValue >= rangeData.startEnd.x && relativeTimeValue < rangeData.startEnd.y ? 1 : 0;
+                float activeFactor = relativeElapsedTime >= rangeData.startEnd.x && relativeElapsedTime < rangeData.startEnd.y ? 1 : 0;
                 float valueInRange = rangeData.value * activeFactor;
 
                 //this calculates how long to wait for the next necessary canculation
                 float waitForTimeByRangeValues = timeTillEnd;
-                if(relativeTimeValue < rangeData.startEnd.x)                waitForTimeByRangeValues = (rangeData.startEnd.x * duration) - elapsedTime; //wait till range start
-                else if (relativeTimeValue < rangeData.startEnd.y)          waitForTimeByRangeValues = (rangeData.startEnd.y * duration) - elapsedTime; //wait till range end
+                if(relativeElapsedTime < rangeData.startEnd.x)                waitForTimeByRangeValues = (rangeData.startEnd.x * duration) - elapsedTime; //wait till range start
+                else if (relativeElapsedTime < rangeData.startEnd.y)          waitForTimeByRangeValues = (rangeData.startEnd.y * duration) - elapsedTime; //wait till range end
                                                                         waitForTime = Math.Min(waitForTime, waitForTimeByRangeValues);
                 SetValueByName(rangeData.name, valueInRange);
             }
@@ -586,13 +597,13 @@ public class PlayerMovement : MonoBehaviour
             {
                 AnimationCurve curve = curveData.curve;
 
-                float activeFactor = relativeTimeValue > curveData.startEnd.x && relativeTimeValue < curveData.startEnd.y ? 1 : 0;
-                float curveValue = curveData.value * curve.Evaluate(Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeTimeValue)) * activeFactor;
+                float activeFactor = relativeElapsedTime > curveData.startEnd.x && relativeElapsedTime < curveData.startEnd.y ? 1 : 0;
+                float curveValue = curveData.value * curve.Evaluate(Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeElapsedTime)) * activeFactor;
 
                 //this calculates how long to wait for the next necessary canculation
                 float waitForTimeByCurveValues = timeToWait;
-                if (relativeTimeValue < curveData.startEnd.x)               waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.x * duration) - elapsedTime); //wait till range start or timeToWait
-                else if (relativeTimeValue < curveData.startEnd.y)          waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.y * duration) - elapsedTime); //wait till range end or timeToWait                                                                        //wait till timeToWait
+                if (relativeElapsedTime < curveData.startEnd.x)               waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.x * duration) - elapsedTime); //wait till range start or timeToWait
+                else if (relativeElapsedTime < curveData.startEnd.y)          waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.y * duration) - elapsedTime); //wait till range end or timeToWait                                                                        //wait till timeToWait
                                                                         waitForTime = Mathf.Min(waitForTime, waitForTimeByCurveValues);                                                                                                   
 
 
@@ -619,7 +630,7 @@ public class PlayerMovement : MonoBehaviour
         m_actionInfluenceOverDesiredFacingRotationDirInWS = 0;
         m_actionInfluenceOverTurningStrenght = 0;
         m_actionInfluenceOverMaxTurningSpeed = 0;
-        m_turningFollowsTarget = false;
+        m_isTurningFollowsTarget = false;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.Free;
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
         m_ActionCoroutine = null;
