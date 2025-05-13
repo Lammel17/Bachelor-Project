@@ -25,7 +25,6 @@ public class AnimationMovementData : ScriptableObject
     [Space]
     [Tooltip("  ")]
     [SerializeField] public TurningRelations turningRelations = TurningRelations.None;
-    //[SerializeField][Range(0, 1)] public float applyRelationAt = 0;
     [Space]
     [Header("Animation Parameters for Movement and Rotation")]
     [SerializeField] public Values[] variableValue;
@@ -36,8 +35,6 @@ public class AnimationMovementData : ScriptableObject
     {
         LatestInput = 1,    //Will use the latest inputDir and TurningDir as StartingPoint
         LatestFrame,
-        //InputOnly,
-        //Freeze,
 
     }
     public enum InfluenceValuePredefinitions

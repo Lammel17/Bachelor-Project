@@ -51,7 +51,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isStandingStill = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isLockOn = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isRunning = false;
-    [SerializeField][EditorAttributes.ReadOnly] private bool m_isFreelyMoving = true;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isFreelyTurning = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
 
@@ -118,17 +118,16 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
-        m_isFreelyMoving = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyMoving; //only change, when its not mid animation
+        m_isFreelyTurning = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyTurning; //only change, when its not mid animation
         m_isStandingStill = m_moveStrength == 0;
 
         if (m_isLockOn) m_targetDist = (TargetPos - transform.position).magnitude;
 
         if (m_isStandingStill)
         {
-            //m_facingDirectionType = Direction.Forward;
             return;
         }
-        if (m_isFreelyMoving)
+        if (m_isFreelyTurning)
         {
             // InputDirRelativeToCam is relative to cameraRotation, so it should not affect the InputDirRelativeToCam when for example standing still
             m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : m_inputDirInWS; 
@@ -151,14 +150,14 @@ public class PlayerMovement : MonoBehaviour
     void SetFacingDirectionType()
     {
         //das setzt den threshhold für ab welchen winkel die vorwärts, seitswärt order rückwärts animation abgespielt wird
-        float firstThreshholdAngleMin = 15f;
+        float firstThreshholdAngleMin = 10f;
         float secondThreshholdAngleMin = 110f;
         float distThreshhold = 10f;    //Ab diesem abstand werden die threshholds anfangen zu den Min Threshholds zu lerpen
         float additionalThreshhold = 5f; //Damit es keine flickerzone gibt, wo das überschreiten und unterschreiten des threshholds gleich ist
 
         if (m_facingDirectionType == Direction.Left || m_facingDirectionType == Direction.Right) additionalThreshhold = -additionalThreshhold;
 
-        m_forwardSidewardThreshholdAngle = Mathf.Lerp(firstThreshholdAngleMin, 45f, m_targetDist / distThreshhold) + additionalThreshhold;
+        m_forwardSidewardThreshholdAngle = Mathf.Lerp(firstThreshholdAngleMin, 45f, m_targetDist / distThreshhold) + additionalThreshhold; /////////////////Mathf.Min
         m_sidewardBackwardThreshholdAngle = Mathf.Lerp(secondThreshholdAngleMin, 135f, m_targetDist / distThreshhold) - additionalThreshhold;
 
         float inputAngleToForward = Vector3.Angle(Vector3.forward, m_inputDir);
@@ -182,7 +181,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_isStandingStill)
             return;
 
-        if (m_isFreelyMoving)
+        if (m_isFreelyTurning)
         {
             m_animator.SetFloat("Vertical", 1, animationDampTime, Time.deltaTime);
             m_animator.SetFloat("Horizontal", 0, animationDampTime, Time.deltaTime);
@@ -219,7 +218,7 @@ public class PlayerMovement : MonoBehaviour
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
         float angleMoveDirToPrevMoveDir = Vector3.Angle(m_desiredFacingRotationDirInWS, m_prevFacingRotationDir);
 
-        if (m_isFreelyMoving && (!m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
+        if (m_isFreelyTurning && (!m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
         {
             m_currentInteruptability = turningInterruptability;
             m_turningStrenght = turningStrenght;
@@ -266,9 +265,6 @@ public class PlayerMovement : MonoBehaviour
         m_isAction = true;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        //m_desiredFacingRotationDirInWS = m_inputDirInWS;
-
-
         float animationDuration = m_characterMovesetData.evadeForward.animationClip.length / m_characterMovesetData.evadeForward.animationSpeed;
         SetActionValues(animData, animationDuration);
 
@@ -291,7 +287,7 @@ public class PlayerMovement : MonoBehaviour
         float forwardFactor = m_isTurning ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_inputDirInWS), 30, 20, 0, 1) : 1f;
 
         //direction
-        Vector3 directionByInput = !m_isFreelyMoving ? m_inputDirInWS : transform.forward;
+        Vector3 directionByInput = !m_isFreelyTurning ? m_inputDirInWS : transform.forward;
         Vector3 directionByAction = m_directionByAction;
         Vector3 nowMoveDirection = Vector3.Lerp(directionByInput, directionByAction, m_actionInfluenceOverMoveDirection);
 
@@ -313,14 +309,13 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
-    Quaternion AdditionalFacingRotation()
+    private Quaternion AdditionalFacingRotation()
     {
         if (m_facingDirectionType == Direction.Forward) return Quaternion.identity;
         if (m_facingDirectionType == Direction.Right) return Quaternion.Euler(0, -90, 0);
         else if (m_facingDirectionType == Direction.Left) return Quaternion.Euler(0, 90, 0);
         else return Quaternion.Euler(0, 180, 0);
     }
-
 
     private void RotatingPlayer()
     {
@@ -334,9 +329,9 @@ public class PlayerMovement : MonoBehaviour
 
         //direction
         Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS; 
-        Vector3 desiredFacingRotationDirInWSByAction = (m_isTurningFollowsTarget && m_isLockOn) ? PlayerToTargetXZVector : m_desiredFacingRotationDirInWSByAction;
+        Vector3 desiredFacingRotationDirInWSByAction = (m_isTurningFollowsTarget && m_isLockOn) ? Vector3.Lerp(PlayerToTargetXZVector, m_desiredFacingRotationDirInWSByAction, 0f) : m_desiredFacingRotationDirInWSByAction; //Maybe in future something for the lerp factor
         Vector3 nowdesiredFacingRotationDirInWS = Vector3.Slerp(desiredFacingRotationDirInWSByInput, desiredFacingRotationDirInWSByAction, m_actionInfluenceOverDesiredFacingRotationDirInWS);
-        //Debug.Log(m_desiredFacingRotationDirInWSByAction);
+
         //Speed
         float turningStrenghtByInput = m_turningStrenght;
         float turningStrenghtByAction = m_turningStrenghtByAction;
@@ -414,7 +409,7 @@ public class PlayerMovement : MonoBehaviour
         float startMoveInfluence = animData.moveInfluence  == AnimationMovementData.InfluenceValuePredefinitions.NoInputInfluence ? 1 : 0;  
         float startTurningInfluence = animData.turningInfluence == AnimationMovementData.InfluenceValuePredefinitions.NoInputInfluence ? 1 : 0;
 
-        m_isTurningFollowsTarget = animData.turningRelations == AnimationMovementData.TurningRelations.TurningDirFollowsTarget /*&& animData.applyRelationAt == 0*/;
+        m_isTurningFollowsTarget = animData.turningRelations == AnimationMovementData.TurningRelations.TurningDirFollowsTarget;
 
         //move
         m_directionByAction = m_directionByActionBaseValue = (moveDirPredefinition == 1) ? m_inputDirInWS : transform.forward;
@@ -425,7 +420,7 @@ public class PlayerMovement : MonoBehaviour
         m_actionInfluenceOverMoveAcceleration = startMoveInfluence;
 
         //turning
-        m_desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByActionBaseValue = (int)animData.turningRelations == 2 ? m_inputDirInWS : (turningDirPredefinition == 1) ? m_desiredFacingRotationDirInWS : transform.forward;
+        m_desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByActionBaseValue = ((int)animData.turningRelations == 2) ? m_inputDirInWS : (turningDirPredefinition == 1) ? m_desiredFacingRotationDirInWS : transform.forward;
         m_actionInfluenceOverDesiredFacingRotationDirInWS = startTurningInfluence;
         m_turningStrenghtByAction = m_turningStrenght; // is set to current speed 
         m_actionInfluenceOverTurningStrenght = startTurningInfluence;
@@ -490,8 +485,6 @@ public class PlayerMovement : MonoBehaviour
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
 
-                    //if ((int)animData.turningRelations == 4)   { m_directionByAction = transform.forward; /*m_actionInfluenceOverDesiredFacingRotationDirInWS = 1;*/ }
-
                     break;
                 case AnimationMovementData.ValueName.Turning_Strenght:
 
@@ -519,7 +512,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, (int)animData.turningRelations, animData.timeStepsForCurves, animationDuration /*, animData.turningRelations == AnimationMovementData.InitialRelations.TurningDirFollowsTarget ? animData.applyRelationAt : 0*/); //This could be saved somewhere in future!
+        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, (int)animData.turningRelations, animData.timeStepsForCurves, animationDuration); //This could be saved somewhere in future!
 
         m_ActionCoroutine = StartCoroutine(PerformAction(processedData));
 
@@ -530,10 +523,8 @@ public class PlayerMovement : MonoBehaviour
         float elapsedTime = 0;
         float startTime = Time.time;
         float timeToWait = processedData.timeSteps;
-        //bool turningFollowsTargetWasApplied = processedData.applyTurningRelationsAt == 0;
 
-
-        float duration = processedData.animationDuration; //what about blendtrees?
+        float duration = processedData.animationDuration; //what about blendtrees, do they affect it?
 
         void SetValueByName(ProcessedAnimationMovementData.ValueName name, float newValue)
         {
@@ -565,17 +556,12 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        //Debug.Log($"time: {Time.time}, < start: {startTime} + elapsed: {elapsedTime}");
 
         while (elapsedTime <= duration)
         {
             float timeTillEnd = (duration - elapsedTime);
             float waitForTime = timeTillEnd; 
             float relativeElapsedTime = elapsedTime / duration;
-
-            //apply special turning behavior
-            //if (!turningFollowsTargetWasApplied && relativeElapsedTime < processedData.applyTurningRelationsAt) waitForTime = processedData.applyTurningRelationsAt * duration - elapsedTime;
-            //if (!turningFollowsTargetWasApplied && relativeElapsedTime >= processedData.applyTurningRelationsAt && !m_turningFollowsTarget) { turningFollowsTargetWasApplied = true; m_turningFollowsTarget = true;Debug.Log(relativeElapsedTime);}
 
             //STARTEND VALUES
             foreach (var rangeData in processedData.rangeValuesList)
@@ -611,7 +597,6 @@ public class PlayerMovement : MonoBehaviour
             }
 
             //End of Frame
-            //Debug.Log($" relativeTime: { relativeTimeValue}");
             if (elapsedTime > duration - 0.001f)
                 yield return null;
             else
@@ -635,12 +620,14 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
         m_ActionCoroutine = null;
         m_isAction = false;
-        m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
+        m_isFreelyTurning = !m_isLockOn || m_isRunning || m_isStandingStill;
 
         //Set Values
         m_prevFacingRotationDir = transform.forward;
-        m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward; 
-        m_desiredFacingRotationDirInWS = !m_isStandingStill ? m_inputDirInWS : transform.forward;
+        m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
+        if (!m_isFreelyTurning) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward;
+        Debug.Log(m_facingDirectionType);
+        m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
 
 
 
