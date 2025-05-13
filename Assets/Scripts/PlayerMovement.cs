@@ -55,6 +55,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
 
+    //Actions
+    Action ResetTurningAction;
+
     //Coroutines
     private Coroutine m_turningCoroutine;
 
@@ -88,6 +91,17 @@ public class PlayerMovement : MonoBehaviour
 
         m_turningStrenght = m_turningStrenghtBaseValue;
         m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
+
+        ResetTurningAction = () =>
+        {
+            m_turningStrenght = m_turningStrenghtBaseValue;
+            m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
+            if (m_turningCoroutine != null) { StopCoroutine(m_turningCoroutine); m_turningCoroutine = null; }
+            m_isTurning = false;
+            m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
+            m_animator.ResetTrigger("TriggerTurning");
+
+        };
     }
 
     void Update()
@@ -158,76 +172,6 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
-    [SerializeField] float turningStrenght = 2f;
-    [SerializeField] float maxTurningSpeed = 10f;
-    void TriggerTurning()
-    {
-        if (m_isTurning || m_currentInteruptability != AnimationInterruptableType.Always_Interruptable)
-            return;
-
-        // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
-        float angleMoveDirToPrevMoveDir = Vector3.Angle(m_desiredFacingRotationDirInWS, m_prevFacingRotationDir);
-
-        if (m_isFreelyMoving && (!m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
-        {
-
-            m_turningStrenght = turningStrenght;
-            m_maxTurningSpeed = maxTurningSpeed;
-
-            m_animator.SetTrigger("TriggerTurning");
-            m_isTurning = true;
-
-            Action resetTurnAction = () =>
-            {
-                m_turningStrenght = m_turningStrenghtBaseValue;
-                m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
-                m_turningCoroutine = null;
-                m_isTurning = false;
-            };
-            m_turningCoroutine = StartCoroutine(UtilityFunctions.Wait(0.45f, resetTurnAction));
-        }
-    }
-
-    public void TriggerEvading()
-    {
-        if ((int)m_currentInteruptability >= 3)
-            return;
-        
-        if (m_characterMovesetData == null)
-        {
-            Debug.Log("MISSING ANIMATION DATA");
-            return;
-        }
-
-        m_currentInteruptability = AnimationInterruptableType.Not_Interruptable;
-
-        m_animator.SetTrigger("TriggerEvade");
-
-        SetValues(); //needed, because what if it jumps from one action directly into another
-        m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
-        m_isAction = true;
-
-        //m_desiredFacingRotationDirInWS = m_inputDirInWS;
-
-        AnimationMovementData animData;
-        if (m_facingDirectionType == Direction.Forward)         animData = m_characterMovesetData.evadeForward.AnimationMovementData;
-        else if (m_facingDirectionType == Direction.Left)       animData = m_characterMovesetData.evadeLeft.AnimationMovementData;
-        else if (m_facingDirectionType == Direction.Right)      animData = m_characterMovesetData.evadeRight.AnimationMovementData;
-        else                                                    animData = m_characterMovesetData.evadeBackwards.AnimationMovementData;
-
-        //Debug.Log(m_facingDirectionType);
-
-        float animationDuration = m_characterMovesetData.evadeForward.animationClip.length / m_characterMovesetData.evadeForward.animationSpeed;
-        SetActionValues(animData, animationDuration);
-
-    }
-
-
-
-
-
-
-
 
     private void SetAnimatorMoveValues()
     {
@@ -254,6 +198,79 @@ public class PlayerMovement : MonoBehaviour
             m_animator.SetFloat("Vertical", horAndVerMovement.y, animationDampTime, Time.deltaTime);    
             m_animator.SetFloat("Horizontal", horAndVerMovement.x, animationDampTime, Time.deltaTime);
         }
+
+    }
+
+
+
+
+
+
+
+    [SerializeField] float turningStrenght = 2f;
+    [SerializeField] float maxTurningSpeed = 10f;
+    void TriggerTurning()
+    {
+        AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
+
+        if ((int)m_currentInteruptability >= (int)turningInterruptability)
+            return;
+
+        // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
+        float angleMoveDirToPrevMoveDir = Vector3.Angle(m_desiredFacingRotationDirInWS, m_prevFacingRotationDir);
+
+        if (m_isFreelyMoving && (!m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
+        {
+            m_currentInteruptability = turningInterruptability;
+            m_turningStrenght = turningStrenght;
+            m_maxTurningSpeed = maxTurningSpeed;
+
+            m_animator.SetTrigger("TriggerTurning");
+            m_isTurning = true;
+
+            m_turningCoroutine = StartCoroutine(UtilityFunctions.Wait(0.45f, ResetTurningAction));
+        }
+    }
+
+
+    public void TriggerEvading()
+    {
+        AnimationInterruptableType evadeInterruptability = AnimationInterruptableType.Not_Interruptable;
+
+        if ((int)m_currentInteruptability >= (int)evadeInterruptability)
+            return;
+        
+        if (m_characterMovesetData == null)
+        {
+            Debug.Log("MISSING Moveset DATA");
+            return;
+        }
+
+        AnimationMovementData animData;
+        if (m_facingDirectionType == Direction.Forward)         animData = m_characterMovesetData.evadeForward.AnimationMovementData;
+        else if (m_facingDirectionType == Direction.Left)       animData = m_characterMovesetData.evadeLeft.AnimationMovementData;
+        else if (m_facingDirectionType == Direction.Right)      animData = m_characterMovesetData.evadeRight.AnimationMovementData;
+        else                                                    animData = m_characterMovesetData.evadeBackwards.AnimationMovementData;
+
+        if (animData == null)
+        {
+            Debug.Log("MISSING ANIMATION DATA");
+            return;
+        }
+
+        ResetTurningAction?.Invoke();
+
+        m_currentInteruptability = evadeInterruptability;
+        m_animator.SetTrigger("TriggerEvade");
+        SetValues(); //needed, because what if it jumps from one action directly into another
+        m_isAction = true;
+        m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
+
+        //m_desiredFacingRotationDirInWS = m_inputDirInWS;
+
+
+        float animationDuration = m_characterMovesetData.evadeForward.animationClip.length / m_characterMovesetData.evadeForward.animationSpeed;
+        SetActionValues(animData, animationDuration);
 
     }
 
@@ -593,10 +610,8 @@ public class PlayerMovement : MonoBehaviour
         }
 
 
-        //At the end
-
-
         //End of Action
+
         //reset Values
         m_actionInfluenceOverMoveDirection = 0;
         m_actionInfluenceOverMoveSpeed = 0;
@@ -610,7 +625,6 @@ public class PlayerMovement : MonoBehaviour
         m_ActionCoroutine = null;
         m_isAction = false;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
-        m_animator.ResetTrigger("TriggerTurning");
 
         //Set Values
         m_prevFacingRotationDir = transform.forward;

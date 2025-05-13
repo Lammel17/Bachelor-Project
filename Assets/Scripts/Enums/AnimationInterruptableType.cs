@@ -4,9 +4,9 @@
 public enum AnimationInterruptableType
 { 
     Always_Interruptable = 0,   //like walking                                          | walking
-    Easily_Interruptable,       //interruptable by almost any input                     | no walking, but any (attack, item use, evade)
-    Hardly_Interruptable,       //interruptable by few input                            | no (attack, item use), but by evade
-    Not_Interruptable,          //interruptable by no Input                             | no evade, but get knocked over
+    Easily_Interruptable,       //interruptable by almost any input                     | no interrupt by walking, but any (attack, item use, evade)
+    Hardly_Interruptable,       //interruptable by few input                            | no interrupt by (attack, item use), but by evade
+    Not_Interruptable,          //interruptable by no Input                             | no interrupt by evade, but get knocked over
     Never_Interruptable         //never interruptable by any input or outside causes    | no knocked over or anything else
 } 
 

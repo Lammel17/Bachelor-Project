@@ -274,18 +274,23 @@ public class PlayerInputManager : MonoBehaviour
                 StopCoroutine(c_inputBufferCoroutine);
                 c_inputBufferCoroutine = null;
             }
+
+            return false;
         }
-        else // check with something with priority like dodge here
+        else // maybe check with something with priority like dodge here
         {
             m_lastInputIsUnread = true;
             m_lastBuffedInput = context;
-
+            if (c_inputBufferCoroutine != null)
+            {
+                StopCoroutine(c_inputBufferCoroutine);
+                c_inputBufferCoroutine = null;
+            }
             //the last input only stays readable for an amount of time;
             c_inputBufferCoroutine = StartCoroutine(UtilityFunctions.Wait(m_inputBufferTime, ClearBufferAction));
             return true;
         }
         
-        return false;
     }
 
 
