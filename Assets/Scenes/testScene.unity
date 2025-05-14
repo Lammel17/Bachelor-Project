@@ -469,7 +469,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: ff74c251c2e297e47be091b310ce6e54, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 22100000, guid: 35a5357d5b955d5479695d4eb821f5d5, type: 2}
+      objectReference: {fileID: 9100000, guid: 81802f2e00b38a446982ec846abce648, type: 2}
     - target: {fileID: 5866666021909216657, guid: ff74c251c2e297e47be091b310ce6e54, type: 3}
       propertyPath: m_ApplyRootMotion
       value: 0
@@ -1686,9 +1686,10 @@ MonoBehaviour:
   m_isStandingStill: 0
   m_isLockOn: 0
   m_isRunning: 0
-  m_isFreelyMoving: 0
+  m_isFreelyTurning: 1
   m_isTurning: 0
   m_isAction: 0
+  m_currentAnimation: 0
   m_actionDirectionConstrain: 0
   turningStrenght: 20
   maxTurningSpeed: 15

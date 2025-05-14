@@ -55,6 +55,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
 
+    [SerializeField][EditorAttributes.ReadOnly] private AnimationStatesHumanoid m_currentAnimation;
+
     //Actions
     Action ResetTurningAction;
 
@@ -92,6 +94,8 @@ public class PlayerMovement : MonoBehaviour
         m_turningStrenght = m_turningStrenghtBaseValue;
         m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
 
+        m_currentAnimation = AnimationStatesHumanoid.Idle_1;
+
         ResetTurningAction = () =>
         {
             m_turningStrenght = m_turningStrenghtBaseValue;
@@ -99,7 +103,8 @@ public class PlayerMovement : MonoBehaviour
             if (m_turningCoroutine != null) { StopCoroutine(m_turningCoroutine); m_turningCoroutine = null; }
             m_isTurning = false;
             m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
-            m_animator.ResetTrigger("TriggerTurning");
+            //m_animator.ResetTrigger("TriggerTurning");
+            CheckAnimation(true, 0.4f);
 
         };
     }
@@ -114,12 +119,14 @@ public class PlayerMovement : MonoBehaviour
         MovingPlayer();
 
         SetAnimatorMoveValues();
+        CheckAnimation();
     }
 
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
         m_isFreelyTurning = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyTurning; //only change, when its not mid animation
-        m_isStandingStill = m_moveStrength == 0;
+        //m_isStandingStill = m_moveStrength == 0;
+        m_isStandingStill = m_prevMove.sqrMagnitude == 0;
 
         if (m_isLockOn) m_targetDist = (TargetPos - transform.position).magnitude;
 
@@ -174,7 +181,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetAnimatorMoveValues()
     {
-        float animationDampTime = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? 0.15f : 0; //smaller is faster transition
+        float animationDampTime = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? 0.1f : 0; //smaller is faster transition
         float MoveStrength = m_moveStrength; //is already snapped in inputmanager
         m_animator.SetFloat("MoveMag", MoveStrength, animationDampTime, Time.deltaTime);
 
@@ -224,10 +231,22 @@ public class PlayerMovement : MonoBehaviour
             m_turningStrenght = turningStrenght;
             m_maxTurningSpeed = maxTurningSpeed;
 
-            m_animator.SetTrigger("TriggerTurning");
+            //m_animator.SetTrigger("TriggerTurning");
+            float duration = 0;
+            if (!m_isRunning) 
+            { 
+                SetAnimation(AnimationStatesHumanoid.Turning); 
+                duration = m_characterMovesetData.turningLeft.animationClip.length / m_characterMovesetData.turningLeft.animationSpeed; 
+            }
+            else 
+            { 
+                SetAnimation(AnimationStatesHumanoid.Turning_Running); 
+                duration = m_characterMovesetData.turningRunningLeft.animationClip.length / m_characterMovesetData.turningRunningLeft.animationSpeed; 
+            }
+
             m_isTurning = true;
 
-            m_turningCoroutine = StartCoroutine(UtilityFunctions.Wait(0.45f, ResetTurningAction));
+            m_turningCoroutine = StartCoroutine(UtilityFunctions.Wait(duration - 0.2f, ResetTurningAction));
         }
     }
 
@@ -260,7 +279,8 @@ public class PlayerMovement : MonoBehaviour
         ResetTurningAction?.Invoke();
 
         m_currentInteruptability = evadeInterruptability;
-        m_animator.SetTrigger("TriggerEvade");
+        //m_animator.SetTrigger("TriggerEvade");
+        SetAnimation(AnimationStatesHumanoid.Evade);
         SetValues(); //needed, because what if it jumps from one action directly into another
         m_isAction = true;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
@@ -638,11 +658,104 @@ public class PlayerMovement : MonoBehaviour
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
         if (!m_isFreelyTurning) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
-
+        CheckAnimation(true);
 
 
         m_playerInputManager.RecallLatestBufferedInput();
     }
+
+
+
+
+    public enum AnimationStatesHumanoid
+    {
+        Idle_1,
+        Shield_Idle,
+        Locomotion,
+        Turning,
+        Turning_Running,
+        Evade,
+
+        Use_Item,
+        Healing,
+        Environment_Interaction,
+        Pick_Up_Item_Low,
+        Pick_Up_Item_Up,
+
+        Switch_Weapon,
+        Switch_Shield,
+        Put_Away_Weapon,
+        Take_Out_Weapon,
+
+        Light_Attack_1,
+        Light_Attack_2,
+        Light_Attack_3,
+        Light_Attack_4,
+        Light_Attack_5,
+        Light_Attack_6,
+        Sprint_Light_Attack,
+        Evade_Light_Attack,
+        Special_Light_Attack_1,
+        Special_Light_Attack_2,
+
+        Heavy_Attack_1,
+        Heavy_Attack_2,
+        Heavy_Attack_3,
+        Heavy_Attack_4,
+        Sprint_Heavy_Attack,
+        Evade_Heavy_Attack,
+        Special_Heavy_Attack_1,
+        Special_Heavy_Attack_2,
+
+        Special_Shield_1,
+        Special_Shield_2,
+        Special_Shield_3,
+        Special_Shield_4,
+
+        Almost_Stance_Break,
+        Stance_Break,
+        Falling_Forward,
+        Standing_Up_Forward,
+        Falling_Backward,
+        Standing_Up_Backward,
+
+        Falling_Mid_Air,
+        Landing,
+
+    }
+
+
+    private void CheckAnimation(bool forceNewAnim = false, float crossFadeDuration = -1)
+    {
+        if ((m_isAction || m_isTurning))
+            if (!forceNewAnim) return;
+
+        if (m_isStandingStill)
+            SetAnimation(AnimationStatesHumanoid.Idle_1, crossFadeDuration);
+        if (!m_isStandingStill)
+            SetAnimation(AnimationStatesHumanoid.Locomotion, crossFadeDuration);
+
+
+    }
+
+    private float m_baseCrossFadeDuration = 0.15f;
+
+    private void SetAnimation(AnimationStatesHumanoid animation, float crossFadeDuration = -1)
+    {
+        if (m_currentAnimation == animation)
+            return;
+        if (crossFadeDuration < 0) crossFadeDuration = m_baseCrossFadeDuration;
+
+        m_currentAnimation = animation;
+        string stateName = animation.ToString() ;
+        Debug.Log(animation);
+        m_animator.CrossFade(stateName, crossFadeDuration, 0);
+
+        Debug.Log(crossFadeDuration);
+    }
+
+
+
 
 
 
