@@ -14,9 +14,9 @@ public class AnimationMovementData : ScriptableObject
 
     [Header("Predefined Calculation")]
     [Tooltip("1: will use the latestInput ss starting orientation. 2: willuse the latest actual Orientation as starting orientation. 3. Will override the influence to 0. 4. Will ")]
-    [SerializeField] public DirectionPredefinitions moveDirPredefinition = DirectionPredefinitions.LatestInput;
+    [SerializeField] public MoveDirectionPredefinitions moveDirPredefinition = MoveDirectionPredefinitions.LatestInput;
     [Tooltip("1: will use the latestInput ss starting orientation. 2: willuse the latest actual Orientation as starting orientation. 3. Will override the influence to 0. 4. Will ")]
-    [SerializeField] public DirectionPredefinitions turningDirPredefinition = DirectionPredefinitions.LatestInput;
+    [SerializeField] public TurningDirectionPredefinitions turningDirPredefinition = TurningDirectionPredefinitions.LatestInput;
     [Space]
     [Tooltip("sets if the initial Influence value of dir, speed and acc is set to 0 or 1")]
     [SerializeField] public InfluenceValuePredefinitions moveInfluence = InfluenceValuePredefinitions.NoInputInfluence;
@@ -25,18 +25,26 @@ public class AnimationMovementData : ScriptableObject
     [Space]
     [Tooltip("  ")]
     [SerializeField] public TurningRelations turningRelations = TurningRelations.None;
+    [SerializeField] public bool forbidAdditinalRotation = false;
     [Space]
     [Header("Animation Parameters for Movement and Rotation")]
     [SerializeField] public Values[] variableValue;
 
     public float timeStepsForCurves = 0.05f;
 
-    public enum DirectionPredefinitions
+    public enum MoveDirectionPredefinitions
     {
         LatestInput = 1,    //Will use the latest inputDir and TurningDir as StartingPoint
         LatestFrame,
-
     }
+
+    public enum TurningDirectionPredefinitions
+    {
+        LatestInput = 1,    //Will use the latest inputDir and TurningDir as StartingPoint
+        LatestInputWithAddTurning,
+        LatestFrame,
+    }
+
     public enum InfluenceValuePredefinitions
     {
         NoInputInfluence = 1,    //Will use the latest inputDir and TurningDir as StartingPoint
@@ -111,22 +119,28 @@ public class AnimationMovementData : ScriptableObject
 
 
             [Space]
-            [Header("Custom Influence over Input")]
-            [Tooltip("Constant: Only Value needed; StartEnd: Value and StartEnd needed; Curve: Value, StartEnd and Curve needed ")]
-            public InfluenceValueType influenceType = InfluenceValueType.ConstantInfluence;
-            [Tooltip("Value is the Base Value or the MaxValue when Curve")]
-            [Range(0, 1)] public float influence = 1f;
+            public Influence customInfluenceOverInput;
 
-            [Tooltip("Settings only needed when Type is not Constant")]
-            public ValueSettings influenceSettings;
             [System.Serializable]
-            public class InfluenceSettings
+            public class Influence
             {
-                [Tooltip("This is in what Part the Value/Curve starts and ends to the animation leght relatively. Outside the Range its 0.")]
-                [GD.MinMaxSlider.MinMaxSlider(0, 1)] public Vector2 influenceStartEnd = new Vector2(0f, 1f);
-                [Tooltip("1 is the Value, -1 is -Value. This curve starts and ends at StartEnd to the animation leght relatively.")]
-                public AnimationCurve influenceCurve;
+                [Tooltip("Constant: Only Value needed; StartEnd: Value and StartEnd needed; Curve: Value, StartEnd and Curve needed ")]
+                public InfluenceValueType influenceType = InfluenceValueType.ConstantInfluence;
+                [Tooltip("Value is the Base Value or the MaxValue when Curve")]
+                [Range(0, 1)] public float influence = 1f;
+
+                [Tooltip("Settings only needed when Type is not Constant")]
+                public ValueSettings influenceSettings;
+                [System.Serializable]
+                public class InfluenceSettings
+                {
+                    [Tooltip("This is in what Part the Value/Curve starts and ends to the animation leght relatively. Outside the Range its 0.")]
+                    [GD.MinMaxSlider.MinMaxSlider(0, 1)] public Vector2 influenceStartEnd = new Vector2(0f, 1f);
+                    [Tooltip("1 is the Value, -1 is -Value. This curve starts and ends at StartEnd to the animation leght relatively.")]
+                    public AnimationCurve influenceCurve;
+                }
             }
+
         }
 
 

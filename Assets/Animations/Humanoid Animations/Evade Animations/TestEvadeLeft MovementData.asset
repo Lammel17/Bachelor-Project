@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ActionDescription: humanoid_evade_left
   moveDirPredefinition: 1
-  turningDirPredefinition: 1
+  turningDirPredefinition: 2
   moveInfluence: 1
   turningInfluence: 1
-  turningRelations: 0
+  turningRelations: 2
+  forbidAdditinalRotation: 0
   variableValue:
   - valueName: 1
     ignore: 0
@@ -50,16 +51,17 @@ MonoBehaviour:
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
-      influenceType: 0
-      influence: 1
-      influenceSettings:
-        startEnd: {x: 0, y: 0}
-        curveValue:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 0
-          m_PostInfinity: 0
-          m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 1}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
   - valueName: 4
     ignore: 0
     settings:
@@ -73,14 +75,75 @@ MonoBehaviour:
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
-      influenceType: 0
-      influence: 1
-      influenceSettings:
-        startEnd: {x: 0, y: 0}
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 1}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+  - valueName: 3
+    ignore: 0
+    settings:
+      valueType: 0
+      value: 90
+      valueSettings:
+        startEnd: {x: 0, y: 1}
         curveValue:
           serializedVersion: 2
           m_Curve: []
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 1}
+          curveValue:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 1
+              inSlope: 0
+              outSlope: 0
+              tangentMode: 65
+              weightedMode: 0
+              inWeight: 0.33333334
+              outWeight: 0.33333334
+            - serializedVersion: 3
+              time: 0.6953303
+              value: 1
+              inSlope: -0
+              outSlope: -0.13080972
+              tangentMode: 5
+              weightedMode: 0
+              inWeight: 0.33333334
+              outWeight: 0.51330787
+            - serializedVersion: 3
+              time: 0.84510255
+              value: 0
+              inSlope: -20.19135
+              outSlope: 0
+              tangentMode: 65
+              weightedMode: 0
+              inWeight: 0.06463886
+              outWeight: 0.33333334
+            - serializedVersion: 3
+              time: 1
+              value: 0
+              inSlope: -0
+              outSlope: 0
+              tangentMode: 69
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
   timeStepsForCurves: 0.05

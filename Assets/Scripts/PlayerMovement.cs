@@ -38,7 +38,7 @@ public class PlayerMovement : MonoBehaviour
     private float m_turningStrenght;
     private float m_maxTurningSpeed;
     private float m_speed = 0; //slow, walk, running
-
+    bool m_isAdditionalRotationForbidden = false;
 
     //Values Depending on Camera
     private Quaternion m_cameraYAxisRotationInWS = Quaternion.identity;
@@ -311,6 +311,9 @@ public class PlayerMovement : MonoBehaviour
 
     private Quaternion AdditionalFacingRotation()
     {
+        if (m_isAdditionalRotationForbidden)
+            return Quaternion.identity;
+
         if (m_facingDirectionType == Direction.Forward) return Quaternion.identity;
         if (m_facingDirectionType == Direction.Right) return Quaternion.Euler(0, -90, 0);
         else if (m_facingDirectionType == Direction.Left) return Quaternion.Euler(0, 90, 0);
@@ -410,6 +413,8 @@ public class PlayerMovement : MonoBehaviour
         float startTurningInfluence = animData.turningInfluence == AnimationMovementData.InfluenceValuePredefinitions.NoInputInfluence ? 1 : 0;
 
         m_isTurningFollowsTarget = animData.turningRelations == AnimationMovementData.TurningRelations.TurningDirFollowsTarget;
+        m_isAdditionalRotationForbidden = animData.forbidAdditinalRotation;
+
 
         //move
         m_directionByAction = m_directionByActionBaseValue = (moveDirPredefinition == 1) ? m_inputDirInWS : transform.forward;
@@ -420,11 +425,15 @@ public class PlayerMovement : MonoBehaviour
         m_actionInfluenceOverMoveAcceleration = startMoveInfluence;
 
         //turning
-        m_desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByActionBaseValue = ((int)animData.turningRelations == 2) ? m_inputDirInWS : (turningDirPredefinition == 1) ? m_desiredFacingRotationDirInWS : transform.forward;
+        Vector3 turningDir = transform.forward;
+        if (turningDirPredefinition == 1) turningDir = (((int)animData.turningRelations != 2) ? Quaternion.Inverse(AdditionalFacingRotation()) * m_desiredFacingRotationDirInWS : m_inputDirInWS);
+        else if (turningDirPredefinition == 2) turningDir =  (((int)animData.turningRelations != 2) ? m_desiredFacingRotationDirInWS : m_inputDirInWS);
+        //else if (turningDirPredefinition == 3) turningDir = transform.forward;
+        m_desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByActionBaseValue = turningDir;
         m_actionInfluenceOverDesiredFacingRotationDirInWS = startTurningInfluence;
-        m_turningStrenghtByAction = m_turningStrenght; // is set to current speed 
+        m_turningStrenghtByAction = m_turningStrenght; // is set to current strenght
         m_actionInfluenceOverTurningStrenght = startTurningInfluence;
-        m_maxTurningSpeedByInputByAction = m_maxTurningSpeed; // is set to current acc
+        m_maxTurningSpeedByInputByAction = m_maxTurningSpeed; // is set to current maxspeed
         m_actionInfluenceOverMaxTurningSpeed = startTurningInfluence;
 
         List<ProcessedAnimationMovementData.DataCurves> CurveValuesList = new List<ProcessedAnimationMovementData.DataCurves>(); 
@@ -436,12 +445,13 @@ public class PlayerMovement : MonoBehaviour
             if (value.ignore)
                 continue;
             AnimationMovementData.Values.Settings valueData = value.settings;
+            AnimationMovementData.Values.Settings.Influence influenceData = value.settings.customInfluenceOverInput;
 
             bool valueTypeIsConstant = valueData.valueType == AnimationMovementData.ValueType.ConstantValue;
             bool valueTypeIsStartEnd = valueData.valueType == AnimationMovementData.ValueType.StartEndValue;
 
-            bool influenceValueTypeIsConstant = valueData.influenceType == AnimationMovementData.InfluenceValueType.ConstantInfluence;
-            bool influenceValueTypeIsStartEnd = valueData.influenceType == AnimationMovementData.InfluenceValueType.StartEndInfluence;
+            bool influenceValueTypeIsConstant = influenceData.influenceType == AnimationMovementData.InfluenceValueType.ConstantInfluence;
+            bool influenceValueTypeIsStartEnd = influenceData.influenceType == AnimationMovementData.InfluenceValueType.StartEndInfluence;
 
             switch (value.valueName)
             {
@@ -450,9 +460,9 @@ public class PlayerMovement : MonoBehaviour
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
                     
-                    if (influenceValueTypeIsConstant)   m_actionInfluenceOverMoveDirection = valueData.influence;
-                    else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
-                    else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    if (influenceValueTypeIsConstant)           m_actionInfluenceOverMoveDirection = influenceData.influence;
+                    else if (influenceValueTypeIsStartEnd)      RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd));
+                    else                                        CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
 
                     break;
                 case AnimationMovementData.ValueName.Move_Speed:
@@ -460,9 +470,9 @@ public class PlayerMovement : MonoBehaviour
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Move_Speed, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Move_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
 
-                    if (influenceValueTypeIsConstant)   m_actionInfluenceOverMoveSpeed = valueData.influence;
-                    else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Speed, valueData.value, valueData.valueSettings.startEnd));
-                    else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    if (influenceValueTypeIsConstant)           m_actionInfluenceOverMoveSpeed = influenceData.influence;
+                    else if (influenceValueTypeIsStartEnd)      RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Speed, influenceData.influence, influenceData.influenceSettings.startEnd));
+                    else                                        CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Speed, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
 
                     break;
                 case AnimationMovementData.ValueName.Move_Acceleration:
@@ -470,9 +480,9 @@ public class PlayerMovement : MonoBehaviour
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Move_Acceleration, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Move_Acceleration, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
 
-                    if (influenceValueTypeIsConstant)   m_actionInfluenceOverMoveAcceleration = valueData.influence;
-                    else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Acceleration, valueData.value, valueData.valueSettings.startEnd));
-                    else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Acceleration, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    if (influenceValueTypeIsConstant)           m_actionInfluenceOverMoveAcceleration = influenceData.influence;
+                    else if (influenceValueTypeIsStartEnd)      RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Acceleration, influenceData.influence, influenceData.influenceSettings.startEnd));
+                    else                                        CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Acceleration, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
 
                     break;
                 case AnimationMovementData.ValueName.Turning_Direction_Angle:
@@ -481,9 +491,9 @@ public class PlayerMovement : MonoBehaviour
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
 
-                    if (influenceValueTypeIsConstant)   m_actionInfluenceOverDesiredFacingRotationDirInWS = valueData.influence;
-                    else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
-                    else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    if (influenceValueTypeIsConstant)           m_actionInfluenceOverDesiredFacingRotationDirInWS = influenceData.influence;
+                    else if (influenceValueTypeIsStartEnd)      RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd)); 
+                    else                                        CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
 
                     break;
                 case AnimationMovementData.ValueName.Turning_Strenght:
@@ -492,9 +502,9 @@ public class PlayerMovement : MonoBehaviour
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Turning_Strenght, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Turning_Strenght, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
 
-                    if (influenceValueTypeIsConstant)   m_actionInfluenceOverTurningStrenght = valueData.influence;
-                    else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Strenght, valueData.value, valueData.valueSettings.startEnd));
-                    else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Strenght, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    if (influenceValueTypeIsConstant)           m_actionInfluenceOverTurningStrenght = influenceData.influence;
+                    else if (influenceValueTypeIsStartEnd)      RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Strenght, influenceData.influence, influenceData.influenceSettings.startEnd));
+                    else                                        CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Strenght, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
 
                     break;
                 case AnimationMovementData.ValueName.Max_Turning_Speed:
@@ -503,9 +513,9 @@ public class PlayerMovement : MonoBehaviour
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Max_Turning_Speed, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Max_Turning_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
 
-                    if (influenceValueTypeIsConstant)   m_actionInfluenceOverMaxTurningSpeed = valueData.influence;
-                    else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Max_Turning_Speed, valueData.value, valueData.valueSettings.startEnd));
-                    else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Max_Turning_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
+                    if (influenceValueTypeIsConstant)           m_actionInfluenceOverMaxTurningSpeed = influenceData.influence;
+                    else if (influenceValueTypeIsStartEnd)      RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Max_Turning_Speed, influenceData.influence, influenceData.influenceSettings.startEnd));
+                    else                                        CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Max_Turning_Speed, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
 
                     break;
 
@@ -615,6 +625,7 @@ public class PlayerMovement : MonoBehaviour
         m_actionInfluenceOverDesiredFacingRotationDirInWS = 0;
         m_actionInfluenceOverTurningStrenght = 0;
         m_actionInfluenceOverMaxTurningSpeed = 0;
+        m_isAdditionalRotationForbidden = false;
         m_isTurningFollowsTarget = false;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.Free;
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
@@ -625,8 +636,7 @@ public class PlayerMovement : MonoBehaviour
         //Set Values
         m_prevFacingRotationDir = transform.forward;
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
-        if (!m_isFreelyTurning) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward;
-        Debug.Log(m_facingDirectionType);
+        if (!m_isFreelyTurning) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
 
 

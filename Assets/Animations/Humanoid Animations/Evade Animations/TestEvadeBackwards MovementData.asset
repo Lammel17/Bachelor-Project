@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ActionDescription: humanoid_evade_backwards
   moveDirPredefinition: 1
-  turningDirPredefinition: 1
+  turningDirPredefinition: 2
   moveInfluence: 1
   turningInfluence: 1
   turningRelations: 2
+  forbidAdditinalRotation: 0
   variableValue:
   - valueName: 1
     ignore: 0
@@ -50,16 +51,17 @@ MonoBehaviour:
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
-      influenceType: 0
-      influence: 1
-      influenceSettings:
-        startEnd: {x: 0, y: 0}
-        curveValue:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 0
-          m_PostInfinity: 0
-          m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 1}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
   - valueName: 4
     ignore: 0
     settings:
@@ -73,16 +75,17 @@ MonoBehaviour:
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
-      influenceType: 0
-      influence: 1
-      influenceSettings:
-        startEnd: {x: 0, y: 1}
-        curveValue:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 0
-          m_PostInfinity: 0
-          m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 1}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
   - valueName: 3
     ignore: 0
     settings:
@@ -96,14 +99,15 @@ MonoBehaviour:
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 4
-      influenceType: 0
-      influence: 1
-      influenceSettings:
-        startEnd: {x: 0, y: 1}
-        curveValue:
-          serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 0
-          m_PostInfinity: 0
-          m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 1}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
   timeStepsForCurves: 0.05
