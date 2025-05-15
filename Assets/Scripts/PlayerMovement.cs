@@ -257,7 +257,6 @@ public class PlayerMovement : MonoBehaviour
 
     public void TriggerEvading()
     {
-        Debug.Log("In TriggerEvadingFunction");
         AnimationInterruptableType evadeInterruptability = AnimationInterruptableType.Not_Interruptable;
 
         if ((int)m_currentInteruptability >= (int)evadeInterruptability)
@@ -287,10 +286,10 @@ public class PlayerMovement : MonoBehaviour
         //m_animator.SetTrigger("TriggerEvade");
         m_isAction = true;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
-        Debug.Log("In TriggerEvadingFunction before Set Value");
+
         SetAnimation(Evade, true);
         SetValues(); //needed, because what if it jumps from one action directly into another
-        Debug.Log("In TriggerEvadingFunction After Set Value");
+
         float animationDuration = m_characterMovesetData.evadeForward.animationClip.length / m_characterMovesetData.evadeForward.animationSpeed;
         SetActionValues(animData, animationDuration);
 
@@ -667,10 +666,7 @@ public class PlayerMovement : MonoBehaviour
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
 
         //CheckAnimation(true);
-
-        Debug.Log(m_isAction);
         m_playerInputManager.RecallLatestBufferedInput();
-        Debug.Log(m_isAction);
 
     }
 
@@ -744,7 +740,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if ((m_isAction || m_isTurning))
             if (!forceNewAnim) return;
-        Debug.Log("EEEEEEEEEE");
+
         if (m_isStandingStill)
             SetAnimation(Idle_1, false, crossFadeDuration);
         if (!m_isStandingStill)
@@ -766,10 +762,8 @@ public class PlayerMovement : MonoBehaviour
         if (crossFadeDuration < 0) crossFadeDuration = m_baseCrossFadeDuration;
 
         m_animator.CrossFade(animation, crossFadeDuration, 0);
-        if (animation == Evade && m_currentAnimation != Evade) Debug.Log("init evade from not evade");
         m_currentAnimation = animation;
 
-        //if (calledByAction && m_currentAnimation != animation) m_animator.CrossFade(animation, crossFadeDuration, 0);
 
         //Debug.Log(crossFadeDuration);
     }

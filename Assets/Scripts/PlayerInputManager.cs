@@ -466,7 +466,7 @@ public class PlayerInputManager : MonoBehaviour
 
         if (SetBuffer(context, priority))
             return;
-        Debug.Log("OnEast executes");
+
         m_thePlayerMovement.TriggerEvading();
     }
 
