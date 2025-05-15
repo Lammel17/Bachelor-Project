@@ -10,13 +10,19 @@ public class ProcessedAnimationMovementData
     public float timeSteps;
     public float animationDuration;
 
-    public ProcessedAnimationMovementData(List<DataStartEnd> se, List<DataCurves> c, int r, float t, float d)
+    //public float crossfadeInTime = 0.2f;
+    public float crossfadeOutTime = 0.2f;
+    public float crossfadeStartBeforeEndTime = 0.2f;
+
+    public ProcessedAnimationMovementData(List<DataStartEnd> se, List<DataCurves> c, int r, float t, float d, float cfo, float cfs)
     {
         rangeValuesList = se;
         curveValuesList = c;
         turningRelations = r;
         timeSteps = t;
-        animationDuration = d;
+        animationDuration = Mathf.Max(d, 0);
+        crossfadeOutTime = Mathf.Max(cfo, 0);
+        crossfadeStartBeforeEndTime = Mathf.Max(cfs, 0);
     }
 
     public class DataCurves

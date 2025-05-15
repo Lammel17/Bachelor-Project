@@ -14,6 +14,10 @@ public class AnimationData : ScriptableObject
     public AnimationMovementData AnimationMovementData;
     public bool mirrorMovement = false;
 
+    public float crossfadeInTime = 0.2f;
+    public float crossfadeOutTime = 0.2f;
+    public float crossfadeOutTimeBeforeEnd = 0.2f;
+
 
 
     [Header("Invincibility")]

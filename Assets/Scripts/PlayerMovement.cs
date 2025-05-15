@@ -268,17 +268,19 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        AnimationMovementData animData;
-        if (m_facingDirectionType == Direction.Forward)         animData = m_characterMovesetData.evadeForward.AnimationMovementData;
-        else if (m_facingDirectionType == Direction.Left)       animData = m_characterMovesetData.evadeLeft.AnimationMovementData;
-        else if (m_facingDirectionType == Direction.Right)      animData = m_characterMovesetData.evadeRight.AnimationMovementData;
-        else                                                    animData = m_characterMovesetData.evadeBackwards.AnimationMovementData;
+        AnimationData animData;
+        if (m_facingDirectionType == Direction.Forward)         animData = m_characterMovesetData.evadeForward;
+        else if (m_facingDirectionType == Direction.Left)       animData = m_characterMovesetData.evadeLeft;
+        else if (m_facingDirectionType == Direction.Right)      animData = m_characterMovesetData.evadeRight;
+        else                                                    animData = m_characterMovesetData.evadeBackwards;
 
         if (animData == null)
         {
             Debug.Log("MISSING ANIMATION DATA");
             return;
         }
+
+        ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_isTurning) ResetTurningAction?.Invoke(true);
 
@@ -287,11 +289,12 @@ public class PlayerMovement : MonoBehaviour
         m_isAction = true;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        SetAnimation(Evade, true);
+        SetAnimation(Evade, true, animData.crossfadeInTime);
+        m_nextCrossfadeOutTime = animData.crossfadeOutTime;
         SetValues(); //needed, because what if it jumps from one action directly into another
 
         float animationDuration = m_characterMovesetData.evadeForward.animationClip.length / m_characterMovesetData.evadeForward.animationSpeed;
-        SetActionValues(animData, animationDuration);
+        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeOutTimeBeforeEnd);
 
     }
 
@@ -430,7 +433,7 @@ public class PlayerMovement : MonoBehaviour
     #endregion
 
 
-    private void SetActionValues(AnimationMovementData animData, float animationDuration)
+    private void SetActionValues(AnimationMovementData animData, float animationDuration, float crossfadeOutTime, float crossfadeStartBeforeEndTime = 0.1f)
     {
 
         int moveDirPredefinition = (int)animData.moveDirPredefinition;
@@ -548,7 +551,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, (int)animData.turningRelations, animData.timeStepsForCurves, animationDuration); //This could be saved somewhere in future!
+        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, (int)animData.turningRelations, animData.timeStepsForCurves, animationDuration, crossfadeOutTime, crossfadeStartBeforeEndTime); //This could be saved somewhere in future!
 
         m_ActionCoroutine = StartCoroutine(PerformAction(processedData));
 
@@ -593,7 +596,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
 
-        while (elapsedTime <= duration)
+        while (elapsedTime <= duration - processedData.crossfadeStartBeforeEndTime)
         {
             float timeTillEnd = (duration - elapsedTime);
             float waitForTime = timeTillEnd; 
@@ -744,7 +747,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_isStandingStill)
             SetAnimation(Idle_1, false, crossFadeDuration);
         if (!m_isStandingStill)
-            SetAnimation(Locomotion, false, crossFadeDuration);
+            SetAnimation(Locomotion, false, crossFadeDuration, 0.25f);
 
     }
 
@@ -753,19 +756,35 @@ public class PlayerMovement : MonoBehaviour
 
 
     private float m_baseCrossFadeDuration = 0.15f;
+    private float m_nextCrossfadeOutTime = -1f;
 
-    private void SetAnimation(int animation, bool calledByAction = false, float crossFadeDuration = -1)
+    private void SetAnimation(int animation, bool calledByAction = false, float crossFadeDuration = -1, float timeOffset = 0)
     {
-        if (m_currentAnimation == animation)
+        if ( m_currentAnimation == animation)
+        {
+            if (calledByAction) 
+                m_animator.Play(animation, 0, 0);
+
+            m_nextCrossfadeOutTime = -1;
             return;
+        }
+        
+        //Debug.Log(m_nextCrossfadeOutTime);
 
-        if (crossFadeDuration < 0) crossFadeDuration = m_baseCrossFadeDuration;
+        //float newCrossFadeDuration = crossFadeDuration;
+        if (crossFadeDuration < 0)
+        {
+            if (m_nextCrossfadeOutTime >= 0) 
+                { crossFadeDuration = m_nextCrossfadeOutTime; m_nextCrossfadeOutTime = -1; }
+            else
+                crossFadeDuration = m_baseCrossFadeDuration;
+        }
 
-        m_animator.CrossFade(animation, crossFadeDuration, 0);
+        m_animator.CrossFade(animation, crossFadeDuration, 0, timeOffset);
         m_currentAnimation = animation;
+        
 
-
-        //Debug.Log(crossFadeDuration);
+        Debug.Log(crossFadeDuration);
     }
 
 

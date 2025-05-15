@@ -18,6 +18,9 @@ MonoBehaviour:
   mirrorAnimation: 0
   AnimationMovementData: {fileID: 11400000, guid: 0009b783e34dcce42a028d9b4bd24626, type: 2}
   mirrorMovement: 0
+  crossfadeInTime: 0.2
+  crossfadeOutTime: 0.3
+  crossfadeOutTimeBeforeEnd: 0
   invincibilitySettings:
     hasInvincibilityFrames: 0
     invincibilityStart: 0
