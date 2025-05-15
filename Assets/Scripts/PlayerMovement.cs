@@ -35,6 +35,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 m_desiredFacingRotationDirInWS = Vector3.forward;
     private float m_forwardSidewardThreshholdAngle = 45f;
     private float m_sidewardBackwardThreshholdAngle = 135f;
+    private float m_turningAngle = 0;
     private float m_turningStrenght;
     private float m_maxTurningSpeed;
     private float m_speed = 0; //slow, walk, running
@@ -55,17 +56,17 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
 
-    [SerializeField][EditorAttributes.ReadOnly] private AnimationStatesHumanoid m_currentAnimation;
+    [SerializeField][EditorAttributes.ReadOnly] private int m_currentAnimation;
 
     //Actions
-    Action ResetTurningAction;
+    Action<bool> ResetTurningAction;
 
     //Coroutines
     private Coroutine m_turningCoroutine;
 
     //Previous Frame Values
     private Vector3 m_prevMove = Vector3.zero;
-    private Vector3 m_prevFacingRotationDir = Vector3.forward;
+    private Vector3 m_prevFacingRotationDir = Vector3.forward; //unused currently
 
     private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
 
@@ -94,9 +95,9 @@ public class PlayerMovement : MonoBehaviour
         m_turningStrenght = m_turningStrenghtBaseValue;
         m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
 
-        m_currentAnimation = AnimationStatesHumanoid.Idle_1;
+        m_currentAnimation = Idle_1;
 
-        ResetTurningAction = () =>
+        ResetTurningAction = (forcedToCancel) =>
         {
             m_turningStrenght = m_turningStrenghtBaseValue;
             m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
@@ -104,7 +105,7 @@ public class PlayerMovement : MonoBehaviour
             m_isTurning = false;
             m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
             //m_animator.ResetTrigger("TriggerTurning");
-            CheckAnimation(true, 0.4f);
+            if (!forcedToCancel) CheckAnimation(true, 0.4f);
 
         };
     }
@@ -223,10 +224,13 @@ public class PlayerMovement : MonoBehaviour
             return;
 
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
-        float angleMoveDirToPrevMoveDir = Vector3.Angle(m_desiredFacingRotationDirInWS, m_prevFacingRotationDir);
+        //float angleMoveDirToPrevMoveDir = Vector3.SignedAngle(m_desiredFacingRotationDirInWS, m_prevFacingRotationDir, Vector3.up);
+        float angleMoveDirToPrevMoveDir = m_turningAngle;
 
-        if (m_isFreelyTurning && (!m_isRunning && angleMoveDirToPrevMoveDir > 90) || (m_isRunning && angleMoveDirToPrevMoveDir > 150))
+        if (m_isFreelyTurning && (!m_isRunning && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90) || (m_isRunning && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150))
         {
+            m_animator.SetFloat("TurningDir", Mathf.Sign(angleMoveDirToPrevMoveDir));
+
             m_currentInteruptability = turningInterruptability;
             m_turningStrenght = turningStrenght;
             m_maxTurningSpeed = maxTurningSpeed;
@@ -235,12 +239,12 @@ public class PlayerMovement : MonoBehaviour
             float duration = 0;
             if (!m_isRunning) 
             { 
-                SetAnimation(AnimationStatesHumanoid.Turning); 
+                SetAnimation(Turning); 
                 duration = m_characterMovesetData.turningLeft.animationClip.length / m_characterMovesetData.turningLeft.animationSpeed; 
             }
             else 
             { 
-                SetAnimation(AnimationStatesHumanoid.Turning_Running); 
+                SetAnimation(Turning_Running); 
                 duration = m_characterMovesetData.turningRunningLeft.animationClip.length / m_characterMovesetData.turningRunningLeft.animationSpeed; 
             }
 
@@ -253,6 +257,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void TriggerEvading()
     {
+        Debug.Log("In TriggerEvadingFunction");
         AnimationInterruptableType evadeInterruptability = AnimationInterruptableType.Not_Interruptable;
 
         if ((int)m_currentInteruptability >= (int)evadeInterruptability)
@@ -276,15 +281,16 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        ResetTurningAction?.Invoke();
+        if (m_isTurning) ResetTurningAction?.Invoke(true);
 
         m_currentInteruptability = evadeInterruptability;
         //m_animator.SetTrigger("TriggerEvade");
-        SetAnimation(AnimationStatesHumanoid.Evade);
-        SetValues(); //needed, because what if it jumps from one action directly into another
         m_isAction = true;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
-
+        Debug.Log("In TriggerEvadingFunction before Set Value");
+        SetAnimation(Evade, true);
+        SetValues(); //needed, because what if it jumps from one action directly into another
+        Debug.Log("In TriggerEvadingFunction After Set Value");
         float animationDuration = m_characterMovesetData.evadeForward.animationClip.length / m_characterMovesetData.evadeForward.animationSpeed;
         SetActionValues(animData, animationDuration);
 
@@ -342,7 +348,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void RotatingPlayer()
     {
-        m_prevFacingRotationDir = m_desiredFacingRotationDirInWS; //hmm, vielleicht von dem nehmen: nowdesiredFacingRotationDirInWS
+         m_prevFacingRotationDir = m_desiredFacingRotationDirInWS; //hmm, vielleicht von dem nehmen: nowdesiredFacingRotationDirInWS
 
         Quaternion additionalTurningRotation =  AdditionalFacingRotation();
 
@@ -367,7 +373,8 @@ public class PlayerMovement : MonoBehaviour
 
         float angle = Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up); 
         float newAngle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up) * Time.deltaTime * nowTurningStrenght, -nowMaxTurningSpeed, nowMaxTurningSpeed); //Only ever 90° steps max per seconds, the turning speed
-        if (newAngle != 0) m_animator.SetFloat("TurningDir", Mathf.Sign(newAngle));
+        m_turningAngle = angle;
+
 
         //this makes the car rotate not around it center when walking and turning, but rotates around a pont slightly to the side
         float turnRotationPointOffsetXAxis = !m_isAction ? (Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f) : 0;
@@ -658,100 +665,113 @@ public class PlayerMovement : MonoBehaviour
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
         if (!m_isFreelyTurning) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
-        CheckAnimation(true);
 
+        //CheckAnimation(true);
 
+        Debug.Log(m_isAction);
         m_playerInputManager.RecallLatestBufferedInput();
-    }
-
-
-
-
-    public enum AnimationStatesHumanoid
-    {
-        Idle_1,
-        Shield_Idle,
-        Locomotion,
-        Turning,
-        Turning_Running,
-        Evade,
-
-        Use_Item,
-        Healing,
-        Environment_Interaction,
-        Pick_Up_Item_Low,
-        Pick_Up_Item_Up,
-
-        Switch_Weapon,
-        Switch_Shield,
-        Put_Away_Weapon,
-        Take_Out_Weapon,
-
-        Light_Attack_1,
-        Light_Attack_2,
-        Light_Attack_3,
-        Light_Attack_4,
-        Light_Attack_5,
-        Light_Attack_6,
-        Sprint_Light_Attack,
-        Evade_Light_Attack,
-        Special_Light_Attack_1,
-        Special_Light_Attack_2,
-
-        Heavy_Attack_1,
-        Heavy_Attack_2,
-        Heavy_Attack_3,
-        Heavy_Attack_4,
-        Sprint_Heavy_Attack,
-        Evade_Heavy_Attack,
-        Special_Heavy_Attack_1,
-        Special_Heavy_Attack_2,
-
-        Special_Shield_1,
-        Special_Shield_2,
-        Special_Shield_3,
-        Special_Shield_4,
-
-        Almost_Stance_Break,
-        Stance_Break,
-        Falling_Forward,
-        Standing_Up_Forward,
-        Falling_Backward,
-        Standing_Up_Backward,
-
-        Falling_Mid_Air,
-        Landing,
+        Debug.Log(m_isAction);
 
     }
+
+
+
+
+
+
+
+
+
+    //animation States
+    #region
+    readonly int Idle_1                     = Animator.StringToHash("Idle_1");
+    readonly int Shield_Idle                = Animator.StringToHash("Shield_Idle");
+
+    readonly int Locomotion                 = Animator.StringToHash("Locomotion");
+    readonly int Turning                    = Animator.StringToHash("Turning");
+    readonly int Turning_Running            = Animator.StringToHash("Turning_Running");
+    readonly int Evade                      = Animator.StringToHash("Evade");
+
+    readonly int Use_Item                   = Animator.StringToHash("Use_Item");
+    readonly int Healing                    = Animator.StringToHash("Healing");
+    readonly int Environment_Interaction    = Animator.StringToHash("Environment_Interaction");
+    readonly int Pick_Up_Item_Low           = Animator.StringToHash("Pick_Up_Item_Low");
+    readonly int Pick_Up_Item_Up            = Animator.StringToHash("Pick_Up_Item_Up");
+
+    readonly int Switch_Weapon              = Animator.StringToHash("Switch_Weapon");
+    readonly int Switch_Shield              = Animator.StringToHash("Switch_Shield");
+    readonly int Put_Away_Weapon            = Animator.StringToHash("Put_Away_Weapon");
+    readonly int Take_Out_Weapon            = Animator.StringToHash("Take_Out_Weapon");
+
+    readonly int Light_Attack_1             = Animator.StringToHash("Light_Attack_1");
+    readonly int Light_Attack_2             = Animator.StringToHash("Light_Attack_2");
+    readonly int Light_Attack_3             = Animator.StringToHash("Light_Attack_3");
+    readonly int Light_Attack_4             = Animator.StringToHash("Light_Attack_4");
+    readonly int Light_Attack_5             = Animator.StringToHash("Light_Attack_5");
+    readonly int Light_Attack_6             = Animator.StringToHash("Light_Attack_6");
+    readonly int Sprint_Light_Attack        = Animator.StringToHash("Sprint_Light_Attack");
+    readonly int Evade_Light_Attack         = Animator.StringToHash("Evade_Light_Attack");
+    readonly int Special_Light_Attack_1     = Animator.StringToHash("Special_Light_Attack_1");
+    readonly int Special_Light_Attack_2     = Animator.StringToHash("Special_Light_Attack_2");
+
+    readonly int Heavy_Attack_1             = Animator.StringToHash("Heavy_Attack_1");
+    readonly int Heavy_Attack_2             = Animator.StringToHash("Heavy_Attack_2");
+    readonly int Heavy_Attack_3             = Animator.StringToHash("Heavy_Attack_3");
+    readonly int Heavy_Attack_4             = Animator.StringToHash("Heavy_Attack_4");
+    readonly int Sprint_Heavy_Attack        = Animator.StringToHash("Sprint_Heavy_Attack");
+    readonly int Evade_Heavy_Attack         = Animator.StringToHash("Evade_Heavy_Attack");
+    readonly int Special_Heavy_Attack_1     = Animator.StringToHash("Special_Heavy_Attack_1");
+    readonly int Special_Heavy_Attack_2     = Animator.StringToHash("Special_Heavy_Attack_2");
+
+    readonly int Special_Shield_1           = Animator.StringToHash("Special_Shield_1");
+    readonly int Special_Shield_2           = Animator.StringToHash("Special_Shield_2");
+    readonly int Special_Shield_3           = Animator.StringToHash("Special_Shield_3");
+    readonly int Special_Shield_4           = Animator.StringToHash("Special_Shield_4");
+
+    readonly int Almost_Stance_Break        = Animator.StringToHash("Almost_Stance_Break");
+    readonly int Stance_Break               = Animator.StringToHash("Stance_Break");
+    readonly int Falling_Forward       = Animator.StringToHash("Falling_Forward");
+    readonly int Standing_Up_Forward        = Animator.StringToHash("Standing_Up_Forward");
+    readonly int Falling_Backward           = Animator.StringToHash("Falling_Backward");
+    readonly int Standing_Up_Backward       = Animator.StringToHash("Standing_Up_Backward");
+
+    readonly int Falling_Mid_Air       = Animator.StringToHash("Falling_Mid_Air");
+    readonly int Landing                    = Animator.StringToHash("Landing");
+    #endregion 
 
 
     private void CheckAnimation(bool forceNewAnim = false, float crossFadeDuration = -1)
     {
         if ((m_isAction || m_isTurning))
             if (!forceNewAnim) return;
-
+        Debug.Log("EEEEEEEEEE");
         if (m_isStandingStill)
-            SetAnimation(AnimationStatesHumanoid.Idle_1, crossFadeDuration);
+            SetAnimation(Idle_1, false, crossFadeDuration);
         if (!m_isStandingStill)
-            SetAnimation(AnimationStatesHumanoid.Locomotion, crossFadeDuration);
-
+            SetAnimation(Locomotion, false, crossFadeDuration);
 
     }
 
+
+
+
+
     private float m_baseCrossFadeDuration = 0.15f;
 
-    private void SetAnimation(AnimationStatesHumanoid animation, float crossFadeDuration = -1)
+    private void SetAnimation(int animation, bool calledByAction = false, float crossFadeDuration = -1)
     {
         if (m_currentAnimation == animation)
             return;
+
         if (crossFadeDuration < 0) crossFadeDuration = m_baseCrossFadeDuration;
 
+        m_animator.CrossFade(animation, crossFadeDuration, 0);
+        if (animation == Evade && m_currentAnimation != Evade) Debug.Log("init evade from not evade");
         m_currentAnimation = animation;
-        string stateName = animation.ToString() ;
-        Debug.Log(animation);
-        m_animator.CrossFade(stateName, crossFadeDuration, 0);
 
-        Debug.Log(crossFadeDuration);
+        //if (calledByAction && m_currentAnimation != animation) m_animator.CrossFade(animation, crossFadeDuration, 0);
+
+        //Debug.Log(crossFadeDuration);
     }
 
 

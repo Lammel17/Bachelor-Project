@@ -465,6 +465,17 @@ public static class UtilityFunctions
         targetAction?.Invoke();
     }
 
+    public static IEnumerator Wait(float duration, Action<bool> targetAction = null, bool actionBool = false)
+    {
+        var elapsed = 0f;
+        while (elapsed <= duration)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        targetAction?.Invoke(actionBool);
+    }
+
     public static IEnumerator WaitFrames(int frames, Action targetAction = null)
     {
         var counter = 0;

@@ -1692,7 +1692,7 @@ MonoBehaviour:
   m_currentAnimation: 0
   m_actionDirectionConstrain: 0
   turningStrenght: 20
-  maxTurningSpeed: 15
+  maxTurningSpeed: 11
 --- !u!143 &1756236763
 CharacterController:
   m_ObjectHideFlags: 0
