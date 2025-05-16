@@ -294,7 +294,7 @@ public class PlayerMovement : MonoBehaviour
         SetValues(); //needed, because what if it jumps from one action directly into another
 
         float animationDuration = m_characterMovesetData.evadeForward.animationClip.length / m_characterMovesetData.evadeForward.animationSpeed;
-        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeOutTimeBeforeEnd);
+        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
 
     }
 
@@ -729,12 +729,12 @@ public class PlayerMovement : MonoBehaviour
 
     readonly int Almost_Stance_Break        = Animator.StringToHash("Almost_Stance_Break");
     readonly int Stance_Break               = Animator.StringToHash("Stance_Break");
-    readonly int Falling_Forward       = Animator.StringToHash("Falling_Forward");
+    readonly int Falling_Forward            = Animator.StringToHash("Falling_Forward");
     readonly int Standing_Up_Forward        = Animator.StringToHash("Standing_Up_Forward");
     readonly int Falling_Backward           = Animator.StringToHash("Falling_Backward");
     readonly int Standing_Up_Backward       = Animator.StringToHash("Standing_Up_Backward");
 
-    readonly int Falling_Mid_Air       = Animator.StringToHash("Falling_Mid_Air");
+    readonly int Falling_Mid_Air            = Animator.StringToHash("Falling_Mid_Air");
     readonly int Landing                    = Animator.StringToHash("Landing");
     #endregion 
 
@@ -756,26 +756,21 @@ public class PlayerMovement : MonoBehaviour
 
 
     private float m_baseCrossFadeDuration = 0.15f;
-    private float m_nextCrossfadeOutTime = -1f;
+    private float m_nextCrossfadeOutTime = -1f; //crossfadeOut is set by an animation and stored only for the next crossfadeOut if its not interrupted by an crossfade in of another anim
 
     private void SetAnimation(int animation, bool calledByAction = false, float crossFadeDuration = -1, float timeOffset = 0)
     {
-        if ( m_currentAnimation == animation)
-        {
-            if (calledByAction) 
-                m_animator.Play(animation, 0, 0);
-
-            m_nextCrossfadeOutTime = -1;
+        if (!calledByAction && m_currentAnimation == animation)
             return;
-        }
-        
-        //Debug.Log(m_nextCrossfadeOutTime);
 
-        //float newCrossFadeDuration = crossFadeDuration;
+
         if (crossFadeDuration < 0)
         {
-            if (m_nextCrossfadeOutTime >= 0) 
-                { crossFadeDuration = m_nextCrossfadeOutTime; m_nextCrossfadeOutTime = -1; }
+            if (m_nextCrossfadeOutTime >= 0)
+            { 
+                crossFadeDuration = m_nextCrossfadeOutTime; 
+                m_nextCrossfadeOutTime = -1; 
+            }
             else
                 crossFadeDuration = m_baseCrossFadeDuration;
         }

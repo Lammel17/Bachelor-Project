@@ -13,10 +13,11 @@ public class AnimationData : ScriptableObject
     public bool mirrorAnimation = false;
     public AnimationMovementData AnimationMovementData;
     public bool mirrorMovement = false;
-
+    [Space]
     public float crossfadeInTime = 0.2f;
     public float crossfadeOutTime = 0.2f;
-    public float crossfadeOutTimeBeforeEnd = 0.2f;
+    [Tooltip("how long before the end of animation should the crossfade begin ")]
+    public float crossfadeBeginn = 0f;
 
 
 
