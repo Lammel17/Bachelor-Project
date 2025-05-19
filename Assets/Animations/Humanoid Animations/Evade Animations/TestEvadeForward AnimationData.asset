@@ -20,7 +20,7 @@ MonoBehaviour:
   mirrorMovement: 0
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.3
-  crossfadeOutTimeBeforeEnd: 0
+  crossfadeBeginn: 0
   invincibilitySettings:
     hasInvincibilityFrames: 0
     invincibilityStart: 0

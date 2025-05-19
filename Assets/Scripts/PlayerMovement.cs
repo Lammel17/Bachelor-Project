@@ -52,20 +52,17 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isStandingStill = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isLockOn = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isRunning = false;
-    [SerializeField][EditorAttributes.ReadOnly] private bool m_isFreelyTurning = true;
-    [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurning = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isFreelyMoving = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isWalkingLocked = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionLocked = false;
 
     [SerializeField][EditorAttributes.ReadOnly] private int m_currentAnimation;
 
-    //Actions
-    Action<bool> ResetTurningAction;
-
-    //Coroutines
-    private Coroutine m_turningCoroutine;
-
     //Previous Frame Values
     private Vector3 m_prevMove = Vector3.zero;
+    private float m_prevMoveStrength = 0;
+    private float m_prevPrevMoveStrength = 0;
     private Vector3 m_prevFacingRotationDir = Vector3.forward; //unused currently
 
     private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
@@ -75,7 +72,7 @@ public class PlayerMovement : MonoBehaviour
 
 
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
-    public float MoveStrenght { get => m_moveStrength; set { if (m_isRunning && value > 0f)  m_moveStrength = m_runningMoveStrenght; else m_moveStrength = value; Speed = m_moveStrength; } } //is already snapped by inputmanager
+    public float MoveStrenght { get => m_moveStrength; set { m_prevPrevMoveStrength = m_prevMoveStrength; m_prevMoveStrength = m_moveStrength; if (m_isRunning && value > 0f)  m_moveStrength = m_runningMoveStrenght; else m_moveStrength = value; Speed = m_moveStrength; } } //is already snapped by inputmanager
     public float Speed { get => m_speed; set { m_speed = value == 0 ? 0 : value == 0.5 ? m_speedValues.x : value == 1 ? m_speedValues.y : m_speedValues.z; } } //is already snapped by inputmanager
     public Quaternion CameraYAxisRotation { get => m_cameraYAxisRotationInWS; set => m_cameraYAxisRotationInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
     public Transform Target { get { if (m_target != null) return m_target; else { Debug.Log("target gets called, but is empty"); return null; } } set { m_target = value; m_isLockOn = (m_target != null); } }
@@ -97,17 +94,6 @@ public class PlayerMovement : MonoBehaviour
 
         m_currentAnimation = Idle_1;
 
-        ResetTurningAction = (forcedToCancel) =>
-        {
-            m_turningStrenght = m_turningStrenghtBaseValue;
-            m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
-            if (m_turningCoroutine != null) { StopCoroutine(m_turningCoroutine); m_turningCoroutine = null; }
-            m_isTurning = false;
-            m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
-            //m_animator.ResetTrigger("TriggerTurning");
-            if (!forcedToCancel) CheckAnimation(true, 0.4f);
-
-        };
     }
 
     void Update()
@@ -116,35 +102,30 @@ public class PlayerMovement : MonoBehaviour
         TriggerTurning();
 
         RotatingPlayer();
-
         MovingPlayer();
 
         SetAnimatorMoveValues();
         CheckAnimation();
+        
     }
 
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
-        m_isFreelyTurning = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyTurning; //only change, when its not mid animation
-        //m_isStandingStill = m_moveStrength == 0;
-        m_isStandingStill = m_prevMove.sqrMagnitude == 0;
+        m_isStandingStill = ((m_isWalkingLocked == false && m_moveStrength == 0) || m_isWalkingLocked == true);
+        m_isFreelyMoving = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyMoving; //only change, when its not mid animation
 
-        if (m_isLockOn) m_targetDist = (TargetPos - transform.position).magnitude;
+        if (m_isLockOn) 
+            m_targetDist = (TargetPos - transform.position).magnitude;
 
-        if (m_isStandingStill)
-        {
-            return;
-        }
-        if (m_isFreelyTurning)
+        if (m_isFreelyMoving)
         {
             // InputDirRelativeToCam is relative to cameraRotation, so it should not affect the InputDirRelativeToCam when for example standing still
-            m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : m_inputDirInWS; 
-
+            m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward; 
             m_facingDirectionType = Direction.Forward;
+            return;
         }
         else
         {
-
             //playerToTargetAndContextRotationSlerp: weil wenn man nah am target stand und vorwärts lief, dann zirkulierte man ewig um es rum anstatt straight drauf zu zu lenken, daher nun halb halb
             Quaternion playerToTargetLookRotation = Quaternion.LookRotation(PlayerToTargetXZVector);
             Quaternion playerToTargetAndCameraForwardSlerp = Quaternion.Slerp(m_cameraYAxisRotationInWS, playerToTargetLookRotation, 0.5f);
@@ -152,6 +133,7 @@ public class PlayerMovement : MonoBehaviour
 
             if (m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free) //if action started, the facingType should stay, since its needed for the SetAnimatorMoveValues()
                 SetFacingDirectionType();
+            return;
         }
     }
 
@@ -182,29 +164,19 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetAnimatorMoveValues()
     {
-        float animationDampTime = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? 0.1f : 0; //smaller is faster transition
+        float animationDampTime = !m_isAction ? 0.1f : 0; //smaller is faster transition
         float MoveStrength = m_moveStrength; //is already snapped in inputmanager
+        Vector2 horAndVerMovement = new Vector2(0, 1);
+        
         m_animator.SetFloat("MoveMag", MoveStrength, animationDampTime, Time.deltaTime);
 
-        if (m_isStandingStill)
-            return;
+        if (m_facingDirectionType == Direction.Forward)             horAndVerMovement = new Vector2(0, 1);
+        else if (m_facingDirectionType == Direction.Right)          horAndVerMovement = new Vector2(1, 0);
+        else if (m_facingDirectionType == Direction.Left)           horAndVerMovement = new Vector2(-1, 0);
+        else                                                        horAndVerMovement = new Vector2(0, -1);
 
-        if (m_isFreelyTurning)
-        {
-            m_animator.SetFloat("Vertical", 1, animationDampTime, Time.deltaTime);
-            m_animator.SetFloat("Horizontal", 0, animationDampTime, Time.deltaTime);
-        }
-        else                                                                                                  
-        {
-            Vector2 horAndVerMovement = new Vector2(0, 1);
-
-            if (m_facingDirectionType == Direction.Right)           horAndVerMovement = new Vector2(1, 0);
-            else if (m_facingDirectionType == Direction.Left)       horAndVerMovement = new Vector2(-1, 0);
-            else if (m_facingDirectionType == Direction.Backward)       horAndVerMovement = new Vector2(0, -1);
-
-            m_animator.SetFloat("Vertical", horAndVerMovement.y, animationDampTime, Time.deltaTime);    
-            m_animator.SetFloat("Horizontal", horAndVerMovement.x, animationDampTime, Time.deltaTime);
-        }
+        m_animator.SetFloat("Vertical", horAndVerMovement.y, animationDampTime, Time.deltaTime);    
+        m_animator.SetFloat("Horizontal", horAndVerMovement.x, animationDampTime, Time.deltaTime);
 
     }
 
@@ -214,8 +186,7 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-    [SerializeField] float turningStrenght = 2f;
-    [SerializeField] float maxTurningSpeed = 10f;
+
     void TriggerTurning()
     {
         AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
@@ -224,33 +195,39 @@ public class PlayerMovement : MonoBehaviour
             return;
 
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
-        //float angleMoveDirToPrevMoveDir = Vector3.SignedAngle(m_desiredFacingRotationDirInWS, m_prevFacingRotationDir, Vector3.up);
         float angleMoveDirToPrevMoveDir = m_turningAngle;
-
-        if (m_isFreelyTurning && (!m_isRunning && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90) || (m_isRunning && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150))
+        //if (Mathf.Abs(angleMoveDirToPrevMoveDir) > 90) Debug.Log($"isrunning: {m_isRunning}, prevMovestr: {m_prevMoveStrength}, angle: {angleMoveDirToPrevMoveDir}");
+        if (m_isRunning && (m_prevMoveStrength == 0 || m_prevPrevMoveStrength == 0)) Debug.Log($"isrunning: {m_isRunning}, prevMovestr: {m_prevMoveStrength}, prevprevMovestr: {m_prevPrevMoveStrength}, angle: {angleMoveDirToPrevMoveDir}");
+        if (m_isFreelyMoving && ((!m_isRunning && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90) || (m_isRunning && (m_prevMoveStrength == 0 || m_prevPrevMoveStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)))
         {
+            //Debug.Log(angleMoveDirToPrevMoveDir);
+            AnimationData animData = null;
+            if      (!m_isRunning && Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)                         animData = m_characterMovesetData.turningLeft;
+            else if (!m_isRunning && Mathf.Sign(angleMoveDirToPrevMoveDir) >= 0)                        animData = m_characterMovesetData.turningRight;
+            else if (Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)                                         animData = m_characterMovesetData.turningRunningLeft;
+            else                                                                                        animData = m_characterMovesetData.turningRunningRight;
+
+            if (animData == null)
+            {
+                Debug.Log("MISSING ANIMATION DATA");
+                return;
+            }
+
+            ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
+
+
             m_animator.SetFloat("TurningDir", Mathf.Sign(angleMoveDirToPrevMoveDir));
-
             m_currentInteruptability = turningInterruptability;
-            m_turningStrenght = turningStrenght;
-            m_maxTurningSpeed = maxTurningSpeed;
+            m_isAction = true;
+            //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction; //?????????????
 
-            //m_animator.SetTrigger("TriggerTurning");
-            float duration = 0;
-            if (!m_isRunning) 
-            { 
-                SetAnimation(Turning); 
-                duration = m_characterMovesetData.turningLeft.animationClip.length / m_characterMovesetData.turningLeft.animationSpeed; 
-            }
-            else 
-            { 
-                SetAnimation(Turning_Running); 
-                duration = m_characterMovesetData.turningRunningLeft.animationClip.length / m_characterMovesetData.turningRunningLeft.animationSpeed; 
-            }
+            SetAnimation(!m_isRunning ? Turning : Turning_Running, true, animData.crossfadeInTime);
+            m_nextCrossfadeOutTime = animData.crossfadeOutTime;
+            SetValues(); //needed, because what if it jumps from one action directly into another, then some new values would be skipped without this
 
-            m_isTurning = true;
+            float animationDuration = animData.animationClip.length / animData.animationSpeed;
+            SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
 
-            m_turningCoroutine = StartCoroutine(UtilityFunctions.Wait(duration - 0.2f, ResetTurningAction));
         }
     }
 
@@ -258,6 +235,9 @@ public class PlayerMovement : MonoBehaviour
     public void TriggerEvading()
     {
         AnimationInterruptableType evadeInterruptability = AnimationInterruptableType.Not_Interruptable;
+
+        if (m_isActionLocked)
+            return;
 
         if ((int)m_currentInteruptability >= (int)evadeInterruptability)
             return;
@@ -282,7 +262,11 @@ public class PlayerMovement : MonoBehaviour
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
-        if (m_isTurning) ResetTurningAction?.Invoke(true);
+        if (m_ActionCoroutine != null)
+        {
+            StopCoroutine(m_ActionCoroutine);
+            m_ActionCoroutine = null;
+        }
 
         m_currentInteruptability = evadeInterruptability;
         //m_animator.SetTrigger("TriggerEvade");
@@ -293,7 +277,7 @@ public class PlayerMovement : MonoBehaviour
         m_nextCrossfadeOutTime = animData.crossfadeOutTime;
         SetValues(); //needed, because what if it jumps from one action directly into another
 
-        float animationDuration = m_characterMovesetData.evadeForward.animationClip.length / m_characterMovesetData.evadeForward.animationSpeed;
+        float animationDuration = animData.animationClip.length / animData.animationSpeed;
         SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
 
     }
@@ -311,16 +295,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void MovingPlayer()
     {
-        //less movement gets applied if the character is still not turned into moveDir, but full movement is applied when facing in movement direction //not sure if this is a nice solution
-        float forwardFactor = m_isTurning ? UtilityFunctions.RefitRange(Vector3.Angle(transform.forward, m_inputDirInWS), 30, 20, 0, 1) : 1f;
-
         //direction
-        Vector3 directionByInput = !m_isFreelyTurning ? m_inputDirInWS : transform.forward;
+        Vector3 directionByInput = !m_isFreelyMoving ? m_inputDirInWS : transform.forward;
         Vector3 directionByAction = m_directionByAction;
         Vector3 nowMoveDirection = Vector3.Lerp(directionByInput, directionByAction, m_actionInfluenceOverMoveDirection);
 
         //speed
-        float speedByInput = m_inputFactor * m_speed * forwardFactor;
+        float speedByInput = (!m_isWalkingLocked) ? m_inputFactor * m_speed : 0;
         float speedByAction = m_speedByAction;
         float nowSpeed = Mathf.Lerp(speedByInput, speedByAction, m_actionInfluenceOverMoveSpeed);
 
@@ -435,6 +416,23 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetActionValues(AnimationMovementData animData, float animationDuration, float crossfadeOutTime, float crossfadeStartBeforeEndTime = 0.1f)
     {
+        if (m_ActionCoroutine != null)
+        {
+            StopCoroutine(m_ActionCoroutine);
+            m_ActionCoroutine = null;
+        }
+
+        List<ProcessedAnimationMovementData.DataCurves> CurveValuesList = new List<ProcessedAnimationMovementData.DataCurves>(); 
+        List<ProcessedAnimationMovementData.DataStartEnd> RangeValuesList = new List<ProcessedAnimationMovementData.DataStartEnd>(); 
+
+        if (animData == null)
+        {
+            Debug.Log("ANIMATION_DATA IS NULL");
+            ProcessedAnimationMovementData emptyProcessedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, 0, 0.01f, animationDuration, crossfadeOutTime, crossfadeStartBeforeEndTime); //This could be saved somewhere in future!
+            m_ActionCoroutine = StartCoroutine(PerformAction(emptyProcessedData));
+            return;
+        }
+
 
         int moveDirPredefinition = (int)animData.moveDirPredefinition;
         int turningDirPredefinition = (int)animData.turningDirPredefinition;
@@ -465,8 +463,6 @@ public class PlayerMovement : MonoBehaviour
         m_maxTurningSpeedByInputByAction = m_maxTurningSpeed; // is set to current maxspeed
         m_actionInfluenceOverMaxTurningSpeed = startTurningInfluence;
 
-        List<ProcessedAnimationMovementData.DataCurves> CurveValuesList = new List<ProcessedAnimationMovementData.DataCurves>(); 
-        List<ProcessedAnimationMovementData.DataStartEnd> RangeValuesList = new List<ProcessedAnimationMovementData.DataStartEnd>(); 
 
 
         foreach (var value in animData.variableValue)
@@ -598,7 +594,7 @@ public class PlayerMovement : MonoBehaviour
 
         while (elapsedTime <= duration - processedData.crossfadeStartBeforeEndTime)
         {
-            float timeTillEnd = (duration - elapsedTime);
+            float timeTillEnd = ((duration - processedData.crossfadeStartBeforeEndTime) - elapsedTime);
             float waitForTime = timeTillEnd; 
             float relativeElapsedTime = elapsedTime / duration;
 
@@ -644,7 +640,6 @@ public class PlayerMovement : MonoBehaviour
             elapsedTime = Time.time - startTime; // time must be added after the first wait
         }
 
-
         //End of Action
 
         //reset Values
@@ -660,12 +655,12 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
         m_ActionCoroutine = null;
         m_isAction = false;
-        m_isFreelyTurning = !m_isLockOn || m_isRunning || m_isStandingStill;
+        m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
 
         //Set Values
         m_prevFacingRotationDir = transform.forward;
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
-        if (!m_isFreelyTurning) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
+        if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
 
         //CheckAnimation(true);
@@ -741,7 +736,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void CheckAnimation(bool forceNewAnim = false, float crossFadeDuration = -1)
     {
-        if ((m_isAction || m_isTurning))
+        if ((m_isAction))
             if (!forceNewAnim) return;
 
         if (m_isStandingStill)
@@ -778,8 +773,6 @@ public class PlayerMovement : MonoBehaviour
         m_animator.CrossFade(animation, crossFadeDuration, 0, timeOffset);
         m_currentAnimation = animation;
         
-
-        Debug.Log(crossFadeDuration);
     }
 
 

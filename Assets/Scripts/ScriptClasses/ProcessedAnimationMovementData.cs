@@ -14,15 +14,15 @@ public class ProcessedAnimationMovementData
     public float crossfadeOutTime = 0.2f;
     public float crossfadeStartBeforeEndTime = 0.2f;
 
-    public ProcessedAnimationMovementData(List<DataStartEnd> se, List<DataCurves> c, int r, float t, float d, float cfo, float cfs)
+    public ProcessedAnimationMovementData(List<DataStartEnd> StartEndValueList, List<DataCurves> CureveValueList, int TurningRelations, float TimeSteps, float AnimDuration, float CrossfadeOutTime, float CrossfadeOutBeforeEnd)
     {
-        rangeValuesList = se;
-        curveValuesList = c;
-        turningRelations = r;
-        timeSteps = t;
-        animationDuration = Mathf.Max(d, 0);
-        crossfadeOutTime = Mathf.Max(cfo, 0);
-        crossfadeStartBeforeEndTime = Mathf.Max(cfs, 0);
+        rangeValuesList = StartEndValueList;
+        curveValuesList = CureveValueList;
+        turningRelations = TurningRelations;
+        timeSteps = TimeSteps;
+        animationDuration = Mathf.Max(AnimDuration, 0);
+        crossfadeOutTime = Mathf.Max(CrossfadeOutTime, 0);
+        crossfadeStartBeforeEndTime = Mathf.Max(CrossfadeOutBeforeEnd, 0);
     }
 
     public class DataCurves

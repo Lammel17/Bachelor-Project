@@ -16,8 +16,11 @@ MonoBehaviour:
   animationClip: {fileID: 7400000, guid: 522e008d830452e409d3e2401da0b71a, type: 2}
   animationSpeed: 2
   mirrorAnimation: 0
-  AnimationMovementData: {fileID: 0}
+  AnimationMovementData: {fileID: 11400000, guid: b174990b90520f240b7ecbbb8b9c83a7, type: 2}
   mirrorMovement: 0
+  crossfadeInTime: 0.2
+  crossfadeOutTime: 0.2
+  crossfadeBeginn: 0.25
   invincibilitySettings:
     hasInvincibilityFrames: 0
     invincibilityStart: 0
