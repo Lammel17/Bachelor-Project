@@ -92,6 +92,7 @@ public class PlayerMovement : MonoBehaviour
         m_turningStrenght = m_turningStrenghtBaseValue;
         m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
 
+        ChangeAnimation.InitializeAnimationOverrideController(m_animator, m_characterMovesetData);
         m_currentAnimation = Idle_1;
 
     }

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Description: 
   idle: {fileID: 11400000, guid: bd873a9b7c9548248b3a1c0524ec5853, type: 2}
+  idle1: []
   turningLeft: {fileID: 11400000, guid: f9c2c11629752c347aba8503c086def6, type: 2}
   turningRight: {fileID: 11400000, guid: 95db6e0cc4d8b094fa8b32982401a1fb, type: 2}
   slowWalkingForward: {fileID: 11400000, guid: 60dc3966b2e51a14abd6ed8fce7c54da, type: 2}

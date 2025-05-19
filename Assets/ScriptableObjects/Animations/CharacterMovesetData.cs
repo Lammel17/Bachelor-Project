@@ -7,6 +7,7 @@ public class CharacterMovesetData : ScriptableObject
     public string Description = "";
     [Header("AnimationData Files")]
     public AnimationData idle;
+    public AnimationData[] idle1;
     [Space]
     public AnimationData turningLeft;
     public AnimationData turningRight;
