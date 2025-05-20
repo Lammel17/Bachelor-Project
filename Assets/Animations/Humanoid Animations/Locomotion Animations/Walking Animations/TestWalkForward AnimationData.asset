@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: 03a25fd9331a4db4495e7d48b3467c07, type: 2}
-  animationSpeed: 1.1
   AnimationMovementData: {fileID: 0}
+  animationSpeed: 1
+  crossfadeInTime: 0.2
+  crossfadeOutTime: 0.2
+  crossfadeBeginn: 0
   invincibilitySettings:
     hasInvincibilityFrames: 0
     invincibilityStart: 0

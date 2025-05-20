@@ -197,9 +197,7 @@ public class PlayerMovement : MonoBehaviour
 
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
         float angleMoveDirToPrevMoveDir = m_turningAngle;
-        //if (Mathf.Abs(angleMoveDirToPrevMoveDir) > 90) Debug.Log($"isrunning: {m_isRunning}, prevMovestr: {m_prevMoveStrength}, angle: {angleMoveDirToPrevMoveDir}");
-        if (m_isRunning && (m_prevMoveStrength == 0 || m_prevPrevMoveStrength == 0)) Debug.Log($"isrunning: {m_isRunning}, prevMovestr: {m_prevMoveStrength}, prevprevMovestr: {m_prevPrevMoveStrength}, angle: {angleMoveDirToPrevMoveDir}");
-        if (m_isFreelyMoving && ((!m_isRunning && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90) || (m_isRunning && (m_prevMoveStrength == 0 || m_prevPrevMoveStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)))
+        if (m_isFreelyMoving && ((!m_isRunning && (m_prevMoveStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90) || (m_isRunning && (m_prevMoveStrength == 0 || m_prevPrevMoveStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)))
         {
             //Debug.Log(angleMoveDirToPrevMoveDir);
             AnimationData animData = null;

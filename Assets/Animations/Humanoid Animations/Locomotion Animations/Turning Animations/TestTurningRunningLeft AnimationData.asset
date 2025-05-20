@@ -14,10 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: 20e0f25fd79e743469f0685a1250bb34, type: 2}
-  animationSpeed: 1.8
-  mirrorAnimation: 0
   AnimationMovementData: {fileID: 11400000, guid: 61c3160bfbb2ef7459f63feb371482d2, type: 2}
-  mirrorMovement: 0
+  animationSpeed: 1
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
   crossfadeBeginn: 0.3
