@@ -25,9 +25,7 @@ public class ChangeAnimation : MonoBehaviour
             if (moveset.idle.animationClip != null)
             {
                 newOverrideController["EmptyIdle"] = moveset.idle.animationClip;
-                if (moveset.idle1.Length == 0)
-                    newOverrideController["EmptyIdle1"] = moveset.idle.animationClip;
-
+                if (moveset.idle1.Length == 0) newOverrideController["EmptyIdle1"] = moveset.idle.animationClip;
             }
         }
         if (moveset.idle1.Length != 0)
@@ -46,152 +44,38 @@ public class ChangeAnimation : MonoBehaviour
         }
 
         //TURNING
-        if (moveset.turningLeft != null)
-        {
-            if (moveset.turningLeft.animationClip != null)
-            {
-                newOverrideController["EmptyTurningLeft"] = moveset.turningLeft.animationClip;
-
-            }
-        }
-        if (moveset.turningRight != null)
-        {
-            if (moveset.turningRight.animationClip != null)
-            {
-                newOverrideController["EmptyTurningRight"] = moveset.turningRight.animationClip;
-
-            }
-        }
+        CheckClipAndChange(moveset.turningLeft, "EmptyTurningLeft");
+        CheckClipAndChange(moveset.turningRight, "EmptyTurningRight");
 
         //SLOWWALKING
-        if (moveset.slowWalkingForward != null)
-        {
-            if (moveset.slowWalkingForward.animationClip != null)
-            {
-                newOverrideController["EmptySlowWalkingForward"] = moveset.slowWalkingForward.animationClip;
-
-            }
-        }
-        if (moveset.slowWalkingLeft != null)
-        {
-            if (moveset.slowWalkingLeft.animationClip != null)
-            {
-                newOverrideController["EmptySlowWalkingLeft"] = moveset.slowWalkingLeft.animationClip;
-
-            }
-        }
-        if (moveset.slowWalkingRight != null)
-        {
-            if (moveset.slowWalkingRight.animationClip != null)
-            {
-                newOverrideController["EmptySlowWalkingRight"] = moveset.slowWalkingRight.animationClip;
-
-            }
-        }
-        if (moveset.slowWalkingBackwards != null)
-        {
-            if (moveset.slowWalkingBackwards.animationClip != null)
-            {
-                newOverrideController["EmptySlowWalkingBackwards"] = moveset.slowWalkingBackwards.animationClip;
-
-            }
-        }
+        CheckClipAndChange(moveset.slowWalkingForward, "EmptySlowWalkingForward");
+        CheckClipAndChange(moveset.slowWalkingLeft, "EmptySlowWalkingLeft");
+        CheckClipAndChange(moveset.slowWalkingRight, "EmptySlowWalkingRight");
+        CheckClipAndChange(moveset.slowWalkingBackwards, "EmptySlowWalkingBackwards");
 
         //WALKING
-        if (moveset.walkingForward != null)
-        {
-            if (moveset.walkingForward.animationClip != null)
-            {
-                newOverrideController["EmptyWalkingForward"] = moveset.walkingForward.animationClip;
-
-            }
-        }
-        if (moveset.walkingLeft != null)
-        {
-            if (moveset.walkingLeft.animationClip != null)
-            {
-                newOverrideController["EmptyWalkingLeft"] = moveset.walkingLeft.animationClip;
-
-            }
-        }
-        if (moveset.walkingRight != null)
-        {
-            if (moveset.walkingRight.animationClip != null)
-            {
-                newOverrideController["EmptyWalkingRight"] = moveset.walkingRight.animationClip;
-
-            }
-        }
-        if (moveset.walkingBackwards != null)
-        {
-            if (moveset.walkingBackwards.animationClip != null)
-            {
-                newOverrideController["EmptyWalkingBackwards"] = moveset.walkingBackwards.animationClip;
-
-            }
-        }
+        CheckClipAndChange(moveset.walkingForward, "EmptyWalkingForward");
+        CheckClipAndChange(moveset.walkingLeft, "EmptyWalkingLeft");
+        CheckClipAndChange(moveset.walkingRight, "EmptyWalkingRight");
+        CheckClipAndChange(moveset.walkingBackwards, "EmptyWalkingBackwards");
 
         //RUNNING
-        if (moveset.running != null)
-        {
-            if (moveset.running.animationClip != null)
-            {
-                newOverrideController["EmptyRunning"] = moveset.running.animationClip;
+        CheckClipAndChange(moveset.running, "EmptyRunning");
 
-            }
-        }
-
-        //TURNING RUNNING
-        if (moveset.turningRunningLeft != null)
-        {
-            if (moveset.turningRunningLeft.animationClip != null)
-            {
-                newOverrideController["EmptyTurningRunningLeft"] = moveset.turningRunningLeft.animationClip;
-
-            }
-        }
-        if (moveset.turningRunningRight != null)
-        {
-            if (moveset.turningRunningRight.animationClip != null)
-            {
-                newOverrideController["EmptyTurningRunningRight"] = moveset.turningRunningRight.animationClip;
-
-            }
-        }
+        //TurningRunning
+        CheckClipAndChange(moveset.turningRunningLeft, "EmptyTurningRunningLeft");
+        CheckClipAndChange(moveset.turningRunningRight, "EmptyTurningRunningRight");
 
         //EVADE
-        if (moveset.evadeForward != null)
-        {
-            if (moveset.evadeForward.animationClip != null)
-            {
-                newOverrideController["EmptyEvadeForward"] = moveset.evadeForward.animationClip;
+        CheckClipAndChange(moveset.evadeForward, "EmptyEvadeForward");
+        CheckClipAndChange(moveset.evadeLeft, "EmptyEvadeLeft");
+        CheckClipAndChange(moveset.evadeRight, "EmptyEvadeRight");
+        CheckClipAndChange(moveset.evadeBackwards, "EmptyEvadeBackwards");
 
-            }
-        }
-        if (moveset.evadeLeft != null)
-        {
-            if (moveset.evadeLeft.animationClip != null)
-            {
-                newOverrideController["EmptyEvadeLeft"] = moveset.evadeLeft.animationClip;
+        //Weapons
+        ChangeWeaponAnimations(newOverrideController, moveset.weapon);
 
-            }
-        }
-        if (moveset.evadeRight != null)
-        {
-            if (moveset.evadeRight.animationClip != null)
-            {
-                newOverrideController["EmptyEvadeRight"] = moveset.evadeRight.animationClip;
 
-            }
-        }
-        if (moveset.evadeBackwards != null)
-        {
-            if (moveset.evadeBackwards.animationClip != null)
-            {
-                newOverrideController["EmptyEvadeBackwards"] = moveset.evadeBackwards.animationClip;
-
-            }
-        }
 
 
         // Apply the override to the Animator
@@ -199,8 +83,92 @@ public class ChangeAnimation : MonoBehaviour
 
 
 
+        void CheckClipAndChange(AnimationData animData, string animName)
+        {
+            if (animData != null)
+            {
+                if (animData.animationClip != null)
+                {
+                    newOverrideController[animName] = animData.animationClip;
+
+                }
+            }
+        }
 
 
     }
+
+
+
+    public static void ChangeWeapon(Animator animator, WeaponData weaponMoveset)
+    {
+        // Make a runtime instance to avoid modifying the shared asset
+        AnimatorOverrideController newOverrideController = new AnimatorOverrideController(animator.runtimeAnimatorController);
+
+        // Override specific clip
+        if (animator == null || weaponMoveset == null)
+            return;
+
+        ChangeWeaponAnimations(newOverrideController, weaponMoveset);
+
+        // Apply the override to the Animator
+        animator.runtimeAnimatorController = newOverrideController;
+
+    }
+
+
+    private static void ChangeWeaponAnimations( AnimatorOverrideController newOverrideController, WeaponData weaponMoveset)
+    {
+
+
+        WeaponData.WeaponActionCount weaponMoves = new WeaponData.WeaponActionCount();
+        //LightAttack
+        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack1.AnimData, "EmptyLightAttack1", true);
+        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack2.AnimData, "EmptyLightAttack2", weaponMoves.LightAttacks == 1);
+        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack3.AnimData, "EmptyLightAttack3", weaponMoves.LightAttacks == 2);
+        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack4.AnimData, "EmptyLightAttack4", weaponMoves.LightAttacks == 3);
+        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack5.AnimData, "EmptyLightAttack5", weaponMoves.LightAttacks == 4);
+        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack6.AnimData, "EmptyLightAttack6", weaponMoves.LightAttacks == 5);
+        weaponMoves.SprintLightAttacks += CheckClipAndChange(weaponMoveset.SprintLightAttack.AnimData, "EmptySprintLightAttack", true);
+        weaponMoves.EvadeLightAttacks += CheckClipAndChange(weaponMoveset.EvadeLightAttack.AnimData, "EmptyEvadeLightAttack", true);
+        weaponMoves.SpecialLightAttacks += CheckClipAndChange(weaponMoveset.SpecialLightAttack1.AnimData, "EmptySpecialLightAttack1", true);
+        weaponMoves.SpecialLightAttacks += CheckClipAndChange(weaponMoveset.SpecialLightAttack2.AnimData, "EmptySpecialLightAttack2", weaponMoves.SpecialLightAttacks == 1);
+
+        //HeavyAttack
+        weaponMoves.HeavyAttacks += CheckClipAndChange(weaponMoveset.HeavyAttack1.AnimData, "EmptyHeavyAttack1", true);
+        weaponMoves.HeavyAttacks += CheckClipAndChange(weaponMoveset.HeavyAttack2.AnimData, "EmptyHeavyAttack2", weaponMoves.HeavyAttacks == 1);
+        weaponMoves.HeavyAttacks += CheckClipAndChange(weaponMoveset.HeavyAttack3.AnimData, "EmptyHeavyAttack3", weaponMoves.HeavyAttacks == 2);
+        weaponMoves.HeavyAttacks += CheckClipAndChange(weaponMoveset.HeavyAttack4.AnimData, "EmptyHeavyAttack4", weaponMoves.HeavyAttacks == 3);
+        weaponMoves.SprintheavyAttacks += CheckClipAndChange(weaponMoveset.SprintHeavyAttack.AnimData, "EmptySprintHeavyAttack", true);
+        weaponMoves.EvadeHeavyAttacks += CheckClipAndChange(weaponMoveset.EvadeHeavyAttack.AnimData, "EmptyEvadeHeavyAttack", true);
+        weaponMoves.SpecialHeavyAttacks += CheckClipAndChange(weaponMoveset.SpecialHeavyAttack1.AnimData, "EmptySpecialHeavyAttack1", true);
+        weaponMoves.SpecialHeavyAttacks += CheckClipAndChange(weaponMoveset.SpecialHeavyAttack2.AnimData, "EmptySpecialHeavyAttack2", weaponMoves.SpecialHeavyAttacks == 1);
+
+        weaponMoveset.weaponActionCount = weaponMoves;
+
+
+
+        int CheckClipAndChange(AnimationData animData, string animName, bool applyAnim)
+        {
+            if (applyAnim && animData != null)
+            {
+                if (animData.animationClip != null)
+                {
+                    newOverrideController[animName] = animData.animationClip;
+                    return 1;
+                }
+                Debug.Log($"ERROR: no animation clip in AnimationData found in {animData.name}");
+            }
+
+            //newOverrideController[animName] = animData.animationClip;
+            return 0;
+            
+        }
+
+
+    }
+
+
+
 
 }

@@ -10,9 +10,6 @@ public class AnimationData : ScriptableObject
     [Header("Animation Data")]
     public AnimationClip animationClip = null;
     public AnimationMovementData AnimationMovementData;
-    public float animationSpeed = 1; //this is just for now, later i need to apply all sped to the clips manually
-    //public bool mirrorAnimation = false;
-    //public bool mirrorMovement = false;
     [Space]
     public float crossfadeInTime = 0.2f;
     public float crossfadeOutTime = 0.2f;

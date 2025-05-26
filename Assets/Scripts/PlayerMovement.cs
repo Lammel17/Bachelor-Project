@@ -17,15 +17,17 @@ public class PlayerMovement : MonoBehaviour
     private CharacterController m_characterController;
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
-    [SerializeField] private CharacterMovesetData m_characterMovesetData;
-
     [SerializeField] private Animator m_animator;
+    [SerializeField] private CharacterMovesetData m_characterMovesetData;
+    private WeaponData.WeaponActionCount m_currentWeaponMoveCount = new WeaponData.WeaponActionCount();
+    private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
+
     [Space]
     [Header("")] //DONT CHANGE THEM HERE! DO IT IN INSPECTOR!
     private float m_inputFactor = 1f; //should stay 1
     [SerializeField] private Vector3 m_speedValues = new Vector3(2, 4, 6); //slow, walk, running
     [SerializeField] private float m_moveAcceleration = 20f;
-    [SerializeField] private float m_turningStrenghtBaseValue = 7f;
+    [SerializeField] private Vector3 m_turningStrenghtBaseValues = new Vector3(15, 15, 10); //slow, walk, running
     [SerializeField] private float m_maxTurningSpeedBaseValue = 50f;
     private const int m_runningMoveStrenght = 2;
 
@@ -65,15 +67,34 @@ public class PlayerMovement : MonoBehaviour
     private float m_prevPrevMoveStrength = 0;
     private Vector3 m_prevFacingRotationDir = Vector3.forward; //unused currently
 
-    private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
 
     private enum FacingDirectionTypeConstrains { Free, LockedByAction}
     [SerializeField] [EditorAttributes.ReadOnly] private FacingDirectionTypeConstrains m_actionDirectionConstrain = FacingDirectionTypeConstrains.Free;
 
+    private NextPossibleActions m_nextPossibleActions = new NextPossibleActions();
+    public class NextPossibleActions
+    {
+        public AnimationData light;
+        public AnimationData heavy;
+        public AnimationData specialLight;
+        public AnimationData specialHeavy;
+    }
+
+
 
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
     public float MoveStrenght { get => m_moveStrength; set { m_prevPrevMoveStrength = m_prevMoveStrength; m_prevMoveStrength = m_moveStrength; if (m_isRunning && value > 0f)  m_moveStrength = m_runningMoveStrenght; else m_moveStrength = value; Speed = m_moveStrength; } } //is already snapped by inputmanager
-    public float Speed { get => m_speed; set { m_speed = value == 0 ? 0 : value == 0.5 ? m_speedValues.x : value == 1 ? m_speedValues.y : m_speedValues.z; } } //is already snapped by inputmanager
+    public float Speed 
+    { 
+        get => m_speed; 
+        set 
+        { 
+            if          (value == 0)        { m_speed = 0;                  m_turningStrenght = 0; }
+            else if     (value == 0.5f)     { m_speed = m_speedValues.x;    m_turningStrenght = m_turningStrenghtBaseValues.x; }
+            else if     (value == 1)        { m_speed = m_speedValues.y;    m_turningStrenght = m_turningStrenghtBaseValues.y; }
+            else                            { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
+        } 
+    } //is already snapped by inputmanager
     public Quaternion CameraYAxisRotation { get => m_cameraYAxisRotationInWS; set => m_cameraYAxisRotationInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
     public Transform Target { get { if (m_target != null) return m_target; else { Debug.Log("target gets called, but is empty"); return null; } } set { m_target = value; m_isLockOn = (m_target != null); } }
     public Vector3 TargetPos { get => Target.position; }
@@ -89,10 +110,17 @@ public class PlayerMovement : MonoBehaviour
         m_characterController = GetComponent<CharacterController>();
         m_playerCameraHolder = PlayerCameraHolder.Instance;
 
-        m_turningStrenght = m_turningStrenghtBaseValue;
+        m_turningStrenght = m_turningStrenghtBaseValues[1];
         m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
 
+        ChangeMoveset.SetWeapon(m_characterMovesetData.weapon, m_characterMovesetData);
         ChangeAnimation.InitializeAnimationOverrideController(m_animator, m_characterMovesetData);
+
+        m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack1.AnimData;
+        m_nextPossibleActions.heavy = m_characterMovesetData.weapon.HeavyAttack1.AnimData;
+        m_nextPossibleActions.specialLight = m_characterMovesetData.weapon.SpecialLightAttack1.AnimData;
+        m_nextPossibleActions.specialHeavy = m_characterMovesetData.weapon.SpecialHeavyAttack1.AnimData;
+
         m_currentAnimation = Idle_1;
 
     }
@@ -110,10 +138,19 @@ public class PlayerMovement : MonoBehaviour
         
     }
 
+    private Coroutine SwitchFreelyMoving;
+    bool m_isAboutSwitchDirectionType = false;
+
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
         m_isStandingStill = ((m_isWalkingLocked == false && m_moveStrength == 0) || m_isWalkingLocked == true);
+        bool prevFreelyMoving = m_isFreelyMoving;
         m_isFreelyMoving = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyMoving; //only change, when its not mid animation
+        if (prevFreelyMoving != m_isFreelyMoving) 
+        { 
+            m_isAboutSwitchDirectionType = true; 
+            SwitchFreelyMoving = StartCoroutine(UtilityFunctions.Wait(0.2f, () => { m_isAboutSwitchDirectionType = false; /*Debug.Log*/ })); 
+        }
 
         if (m_isLockOn) 
             m_targetDist = (TargetPos - transform.position).magnitude;
@@ -224,7 +261,7 @@ public class PlayerMovement : MonoBehaviour
             m_nextCrossfadeOutTime = animData.crossfadeOutTime;
             SetValues(); //needed, because what if it jumps from one action directly into another, then some new values would be skipped without this
 
-            float animationDuration = animData.animationClip.length / animData.animationSpeed;
+            float animationDuration = animData.animationClip.length;
             SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
 
         }
@@ -267,8 +304,9 @@ public class PlayerMovement : MonoBehaviour
             m_ActionCoroutine = null;
         }
 
+        m_nextPossibleActions.light = m_characterMovesetData.weapon.EvadeLightAttack.AnimData; //////////
+
         m_currentInteruptability = evadeInterruptability;
-        //m_animator.SetTrigger("TriggerEvade");
         m_isAction = true;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
@@ -276,7 +314,65 @@ public class PlayerMovement : MonoBehaviour
         m_nextCrossfadeOutTime = animData.crossfadeOutTime;
         SetValues(); //needed, because what if it jumps from one action directly into another
 
-        float animationDuration = animData.animationClip.length / animData.animationSpeed;
+        float animationDuration = animData.animationClip.length;
+        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
+
+    }
+
+
+    public void TriggerLightAttack()
+    {
+        AnimationInterruptableType lightAttackInterruptability = AnimationInterruptableType.Not_Interruptable;
+
+        if (m_isActionLocked)
+            return;
+
+        if ((int)m_currentInteruptability >= (int)lightAttackInterruptability)
+            return;
+
+        if (m_characterMovesetData == null)
+        {
+            Debug.Log("MISSING Moveset DATA");
+            return;
+        }
+
+        AnimationData animData = m_nextPossibleActions.light; 
+
+        if (animData == null)
+        {
+            Debug.Log("MISSING ANIMATION DATA");
+            return;
+        }
+
+        ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
+
+        if (m_ActionCoroutine != null)
+        {
+            StopCoroutine(m_ActionCoroutine);
+            m_ActionCoroutine = null;
+        }
+
+        int whichLightAttack = 0;
+        switch (m_currentWeaponMoveCount.LightAttacks)
+        {
+            case 0: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack1.AnimData; whichLightAttack = Light_Attack_1; break;
+            case 1: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack2.AnimData; whichLightAttack = Light_Attack_2; break;
+            case 2: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack3.AnimData; whichLightAttack = Light_Attack_3; break;
+            case 3: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack4.AnimData; whichLightAttack = Light_Attack_4; break;
+            case 4: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack5.AnimData; whichLightAttack = Light_Attack_5; break;
+            case 5: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack6.AnimData; whichLightAttack = Light_Attack_6; break;
+        }
+        m_currentWeaponMoveCount.LightAttacks = (m_currentWeaponMoveCount.LightAttacks + 1) % m_characterMovesetData.weapon.weaponActionCount.LightAttacks ; ///// Kinda many xx.xx.x.x.
+
+        m_currentInteruptability = lightAttackInterruptability;
+        m_isAction = true;
+        //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
+
+        SetAnimation(whichLightAttack, true, animData.crossfadeInTime);
+        m_nextCrossfadeOutTime = animData.crossfadeOutTime;
+        SetValues(); //needed, because what if it jumps from one action directly into another
+
+        float animationDuration = animData.animationClip.length;
         SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
 
     }
@@ -295,7 +391,7 @@ public class PlayerMovement : MonoBehaviour
     private void MovingPlayer()
     {
         //direction
-        Vector3 directionByInput = !m_isFreelyMoving ? m_inputDirInWS : transform.forward;
+        Vector3 directionByInput = !m_isFreelyMoving || m_isAboutSwitchDirectionType ? m_inputDirInWS : transform.forward;
         Vector3 directionByAction = m_directionByAction;
         Vector3 nowMoveDirection = Vector3.Lerp(directionByInput, directionByAction, m_actionInfluenceOverMoveDirection);
 
@@ -359,10 +455,11 @@ public class PlayerMovement : MonoBehaviour
 
 
         //this makes the car rotate not around it center when walking and turning, but rotates around a pont slightly to the side
-        float turnRotationPointOffsetXAxis = !m_isAction ? (Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f) : 0;
-        Vector3 rotationCenterOffset = new Vector3(turnRotationPointOffsetXAxis, 0, 0);
+        //float turnRotationPointOffsetXAxis = !m_isAction && !m_isIgnoreTurningOffset ? (Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f) : 0;
+        //Vector3 rotationCenterOffset = new Vector3(turnRotationPointOffsetXAxis, 0, 0);
 
-        transform.RotateAround(transform.position + (transform.rotation * rotationCenterOffset), Vector3.up, newAngle);
+        //RotateAround() isnt actually working when using Move()
+        transform.RotateAround(transform.position/* + (transform.rotation * rotationCenterOffset)*/, Vector3.up, newAngle);
 
 
     }

@@ -419,8 +419,8 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context, priority))
             return;
 
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R1");
+        m_thePlayerMovement.TriggerLightAttack();
+
     }
 
     private void OnL2(InputAction.CallbackContext context)

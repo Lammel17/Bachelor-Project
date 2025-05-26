@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23e6ec3c2b118de46b7770dc1f3e46e9, type: 3}
-  m_Name: TestEvadeRight AnimationData
+  m_Name: TestSprintHeavyAttack AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 2824b5f3b1d622c448651cf8a4528fdf, type: 2}
-  AnimationMovementData: {fileID: 11400000, guid: 1e43119925b8246429eae356a2740780, type: 2}
+  animationClip: {fileID: 7400000, guid: ec126b0277b523645b6fdcf4b7c564ee, type: 2}
+  AnimationMovementData: {fileID: 0}
+  animationSpeed: 1
   crossfadeInTime: 0.2
-  crossfadeOutTime: 0.3
-  crossfadeBeginn: 0.2
+  crossfadeOutTime: 0.2
+  crossfadeBeginn: 0
   invincibilitySettings:
     hasInvincibilityFrames: 0
     invincibilityStart: 0

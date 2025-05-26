@@ -1,0 +1,265 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67a9b7b5320f06c4ea89eb6146119d40, type: 3}
+  m_Name: TestWeaponData
+  m_EditorClassIdentifier: 
+  Description: 
+  BasePhysicalType: 2
+  Damage:
+    PhysicalSlice: {x: 0, y: 0}
+    PhysicalBlunt: {x: 0, y: 0}
+    PhysicalPierce: {x: 0, y: 0}
+    Thermal: {x: 0, y: 0}
+    Electrical: {x: 0, y: 0}
+    Metaphysical: {x: 0, y: 0}
+    CorrosionBuildUp: {x: 0, y: 0}
+  UpgradeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  LightAttack1:
+    AnimData: {fileID: 11400000, guid: 4b3775208a25e694fb167e07f4f93660, type: 2}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  LightAttack2:
+    AnimData: {fileID: 11400000, guid: 8a74efbede48d4e4799623a298941f36, type: 2}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  LightAttack3:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  LightAttack4:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  LightAttack5:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  LightAttack6:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  SprintLightAttack:
+    AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  EvadeLightAttack:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  SpecialLightAttack1:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  SpecialLightAttack2:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  HeavyAttack1:
+    AnimData: {fileID: 11400000, guid: 21c32426275a76846be5728270f4c3f4, type: 2}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  HeavyAttack2:
+    AnimData: {fileID: 11400000, guid: 6efba914182ac4245a0db792963347a2, type: 2}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  HeavyAttack3:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  HeavyAttack4:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  SprintHeavyAttack:
+    AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  EvadeHeavyAttack:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  SpecialHeavyAttack1:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  SpecialHeavyAttack2:
+    AnimData: {fileID: 0}
+    DamageFactor: 1
+    EnergyConsumption: 0
+    PoiseDamage: 0
+    PhysicalType: 0
+  alternateAttacks:
+    LightAttack1:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    LightAttack2:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    LightAttack3:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    LightAttack4:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    LightAttack5:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    LightAttack6:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    SprintLightAttack:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    EvadeLightAttack:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    SpecialLightAttack1:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    SpecialLightAttack2:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    HeavyAttack1:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    HeavyAttack2:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    HeavyAttack3:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    HeavyAttack4:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    SprintHeavyAttack:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    EvadeHeavyAttack:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    SpecialHeavyAttack1:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0
+    SpeciaHeavyAttack2:
+      AnimData: {fileID: 0}
+      DamageFactor: 1
+      EnergyConsumption: 0
+      PoiseDamage: 0
+      PhysicalType: 0

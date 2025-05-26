@@ -1,8 +1,10 @@
+using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "MovesetData", menuName = "Scriptable Objects/MovesetData")]
 public class CharacterMovesetData : ScriptableObject
 {
+
 
     public string Description = "";
     [Header("AnimationData Files")]
@@ -31,6 +33,9 @@ public class CharacterMovesetData : ScriptableObject
     public AnimationData evadeLeft;
     public AnimationData evadeRight;
     public AnimationData evadeBackwards;
+    [Space]
+    [Space]
+    public WeaponData weapon;
 
 
 
