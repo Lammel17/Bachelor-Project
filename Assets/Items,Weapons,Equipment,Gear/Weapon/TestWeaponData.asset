@@ -103,7 +103,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   EvadeLightAttack:
-    AnimData: {fileID: 0}
+    AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
     DamageEnergyPoise: {x: 1, y: 0, z: 0}
     PhysicalType: 0
     nextLight: 1
@@ -115,7 +115,7 @@ MonoBehaviour:
     DamageEnergyPoise: {x: 1, y: 0, z: 0}
     PhysicalType: 0
     nextLight: 1
-    nextHeavy: 1
+    nextHeavy: 0
     nextSpecialLight: 1
     nextSpecialHeavy: 0
   SpecialLightAttack2:
@@ -123,11 +123,11 @@ MonoBehaviour:
     DamageEnergyPoise: {x: 1, y: 0, z: 0}
     PhysicalType: 0
     nextLight: 1
-    nextHeavy: 1
+    nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   HeavyAttack1:
-    AnimData: {fileID: 0}
+    AnimData: {fileID: 11400000, guid: 21c32426275a76846be5728270f4c3f4, type: 2}
     DamageEnergyPoise: {x: 1.5, y: 0, z: 0}
     PhysicalType: 0
     nextLight: 0
@@ -135,7 +135,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   HeavyAttack2:
-    AnimData: {fileID: 0}
+    AnimData: {fileID: 11400000, guid: 6efba914182ac4245a0db792963347a2, type: 2}
     DamageEnergyPoise: {x: 1.5, y: 0, z: 0}
     PhysicalType: 0
     nextLight: 0

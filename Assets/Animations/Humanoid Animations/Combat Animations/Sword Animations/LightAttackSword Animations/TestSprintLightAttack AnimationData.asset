@@ -14,13 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: 65213348a6f84b04fa406bc6a07fcd27, type: 2}
-  AnimationMovementData: {fileID: 0}
-  animationSpeed: 1
+  AnimationMovementData: {fileID: 11400000, guid: ad774a7035a415148b30d2c1209b2fe7, type: 2}
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
   crossfadeBeginn: 0
-  invincibilitySettings:
-    hasInvincibilityFrames: 0
-    invincibilityStart: 0
-    invincibilityDuration: 0
-  effectsList: []
+  CustomInterruptability: 5
+  InterruptabilityChangeBeforeEndTime: 0
+  ChangedInterruptability: 1

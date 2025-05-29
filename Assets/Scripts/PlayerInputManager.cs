@@ -417,7 +417,7 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnR1(InputAction.CallbackContext context)
     {
-        int priority = 2;
+        int priority = m_thePlayerMovement.GetInterruptabilityLight();
 
         if (SetBuffer(context, priority))
             return;
@@ -430,8 +430,11 @@ public class PlayerInputManager : MonoBehaviour
     {
         int priority = 2;
 
+
         if (SetBuffer(context, priority))
             return;
+
+        m_thePlayerMovement.TriggerHeavyAttack();
 
         //if (context.performed)
         //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L2");
@@ -439,7 +442,7 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnR2(InputAction.CallbackContext context)
     {
-        int priority = 2;
+        int priority = m_thePlayerMovement.GetInterruptabilityHeavy();
 
         if (SetBuffer(context, priority))
             return;

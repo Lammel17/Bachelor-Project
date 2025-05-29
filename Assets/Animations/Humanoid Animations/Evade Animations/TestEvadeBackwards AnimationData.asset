@@ -18,8 +18,6 @@ MonoBehaviour:
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.3
   crossfadeBeginn: 0.2
-  invincibilitySettings:
-    hasInvincibilityFrames: 0
-    invincibilityStart: 0
-    invincibilityDuration: 0
-  effectsList: []
+  CustomInterruptability: 5
+  InterruptabilityChangeBeforeEndTime: 0.05
+  ChangedInterruptability: 1

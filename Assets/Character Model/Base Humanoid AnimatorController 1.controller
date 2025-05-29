@@ -600,7 +600,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Special_Light _Attack_1
+  m_Name: Special_Light_Attack_1
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
@@ -846,7 +846,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Evade_Light _Attack
+  m_Name: Evade_Light_Attack
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
@@ -1054,7 +1054,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Special_Light _Attack_2
+  m_Name: Special_Light_Attack_2
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
@@ -1616,7 +1616,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Sprint_Light _Attack
+  m_Name: Sprint_Light_Attack
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []

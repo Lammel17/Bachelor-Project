@@ -240,10 +240,10 @@ public class PlayerMovement : MonoBehaviour
 
     void TriggerTurning()
     {
-        AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
-
-        if ((int)m_currentInteruptability >= (int)turningInterruptability) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+
+        AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
+        if ((int)m_currentInteruptability >= (int)turningInterruptability) return;
 
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
         float angleMoveDirToPrevMoveDir = m_turningAngle;
@@ -274,11 +274,11 @@ public class PlayerMovement : MonoBehaviour
 
     public void TriggerEvading()
     {
-        AnimationInterruptableType evadeInterruptability = AnimationInterruptableType.Not_Interruptable;
-
         if (m_isActionLocked) return;
-        if ((int)m_currentInteruptability >= (int)evadeInterruptability) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+
+        AnimationInterruptableType evadeInterruptability = AnimationInterruptableType.Not_Interruptable;
+        if ((int)m_currentInteruptability >= (int)evadeInterruptability) return;
 
         AnimationData animData;
         if (m_facingDirectionType == Direction.Forward)         animData = m_characterMovesetData.evadeForward;
@@ -305,15 +305,14 @@ public class PlayerMovement : MonoBehaviour
 
     public void TriggerLightAttack()
     {
-        AnimationInterruptableType lightAttackInterruptability = AnimationInterruptableType.Not_Interruptable;
-
         if (m_isActionLocked) return;
-        if ((int)m_currentInteruptability >= (int)lightAttackInterruptability) return;
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         WeaponData.WeaponAttack thisAttack = m_nextPossibleActions.light; 
+        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Light Attack"); return;}
 
-        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA"); return;}
+        AnimationInterruptableType lightAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
+        if ((int)m_currentInteruptability >= (int)lightAttackInterruptability) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
@@ -323,6 +322,30 @@ public class PlayerMovement : MonoBehaviour
         SetNextPossibleAttacks(thisAttack);
 
         m_currentInteruptability = lightAttackInterruptability;
+        //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
+
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData);
+    }
+
+    public void TriggerHeavyAttack()
+    {
+        if (m_isActionLocked) return;
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
+
+        WeaponData.WeaponAttack thisAttack = m_nextPossibleActions.light;
+        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Heavy Attack"); return; }
+
+        AnimationInterruptableType heavyAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
+        if ((int)m_currentInteruptability >= (int)heavyAttackInterruptability) return;
+
+        ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
+
+        if (m_ActionCoroutine != null)
+            EndActionReset();
+
+        SetNextPossibleAttacks(thisAttack);
+
+        m_currentInteruptability = heavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
         InitAction(thisAttack.AttackHash, thisAttack.AnimData);
@@ -350,9 +373,8 @@ public class PlayerMovement : MonoBehaviour
                 EndActionReset();
         };
         
+        //this is if a action is earlier interruptable than the lenght of the animation
         m_actionChangesInterruptabilityCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn - animData.InterruptabilityChangeBeforeEndTime, action));
-
-            //m_resetNextPossibleActionsCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn , action));
 
         SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
     }
@@ -363,7 +385,7 @@ public class PlayerMovement : MonoBehaviour
             m_nextPossibleActions = new NextPossibleActions(m_characterMovesetData.weapon.EvadeLightAttack, m_characterMovesetData.weapon.EvadeHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
 
         else if (currentAction == Running)
-            m_nextPossibleActions = new NextPossibleActions(m_characterMovesetData.weapon.EvadeLightAttack, m_characterMovesetData.weapon.EvadeHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
+            m_nextPossibleActions = new NextPossibleActions(m_characterMovesetData.weapon.SprintLightAttack, m_characterMovesetData.weapon.SprintHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
 
         else if (currentAction == Reset)
             m_nextPossibleActions = new NextPossibleActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
@@ -419,6 +441,24 @@ public class PlayerMovement : MonoBehaviour
             case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_2: if (m_characterMovesetData.weapon.SpecialHeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack2; break;
         }
         return m_characterMovesetData.weapon.SpecialHeavyAttack1;
+    }
+
+
+    public int GetInterruptabilityLight()
+    {
+        return m_nextPossibleActions.light.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? (int)AnimationInterruptableType.Not_Interruptable : (int)m_nextPossibleActions.light.AnimData.CustomInterruptability;
+    }
+    public int GetInterruptabilityHeavy()
+    {
+        return m_nextPossibleActions.heavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? (int)AnimationInterruptableType.Not_Interruptable : (int)m_nextPossibleActions.heavy.AnimData.CustomInterruptability;
+    }
+    public int GetInterruptabilityLightSpecial()
+    {
+        return m_nextPossibleActions.specialLight.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? (int)AnimationInterruptableType.Not_Interruptable : (int)m_nextPossibleActions.specialLight.AnimData.CustomInterruptability;
+    }
+    public int GetInterruptabilityHeavySpecial()
+    {
+        return m_nextPossibleActions.specialHeavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? (int)AnimationInterruptableType.Not_Interruptable : (int)m_nextPossibleActions.specialHeavy.AnimData.CustomInterruptability;
     }
 
 

@@ -7,7 +7,8 @@ public enum AnimationInterruptableType
     Easily_Interruptable,       //interruptable by almost any input                     | no interrupt by walking, but any (attack, item use, evade)
     Hardly_Interruptable,       //interruptable by few input                            | no interrupt by (attack, item use), but by evade
     Not_Interruptable,          //interruptable by no Input                             | no interrupt by evade, but get knocked over
-    Never_Interruptable         //never interruptable by any input or outside causes    | no knocked over or anything else
+    Never_Interruptable,         //never interruptable by any input or outside causes    | no knocked over or anything else
+    SetByButton
 } 
 
 //Not can be interrupted by outside means, like getting knocked away, never can never be interrupted

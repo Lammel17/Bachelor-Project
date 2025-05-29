@@ -17,7 +17,7 @@ public class AnimationData : ScriptableObject
     public float crossfadeBeginn = 0.2f;
 
     [Header("Interruptability")]
-    public AnimationInterruptableType Interruptability;
+    public AnimationInterruptableType CustomInterruptability = AnimationInterruptableType.SetByButton;
     [Space]
     [Tooltip("If 0, its ignored")]
     public float InterruptabilityChangeBeforeEndTime = 0;
