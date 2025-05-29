@@ -121,47 +121,45 @@ public class ChangeAnimation : MonoBehaviour
     {
 
 
-        WeaponData.WeaponActionCount weaponMoves = new WeaponData.WeaponActionCount();
         //LightAttack
-        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack1.AnimData, "EmptyLightAttack1", true);
-        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack2.AnimData, "EmptyLightAttack2", weaponMoves.LightAttacks == 1);
-        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack3.AnimData, "EmptyLightAttack3", weaponMoves.LightAttacks == 2);
-        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack4.AnimData, "EmptyLightAttack4", weaponMoves.LightAttacks == 3);
-        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack5.AnimData, "EmptyLightAttack5", weaponMoves.LightAttacks == 4);
-        weaponMoves.LightAttacks += CheckClipAndChange(weaponMoveset.LightAttack6.AnimData, "EmptyLightAttack6", weaponMoves.LightAttacks == 5);
-        weaponMoves.SprintLightAttacks += CheckClipAndChange(weaponMoveset.SprintLightAttack.AnimData, "EmptySprintLightAttack", true);
-        weaponMoves.EvadeLightAttacks += CheckClipAndChange(weaponMoveset.EvadeLightAttack.AnimData, "EmptyEvadeLightAttack", true);
-        weaponMoves.SpecialLightAttacks += CheckClipAndChange(weaponMoveset.SpecialLightAttack1.AnimData, "EmptySpecialLightAttack1", true);
-        weaponMoves.SpecialLightAttacks += CheckClipAndChange(weaponMoveset.SpecialLightAttack2.AnimData, "EmptySpecialLightAttack2", weaponMoves.SpecialLightAttacks == 1);
+        CheckClipAndChange(weaponMoveset.LightAttack1.AnimData, "EmptyLightAttack1");
+        CheckClipAndChange(weaponMoveset.LightAttack2.AnimData, "EmptyLightAttack2");
+        CheckClipAndChange(weaponMoveset.LightAttack3.AnimData, "EmptyLightAttack3");
+        CheckClipAndChange(weaponMoveset.LightAttack4.AnimData, "EmptyLightAttack4");
+        CheckClipAndChange(weaponMoveset.LightAttack5.AnimData, "EmptyLightAttack5");
+        CheckClipAndChange(weaponMoveset.LightAttack6.AnimData, "EmptyLightAttack6");
+        CheckClipAndChange(weaponMoveset.SprintLightAttack.AnimData, "EmptySprintLightAttack");
+        CheckClipAndChange(weaponMoveset.EvadeLightAttack.AnimData, "EmptyEvadeLightAttack");
+        CheckClipAndChange(weaponMoveset.SpecialLightAttack1.AnimData, "EmptySpecialLightAttack1");
+        CheckClipAndChange(weaponMoveset.SpecialLightAttack2.AnimData, "EmptySpecialLightAttack2");
 
         //HeavyAttack
-        weaponMoves.HeavyAttacks += CheckClipAndChange(weaponMoveset.HeavyAttack1.AnimData, "EmptyHeavyAttack1", true);
-        weaponMoves.HeavyAttacks += CheckClipAndChange(weaponMoveset.HeavyAttack2.AnimData, "EmptyHeavyAttack2", weaponMoves.HeavyAttacks == 1);
-        weaponMoves.HeavyAttacks += CheckClipAndChange(weaponMoveset.HeavyAttack3.AnimData, "EmptyHeavyAttack3", weaponMoves.HeavyAttacks == 2);
-        weaponMoves.HeavyAttacks += CheckClipAndChange(weaponMoveset.HeavyAttack4.AnimData, "EmptyHeavyAttack4", weaponMoves.HeavyAttacks == 3);
-        weaponMoves.SprintheavyAttacks += CheckClipAndChange(weaponMoveset.SprintHeavyAttack.AnimData, "EmptySprintHeavyAttack", true);
-        weaponMoves.EvadeHeavyAttacks += CheckClipAndChange(weaponMoveset.EvadeHeavyAttack.AnimData, "EmptyEvadeHeavyAttack", true);
-        weaponMoves.SpecialHeavyAttacks += CheckClipAndChange(weaponMoveset.SpecialHeavyAttack1.AnimData, "EmptySpecialHeavyAttack1", true);
-        weaponMoves.SpecialHeavyAttacks += CheckClipAndChange(weaponMoveset.SpecialHeavyAttack2.AnimData, "EmptySpecialHeavyAttack2", weaponMoves.SpecialHeavyAttacks == 1);
-
-        weaponMoveset.weaponActionCount = weaponMoves;
+        CheckClipAndChange(weaponMoveset.HeavyAttack1.AnimData, "EmptyHeavyAttack1");
+        CheckClipAndChange(weaponMoveset.HeavyAttack2.AnimData, "EmptyHeavyAttack2");
+        CheckClipAndChange(weaponMoveset.HeavyAttack3.AnimData, "EmptyHeavyAttack3");
+        CheckClipAndChange(weaponMoveset.HeavyAttack4.AnimData, "EmptyHeavyAttack4");
+        CheckClipAndChange(weaponMoveset.SprintHeavyAttack.AnimData, "EmptySprintHeavyAttack");
+        CheckClipAndChange(weaponMoveset.EvadeHeavyAttack.AnimData, "EmptyEvadeHeavyAttack");
+        CheckClipAndChange(weaponMoveset.SpecialHeavyAttack1.AnimData, "EmptySpecialHeavyAttack1");
+        CheckClipAndChange(weaponMoveset.SpecialHeavyAttack2.AnimData, "EmptySpecialHeavyAttack2");
 
 
 
-        int CheckClipAndChange(AnimationData animData, string animName, bool applyAnim)
+
+        void CheckClipAndChange(AnimationData animData, string animName)
         {
-            if (applyAnim && animData != null)
+            if (animData != null)
             {
                 if (animData.animationClip != null)
                 {
                     newOverrideController[animName] = animData.animationClip;
-                    return 1;
+                    return;
                 }
                 Debug.Log($"ERROR: no animation clip in AnimationData found in {animData.name}");
             }
 
             //newOverrideController[animName] = animData.animationClip;
-            return 0;
+            return;
             
         }
 

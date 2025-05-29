@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using EditorAttributes;
 using TMPro;
+using Unity.Hierarchy;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 [RequireComponent(typeof(CharacterController))]
 
@@ -19,7 +22,6 @@ public class PlayerMovement : MonoBehaviour
     private PlayerInputManager m_playerInputManager;
     [SerializeField] private Animator m_animator;
     [SerializeField] private CharacterMovesetData m_characterMovesetData;
-    private WeaponData.WeaponActionCount m_currentWeaponMoveCount = new WeaponData.WeaponActionCount();
     private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
 
     [Space]
@@ -71,13 +73,24 @@ public class PlayerMovement : MonoBehaviour
     private enum FacingDirectionTypeConstrains { Free, LockedByAction}
     [SerializeField] [EditorAttributes.ReadOnly] private FacingDirectionTypeConstrains m_actionDirectionConstrain = FacingDirectionTypeConstrains.Free;
 
-    private NextPossibleActions m_nextPossibleActions = new NextPossibleActions();
+    private Coroutine m_actionChangesInterruptabilityCoroutine;
+    private Coroutine m_ActionCoroutine = null;
+
+    private NextPossibleActions m_nextPossibleActions = null;
     public class NextPossibleActions
     {
-        public AnimationData light;
-        public AnimationData heavy;
-        public AnimationData specialLight;
-        public AnimationData specialHeavy;
+        public WeaponData.WeaponAttack light;
+        public WeaponData.WeaponAttack heavy;
+        public WeaponData.WeaponAttack specialLight;
+        public WeaponData.WeaponAttack specialHeavy;
+
+        public NextPossibleActions(WeaponData.WeaponAttack l, WeaponData.WeaponAttack h, WeaponData.WeaponAttack sl, WeaponData.WeaponAttack sh)
+        {
+            light = l;
+            heavy = h;
+            specialLight = sl; 
+            specialHeavy = sh;
+        }
     }
 
 
@@ -116,10 +129,7 @@ public class PlayerMovement : MonoBehaviour
         ChangeMoveset.SetWeapon(m_characterMovesetData.weapon, m_characterMovesetData);
         ChangeAnimation.InitializeAnimationOverrideController(m_animator, m_characterMovesetData);
 
-        m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack1.AnimData;
-        m_nextPossibleActions.heavy = m_characterMovesetData.weapon.HeavyAttack1.AnimData;
-        m_nextPossibleActions.specialLight = m_characterMovesetData.weapon.SpecialLightAttack1.AnimData;
-        m_nextPossibleActions.specialHeavy = m_characterMovesetData.weapon.SpecialHeavyAttack1.AnimData;
+        m_nextPossibleActions = new NextPossibleActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
 
         m_currentAnimation = Idle_1;
 
@@ -144,8 +154,11 @@ public class PlayerMovement : MonoBehaviour
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
         m_isStandingStill = ((m_isWalkingLocked == false && m_moveStrength == 0) || m_isWalkingLocked == true);
+
         bool prevFreelyMoving = m_isFreelyMoving;
         m_isFreelyMoving = m_actionDirectionConstrain == FacingDirectionTypeConstrains.Free ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyMoving; //only change, when its not mid animation
+        
+        //Only for one thing, that when locked on and then start running, that the movement is for 0.2s set to input instead of forward
         if (prevFreelyMoving != m_isFreelyMoving) 
         { 
             m_isAboutSwitchDirectionType = true; 
@@ -229,8 +242,8 @@ public class PlayerMovement : MonoBehaviour
     {
         AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
 
-        if ((int)m_currentInteruptability >= (int)turningInterruptability)
-            return;
+        if ((int)m_currentInteruptability >= (int)turningInterruptability) return;
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
         float angleMoveDirToPrevMoveDir = m_turningAngle;
@@ -243,26 +256,17 @@ public class PlayerMovement : MonoBehaviour
             else if (Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)                                         animData = m_characterMovesetData.turningRunningLeft;
             else                                                                                        animData = m_characterMovesetData.turningRunningRight;
 
-            if (animData == null)
-            {
-                Debug.Log("MISSING ANIMATION DATA");
-                return;
-            }
+            if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
             ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
+            if (m_ActionCoroutine != null)
+                EndActionReset();
 
             m_animator.SetFloat("TurningDir", Mathf.Sign(angleMoveDirToPrevMoveDir));
             m_currentInteruptability = turningInterruptability;
-            m_isAction = true;
-            //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction; //?????????????
 
-            SetAnimation(!m_isRunning ? Turning : Turning_Running, true, animData.crossfadeInTime);
-            m_nextCrossfadeOutTime = animData.crossfadeOutTime;
-            SetValues(); //needed, because what if it jumps from one action directly into another, then some new values would be skipped without this
-
-            float animationDuration = animData.animationClip.length;
-            SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
+            InitAction(!m_isRunning ? Turning : Turning_Running, animData);
 
         }
     }
@@ -272,17 +276,9 @@ public class PlayerMovement : MonoBehaviour
     {
         AnimationInterruptableType evadeInterruptability = AnimationInterruptableType.Not_Interruptable;
 
-        if (m_isActionLocked)
-            return;
-
-        if ((int)m_currentInteruptability >= (int)evadeInterruptability)
-            return;
-        
-        if (m_characterMovesetData == null)
-        {
-            Debug.Log("MISSING Moveset DATA");
-            return;
-        }
+        if (m_isActionLocked) return;
+        if ((int)m_currentInteruptability >= (int)evadeInterruptability) return;
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         AnimationData animData;
         if (m_facingDirectionType == Direction.Forward)         animData = m_characterMovesetData.evadeForward;
@@ -290,32 +286,19 @@ public class PlayerMovement : MonoBehaviour
         else if (m_facingDirectionType == Direction.Right)      animData = m_characterMovesetData.evadeRight;
         else                                                    animData = m_characterMovesetData.evadeBackwards;
 
-        if (animData == null)
-        {
-            Debug.Log("MISSING ANIMATION DATA");
-            return;
-        }
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
-        {
-            StopCoroutine(m_ActionCoroutine);
-            m_ActionCoroutine = null;
-        }
+            EndActionReset();
 
-        m_nextPossibleActions.light = m_characterMovesetData.weapon.EvadeLightAttack.AnimData; //////////
+        SetNextPossibleAttacks(currentAction: Evade);
 
         m_currentInteruptability = evadeInterruptability;
-        m_isAction = true;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        SetAnimation(Evade, true, animData.crossfadeInTime);
-        m_nextCrossfadeOutTime = animData.crossfadeOutTime;
-        SetValues(); //needed, because what if it jumps from one action directly into another
-
-        float animationDuration = animData.animationClip.length;
-        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
+        InitAction(Evade, animData);
 
     }
 
@@ -324,61 +307,119 @@ public class PlayerMovement : MonoBehaviour
     {
         AnimationInterruptableType lightAttackInterruptability = AnimationInterruptableType.Not_Interruptable;
 
-        if (m_isActionLocked)
-            return;
+        if (m_isActionLocked) return;
+        if ((int)m_currentInteruptability >= (int)lightAttackInterruptability) return;
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
-        if ((int)m_currentInteruptability >= (int)lightAttackInterruptability)
-            return;
+        WeaponData.WeaponAttack thisAttack = m_nextPossibleActions.light; 
 
-        if (m_characterMovesetData == null)
-        {
-            Debug.Log("MISSING Moveset DATA");
-            return;
-        }
-
-        AnimationData animData = m_nextPossibleActions.light; 
-
-        if (animData == null)
-        {
-            Debug.Log("MISSING ANIMATION DATA");
-            return;
-        }
+        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA"); return;}
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
-        {
-            StopCoroutine(m_ActionCoroutine);
-            m_ActionCoroutine = null;
-        }
+            EndActionReset();
 
-        int whichLightAttack = 0;
-        switch (m_currentWeaponMoveCount.LightAttacks)
-        {
-            case 0: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack1.AnimData; whichLightAttack = Light_Attack_1; break;
-            case 1: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack2.AnimData; whichLightAttack = Light_Attack_2; break;
-            case 2: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack3.AnimData; whichLightAttack = Light_Attack_3; break;
-            case 3: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack4.AnimData; whichLightAttack = Light_Attack_4; break;
-            case 4: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack5.AnimData; whichLightAttack = Light_Attack_5; break;
-            case 5: m_nextPossibleActions.light = m_characterMovesetData.weapon.LightAttack6.AnimData; whichLightAttack = Light_Attack_6; break;
-        }
-        m_currentWeaponMoveCount.LightAttacks = (m_currentWeaponMoveCount.LightAttacks + 1) % m_characterMovesetData.weapon.weaponActionCount.LightAttacks ; ///// Kinda many xx.xx.x.x.
+        SetNextPossibleAttacks(thisAttack);
 
         m_currentInteruptability = lightAttackInterruptability;
-        m_isAction = true;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        SetAnimation(whichLightAttack, true, animData.crossfadeInTime);
-        m_nextCrossfadeOutTime = animData.crossfadeOutTime;
-        SetValues(); //needed, because what if it jumps from one action directly into another
-
-        float animationDuration = animData.animationClip.length;
-        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData);
 
     }
 
+    //Coroutine m_resetNextPossibleActionsCoroutine;
+    private void InitAction(int animationHash, AnimationData animData)
+    {
+        m_isAction = true;
+        
+        SetAnimation(animationHash, true, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
+        m_nextCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
 
+        SetValues(); //needed, because what if it jumps from one action directly into another
 
+        float animationDuration = animData.animationClip.length;
+
+        Action action = () =>
+        {
+            m_currentInteruptability = animData.ChangedInterruptability;
+            m_actionChangesInterruptabilityCoroutine = null;
+
+            if (m_playerInputManager.CheckRecallLatestBufferedInput())
+                EndActionReset();
+        };
+        
+        m_actionChangesInterruptabilityCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn - animData.InterruptabilityChangeBeforeEndTime, action));
+
+            //m_resetNextPossibleActionsCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn , action));
+
+        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
+    }
+
+    private void SetNextPossibleAttacks(WeaponData.WeaponAttack currentAttackData = null, int currentAction = 0)
+    {
+        if (currentAction == Evade)
+            m_nextPossibleActions = new NextPossibleActions(m_characterMovesetData.weapon.EvadeLightAttack, m_characterMovesetData.weapon.EvadeHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
+
+        else if (currentAction == Running)
+            m_nextPossibleActions = new NextPossibleActions(m_characterMovesetData.weapon.EvadeLightAttack, m_characterMovesetData.weapon.EvadeHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
+
+        else if (currentAction == Reset)
+            m_nextPossibleActions = new NextPossibleActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
+
+        else if (currentAttackData != null)
+            m_nextPossibleActions = new NextPossibleActions(GetNextAttackLight(currentAttackData.nextLight), GetNextAttackHeavy(currentAttackData.nextHeavy), GetNextAttackSpecialLight(currentAttackData.nextSpecialLight), GetNextAttackSpecialHeavy(currentAttackData.nextSpecialHeavy));
+            
+    }
+
+    private WeaponData.WeaponAttack GetNextAttackLight(WeaponData.LightAttack light)
+    {
+        switch (light)
+        {
+            case WeaponData.LightAttack.Light_Attack_1: if (m_characterMovesetData.weapon.LightAttack1.AnimData != null) return m_characterMovesetData.weapon.LightAttack1; break;
+            case WeaponData.LightAttack.Light_Attack_2: if (m_characterMovesetData.weapon.LightAttack2.AnimData != null) return m_characterMovesetData.weapon.LightAttack2; break;
+            case WeaponData.LightAttack.Light_Attack_3: if (m_characterMovesetData.weapon.LightAttack3.AnimData != null) return m_characterMovesetData.weapon.LightAttack3; break;
+            case WeaponData.LightAttack.Light_Attack_4: if (m_characterMovesetData.weapon.LightAttack4.AnimData != null) return m_characterMovesetData.weapon.LightAttack4; break;
+            case WeaponData.LightAttack.Light_Attack_5: if (m_characterMovesetData.weapon.LightAttack5.AnimData != null) return m_characterMovesetData.weapon.LightAttack5; break;
+            case WeaponData.LightAttack.Light_Attack_6: if (m_characterMovesetData.weapon.LightAttack6.AnimData != null) return m_characterMovesetData.weapon.LightAttack6; break;
+            case WeaponData.LightAttack.Sprint_Light_Attack: if (m_characterMovesetData.weapon.SprintLightAttack.AnimData != null) return m_characterMovesetData.weapon.SprintLightAttack; break;
+            case WeaponData.LightAttack.Evade_Light_Attack: if (m_characterMovesetData.weapon.EvadeLightAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeLightAttack; break;
+        }
+        return m_characterMovesetData.weapon.LightAttack1; ;
+    }
+    private WeaponData.WeaponAttack GetNextAttackHeavy(WeaponData.HeavyAttack heavy)
+    {
+        switch (heavy)
+        {
+            case WeaponData.HeavyAttack.Heavy_Attack_1: if (m_characterMovesetData.weapon.HeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack1; break;
+            case WeaponData.HeavyAttack.Heavy_Attack_2: if (m_characterMovesetData.weapon.HeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack2; break;
+            case WeaponData.HeavyAttack.Heavy_Attack_3: if (m_characterMovesetData.weapon.HeavyAttack3.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack3; break;
+            case WeaponData.HeavyAttack.Heavy_Attack_4: if (m_characterMovesetData.weapon.HeavyAttack4.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack4; break;
+            case WeaponData.HeavyAttack.Sprint_Heavy_Attack: if (m_characterMovesetData.weapon.SprintHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.SprintHeavyAttack; break;
+            case WeaponData.HeavyAttack.Evade_Heavy_Attack: if (m_characterMovesetData.weapon.EvadeHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeHeavyAttack; break;
+        }
+
+        return m_characterMovesetData.weapon.HeavyAttack1;
+    }
+    private WeaponData.WeaponAttack GetNextAttackSpecialLight(WeaponData.LightAttackSpecial specialLight)
+    {
+        switch (specialLight)
+        {
+            case WeaponData.LightAttackSpecial.Special_Light_Attack_1: if (m_characterMovesetData.weapon.SpecialLightAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack1; break;
+            case WeaponData.LightAttackSpecial.Special_Light_Attack_2: if (m_characterMovesetData.weapon.SpecialLightAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack2; break;
+        }
+        return m_characterMovesetData.weapon.SpecialLightAttack1;
+    }
+    private WeaponData.WeaponAttack GetNextAttackSpecialHeavy(WeaponData.HeavyAttackSpecial specialHeavy)
+    {
+        switch (specialHeavy)
+        {
+            case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_1: if (m_characterMovesetData.weapon.SpecialHeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack1; break;
+            case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_2: if (m_characterMovesetData.weapon.SpecialHeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack2; break;
+        }
+        return m_characterMovesetData.weapon.SpecialHeavyAttack1;
+    }
 
 
 
@@ -504,8 +545,6 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 m_desiredFacingRotationDirInWSByActionBaseValue = Vector3.forward;
 
     private bool m_isTurningFollowsTarget = false;
-
-    Coroutine m_ActionCoroutine = null;
 
     #endregion
 
@@ -737,7 +776,16 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //End of Action
+        SetNextPossibleAttacks(currentAction: Reset);
 
+        EndActionReset();
+
+        //HERE NOTHING MORE
+
+    }
+
+    private void EndActionReset()
+    {
         //reset Values
         m_actionInfluenceOverMoveDirection = 0;
         m_actionInfluenceOverMoveSpeed = 0;
@@ -749,9 +797,20 @@ public class PlayerMovement : MonoBehaviour
         m_isTurningFollowsTarget = false;
         m_actionDirectionConstrain = FacingDirectionTypeConstrains.Free;
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
-        m_ActionCoroutine = null;
         m_isAction = false;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
+
+        //End Coroutines
+        if (m_ActionCoroutine != null)
+        {
+            StopCoroutine(m_ActionCoroutine);
+            m_ActionCoroutine = null;
+        }
+        if (m_actionChangesInterruptabilityCoroutine != null) 
+        {
+            StopCoroutine(m_actionChangesInterruptabilityCoroutine);
+            m_actionChangesInterruptabilityCoroutine = null;
+        }
 
         //Set Values
         m_prevFacingRotationDir = transform.forward;
@@ -759,9 +818,7 @@ public class PlayerMovement : MonoBehaviour
         if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
 
-        //CheckAnimation(true);
         m_playerInputManager.RecallLatestBufferedInput();
-
     }
 
 
@@ -771,6 +828,8 @@ public class PlayerMovement : MonoBehaviour
 
 
 
+    readonly int Running                 = Animator.StringToHash("Running");
+    readonly int Reset                 = Animator.StringToHash("Reset");
 
     //animation States
     #region

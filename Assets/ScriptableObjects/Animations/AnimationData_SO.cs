@@ -14,15 +14,21 @@ public class AnimationData : ScriptableObject
     public float crossfadeInTime = 0.2f;
     public float crossfadeOutTime = 0.2f;
     [Tooltip("how long before the end of animation should the crossfade begin ")]
-    public float crossfadeBeginn = 0f;
+    public float crossfadeBeginn = 0.2f;
 
-
-
-    [Header("Invincibility")]
-    public Invincibility invincibilitySettings;
-
+    [Header("Interruptability")]
+    public AnimationInterruptableType Interruptability;
     [Space]
-    [SerializeField] public Effects[] effectsList;
+    [Tooltip("If 0, its ignored")]
+    public float InterruptabilityChangeBeforeEndTime = 0;
+    public AnimationInterruptableType ChangedInterruptability = AnimationInterruptableType.Easily_Interruptable;
+
+
+    //[Header("Invincibility")]
+    //public Invincibility invincibilitySettings;
+
+    //[Space]
+    //[SerializeField] public Effects[] effectsList;
 
 
 

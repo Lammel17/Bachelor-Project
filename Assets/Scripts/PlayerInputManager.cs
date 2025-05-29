@@ -218,7 +218,10 @@ public class PlayerInputManager : MonoBehaviour
     }
 
 
-
+    public bool CheckRecallLatestBufferedInput()
+    {
+        return m_lastInputIsUnread;
+    }
 
     public void RecallLatestBufferedInput()
     {
