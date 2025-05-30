@@ -434,8 +434,6 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context, priority))
             return;
 
-        m_thePlayerMovement.TriggerHeavyAttack();
-
         //if (context.performed)
         //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L2");
     }
@@ -446,6 +444,8 @@ public class PlayerInputManager : MonoBehaviour
 
         if (SetBuffer(context, priority))
             return;
+
+        m_thePlayerMovement.TriggerHeavyAttack();
 
         //if (context.performed)
         //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R2");

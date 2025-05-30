@@ -163,15 +163,15 @@ MonoBehaviour:
     DamageEnergyPoise: {x: 1.5, y: 0, z: 0}
     PhysicalType: 0
     nextLight: 0
-    nextHeavy: 1
+    nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   EvadeHeavyAttack:
-    AnimData: {fileID: 0}
+    AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
     DamageEnergyPoise: {x: 1.5, y: 0, z: 0}
     PhysicalType: 0
     nextLight: 0
-    nextHeavy: 1
+    nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SpecialHeavyAttack1:

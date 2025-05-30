@@ -19,5 +19,29 @@ MonoBehaviour:
   turningInfluence: 1
   turningRelations: 0
   forbidAdditinalRotation: 0
-  variableValue: []
+  variableValue:
+  - valueName: 1
+    ignore: 0
+    settings:
+      valueType: 1
+      value: 3.5
+      valueSettings:
+        startEnd: {x: 0.11823447, y: 0.34823447}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 0
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 0}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 0
+            m_PostInfinity: 0
+            m_RotationOrder: 0
   timeStepsForCurves: 0.05

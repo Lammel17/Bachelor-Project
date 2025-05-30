@@ -309,7 +309,8 @@ public class PlayerMovement : MonoBehaviour
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         WeaponData.WeaponAttack thisAttack = m_nextPossibleActions.light; 
-        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Light Attack"); return;}
+        if (thisAttack == null) { Debug.Log("MISSING ANIMATION DATA of a Light Attack"); return;}
+        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Light Attack"); return; }
 
         AnimationInterruptableType lightAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)lightAttackInterruptability) return;
@@ -332,7 +333,8 @@ public class PlayerMovement : MonoBehaviour
         if (m_isActionLocked) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
 
-        WeaponData.WeaponAttack thisAttack = m_nextPossibleActions.light;
+        WeaponData.WeaponAttack thisAttack = m_nextPossibleActions.heavy;
+        if (thisAttack == null) { Debug.Log("MISSING ATTACK DATA of a Heavy Attack"); return; }
         if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Heavy Attack"); return; }
 
         AnimationInterruptableType heavyAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
@@ -392,73 +394,79 @@ public class PlayerMovement : MonoBehaviour
 
         else if (currentAttackData != null)
             m_nextPossibleActions = new NextPossibleActions(GetNextAttackLight(currentAttackData.nextLight), GetNextAttackHeavy(currentAttackData.nextHeavy), GetNextAttackSpecialLight(currentAttackData.nextSpecialLight), GetNextAttackSpecialHeavy(currentAttackData.nextSpecialHeavy));
-            
+
+
+        WeaponData.WeaponAttack GetNextAttackLight(WeaponData.LightAttack light)
+        {
+            switch (light)
+            {
+                case WeaponData.LightAttack.Light_Attack_1: if (m_characterMovesetData.weapon.LightAttack1.AnimData != null) return m_characterMovesetData.weapon.LightAttack1; break;
+                case WeaponData.LightAttack.Light_Attack_2: if (m_characterMovesetData.weapon.LightAttack2.AnimData != null) return m_characterMovesetData.weapon.LightAttack2; break;
+                case WeaponData.LightAttack.Light_Attack_3: if (m_characterMovesetData.weapon.LightAttack3.AnimData != null) return m_characterMovesetData.weapon.LightAttack3; break;
+                case WeaponData.LightAttack.Light_Attack_4: if (m_characterMovesetData.weapon.LightAttack4.AnimData != null) return m_characterMovesetData.weapon.LightAttack4; break;
+                case WeaponData.LightAttack.Light_Attack_5: if (m_characterMovesetData.weapon.LightAttack5.AnimData != null) return m_characterMovesetData.weapon.LightAttack5; break;
+                case WeaponData.LightAttack.Light_Attack_6: if (m_characterMovesetData.weapon.LightAttack6.AnimData != null) return m_characterMovesetData.weapon.LightAttack6; break;
+                case WeaponData.LightAttack.Sprint_Light_Attack: if (m_characterMovesetData.weapon.SprintLightAttack.AnimData != null) return m_characterMovesetData.weapon.SprintLightAttack; break;
+                case WeaponData.LightAttack.Evade_Light_Attack: if (m_characterMovesetData.weapon.EvadeLightAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeLightAttack; break;
+            }
+            return m_characterMovesetData.weapon.LightAttack1;
+        }
+        WeaponData.WeaponAttack GetNextAttackHeavy(WeaponData.HeavyAttack heavy)
+        {
+            switch (heavy)
+            {
+                case WeaponData.HeavyAttack.Heavy_Attack_1: if (m_characterMovesetData.weapon.HeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack1; break;
+                case WeaponData.HeavyAttack.Heavy_Attack_2: if (m_characterMovesetData.weapon.HeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack2; break;
+                case WeaponData.HeavyAttack.Heavy_Attack_3: if (m_characterMovesetData.weapon.HeavyAttack3.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack3; break;
+                case WeaponData.HeavyAttack.Heavy_Attack_4: if (m_characterMovesetData.weapon.HeavyAttack4.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack4; break;
+                case WeaponData.HeavyAttack.Sprint_Heavy_Attack: if (m_characterMovesetData.weapon.SprintHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.SprintHeavyAttack; break;
+                case WeaponData.HeavyAttack.Evade_Heavy_Attack: if (m_characterMovesetData.weapon.EvadeHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeHeavyAttack; break;
+            }
+            return m_characterMovesetData.weapon.HeavyAttack1;
+        }
+        WeaponData.WeaponAttack GetNextAttackSpecialLight(WeaponData.LightAttackSpecial specialLight)
+        {
+            switch (specialLight)
+            {
+                case WeaponData.LightAttackSpecial.Special_Light_Attack_1: if (m_characterMovesetData.weapon.SpecialLightAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack1; break;
+                case WeaponData.LightAttackSpecial.Special_Light_Attack_2: if (m_characterMovesetData.weapon.SpecialLightAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack2; break;
+            }
+            return m_characterMovesetData.weapon.SpecialLightAttack1;
+        }
+        WeaponData.WeaponAttack GetNextAttackSpecialHeavy(WeaponData.HeavyAttackSpecial specialHeavy)
+        {
+            switch (specialHeavy)
+            {
+                case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_1: if (m_characterMovesetData.weapon.SpecialHeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack1; break;
+                case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_2: if (m_characterMovesetData.weapon.SpecialHeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack2; break;
+            }
+            return m_characterMovesetData.weapon.SpecialHeavyAttack1;
+        }
+
+
     }
 
-    private WeaponData.WeaponAttack GetNextAttackLight(WeaponData.LightAttack light)
-    {
-        switch (light)
-        {
-            case WeaponData.LightAttack.Light_Attack_1: if (m_characterMovesetData.weapon.LightAttack1.AnimData != null) return m_characterMovesetData.weapon.LightAttack1; break;
-            case WeaponData.LightAttack.Light_Attack_2: if (m_characterMovesetData.weapon.LightAttack2.AnimData != null) return m_characterMovesetData.weapon.LightAttack2; break;
-            case WeaponData.LightAttack.Light_Attack_3: if (m_characterMovesetData.weapon.LightAttack3.AnimData != null) return m_characterMovesetData.weapon.LightAttack3; break;
-            case WeaponData.LightAttack.Light_Attack_4: if (m_characterMovesetData.weapon.LightAttack4.AnimData != null) return m_characterMovesetData.weapon.LightAttack4; break;
-            case WeaponData.LightAttack.Light_Attack_5: if (m_characterMovesetData.weapon.LightAttack5.AnimData != null) return m_characterMovesetData.weapon.LightAttack5; break;
-            case WeaponData.LightAttack.Light_Attack_6: if (m_characterMovesetData.weapon.LightAttack6.AnimData != null) return m_characterMovesetData.weapon.LightAttack6; break;
-            case WeaponData.LightAttack.Sprint_Light_Attack: if (m_characterMovesetData.weapon.SprintLightAttack.AnimData != null) return m_characterMovesetData.weapon.SprintLightAttack; break;
-            case WeaponData.LightAttack.Evade_Light_Attack: if (m_characterMovesetData.weapon.EvadeLightAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeLightAttack; break;
-        }
-        return m_characterMovesetData.weapon.LightAttack1; ;
-    }
-    private WeaponData.WeaponAttack GetNextAttackHeavy(WeaponData.HeavyAttack heavy)
-    {
-        switch (heavy)
-        {
-            case WeaponData.HeavyAttack.Heavy_Attack_1: if (m_characterMovesetData.weapon.HeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack1; break;
-            case WeaponData.HeavyAttack.Heavy_Attack_2: if (m_characterMovesetData.weapon.HeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack2; break;
-            case WeaponData.HeavyAttack.Heavy_Attack_3: if (m_characterMovesetData.weapon.HeavyAttack3.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack3; break;
-            case WeaponData.HeavyAttack.Heavy_Attack_4: if (m_characterMovesetData.weapon.HeavyAttack4.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack4; break;
-            case WeaponData.HeavyAttack.Sprint_Heavy_Attack: if (m_characterMovesetData.weapon.SprintHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.SprintHeavyAttack; break;
-            case WeaponData.HeavyAttack.Evade_Heavy_Attack: if (m_characterMovesetData.weapon.EvadeHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeHeavyAttack; break;
-        }
-
-        return m_characterMovesetData.weapon.HeavyAttack1;
-    }
-    private WeaponData.WeaponAttack GetNextAttackSpecialLight(WeaponData.LightAttackSpecial specialLight)
-    {
-        switch (specialLight)
-        {
-            case WeaponData.LightAttackSpecial.Special_Light_Attack_1: if (m_characterMovesetData.weapon.SpecialLightAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack1; break;
-            case WeaponData.LightAttackSpecial.Special_Light_Attack_2: if (m_characterMovesetData.weapon.SpecialLightAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack2; break;
-        }
-        return m_characterMovesetData.weapon.SpecialLightAttack1;
-    }
-    private WeaponData.WeaponAttack GetNextAttackSpecialHeavy(WeaponData.HeavyAttackSpecial specialHeavy)
-    {
-        switch (specialHeavy)
-        {
-            case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_1: if (m_characterMovesetData.weapon.SpecialHeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack1; break;
-            case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_2: if (m_characterMovesetData.weapon.SpecialHeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack2; break;
-        }
-        return m_characterMovesetData.weapon.SpecialHeavyAttack1;
-    }
 
 
     public int GetInterruptabilityLight()
     {
-        return m_nextPossibleActions.light.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? (int)AnimationInterruptableType.Not_Interruptable : (int)m_nextPossibleActions.light.AnimData.CustomInterruptability;
+        if (m_nextPossibleActions.light.AnimData == null || m_nextPossibleActions.light.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
+        else return (int)m_nextPossibleActions.light.AnimData.CustomInterruptability;
     }
     public int GetInterruptabilityHeavy()
     {
-        return m_nextPossibleActions.heavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? (int)AnimationInterruptableType.Not_Interruptable : (int)m_nextPossibleActions.heavy.AnimData.CustomInterruptability;
+        if (m_nextPossibleActions.heavy.AnimData == null || m_nextPossibleActions.heavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
+        else return (int)m_nextPossibleActions.heavy.AnimData.CustomInterruptability;
     }
     public int GetInterruptabilityLightSpecial()
     {
-        return m_nextPossibleActions.specialLight.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? (int)AnimationInterruptableType.Not_Interruptable : (int)m_nextPossibleActions.specialLight.AnimData.CustomInterruptability;
+        if (m_nextPossibleActions.specialLight.AnimData == null || m_nextPossibleActions.specialLight.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
+        else return (int)m_nextPossibleActions.specialLight.AnimData.CustomInterruptability;
     }
     public int GetInterruptabilityHeavySpecial()
     {
-        return m_nextPossibleActions.specialHeavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? (int)AnimationInterruptableType.Not_Interruptable : (int)m_nextPossibleActions.specialHeavy.AnimData.CustomInterruptability;
+        if (m_nextPossibleActions.specialHeavy.AnimData == null || m_nextPossibleActions.specialHeavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
+        else return (int)m_nextPossibleActions.specialHeavy.AnimData.CustomInterruptability;
     }
 
 
