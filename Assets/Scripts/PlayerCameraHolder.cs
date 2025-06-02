@@ -146,7 +146,6 @@ public class PlayerCameraHolder : MonoBehaviour
         //if (m_playerMovement == null || m_playerMovement.MoveStrenght == 0 && !IsLockOn || !m_isLockOn)
         //    return;
 
-        float m_desiredDirForceFactor = 0.6f;
         float desiredRotationForceVerX = 0;
         float desiredRotationForceHorY = 0;
         Quaternion desiredRotation = Quaternion.identity;
@@ -160,9 +159,10 @@ public class PlayerCameraHolder : MonoBehaviour
         }
         else 
         {
+            float m_desiredDirForceFactor = 0.25f;
             Vector3 camRestDir = s_camHolderRestDirection;
-            //here, abhängig nur von input.x, weil beim seitswärts laufen die kamera gedreht wird
-            desiredRotationForceVerX = desiredRotationForceHorY = m_desiredDirForceFactor * Mathf.Abs((m_playerMovement.InputDirection * m_playerMovement.MoveStrenght).x); 
+            //here, abhängig nur vom seitwärts laufen, weil beim seitswärts laufen die kamera gedreht wird
+            desiredRotationForceVerX = desiredRotationForceHorY = m_desiredDirForceFactor * Mathf.Abs((Quaternion.Inverse(CameraHolderForwardYAxis) * m_playerMovement.PreviousMove).x); 
             //Die Gewünschte End-Drehung von der Aktuellen Dreh-Richtung aus
             desiredRotation = m_playerTransform.transform.rotation * Quaternion.LookRotation(camRestDir);
         }

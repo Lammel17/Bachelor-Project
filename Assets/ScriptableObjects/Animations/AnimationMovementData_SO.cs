@@ -11,20 +11,21 @@ public class AnimationMovementData : ScriptableObject
 {
     [SerializeField] public string ActionDescription = "";
 
-
-    [Header("Predefined Calculation")]
-    [Tooltip("1: will use the latestInput ss starting orientation. 2: willuse the latest actual Orientation as starting orientation. 3. Will override the influence to 0. 4. Will ")]
-    [SerializeField] public MoveDirectionPredefinitions moveDirPredefinition = MoveDirectionPredefinitions.LatestInput;
-    [Tooltip("1: will use the latestInput ss starting orientation. 2: willuse the latest actual Orientation as starting orientation. 3. Will override the influence to 0. 4. Will ")]
-    [SerializeField] public TurningDirectionPredefinitions turningDirPredefinition = TurningDirectionPredefinitions.LatestInput;
     [Space]
     [Tooltip("sets if the initial Influence value of dir, speed and acc is set to 0 or 1")]
     [SerializeField] public InfluenceValuePredefinitions moveInfluence = InfluenceValuePredefinitions.NoInputInfluence;
     [Tooltip("sets if the initial Influence value of dir, speed and acc is set to 0 or 1")]
     [SerializeField] public InfluenceValuePredefinitions turningInfluence = InfluenceValuePredefinitions.NoInputInfluence;
     [Space]
+    [Header("Initial Directions by:")]
+    [Tooltip("1: will use the latestInput ss starting orientation. 2: willuse the latest actual Orientation as starting orientation. 3. Will override the influence to 0. 4. Will ")]
+    [SerializeField] public MoveDirectionPredefinitions moveDirPredefinition = MoveDirectionPredefinitions.LatestInput;
+    [Tooltip("1: will use the latestInput ss starting orientation. 2: willuse the latest actual Orientation as starting orientation. 3. Will override the influence to 0. 4. Will ")]
+    [SerializeField] public TurningDirectionPredefinitions turningDirPredefinition = TurningDirectionPredefinitions.LatestInput;
+    [Header("Direction and Turning Relations")]
     [Tooltip("  ")]
     [SerializeField] public TurningRelations turningRelations = TurningRelations.None;
+    [Tooltip("If the lockOn directions are used or not. It wont be updated, but the initial rotation stays.")]
     [SerializeField] public bool forbidAdditinalRotation = false;
     [Space]
     [Header("Animation Parameters for Movement and Rotation")]
@@ -58,7 +59,7 @@ public class AnimationMovementData : ScriptableObject
         None = 0,
         TurningDirFollowsTarget,   
         TurningDirFollowsMoveDir,    //Will use the latest inputDir and TurningDir as StartingPoint
-        //MoveDirFollowsTurningDir
+        MoveDirFollowsTurningDir
 
 
     }

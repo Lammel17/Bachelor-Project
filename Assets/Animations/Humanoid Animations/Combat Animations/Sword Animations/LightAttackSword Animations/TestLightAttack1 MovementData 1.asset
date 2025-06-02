@@ -10,23 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
-  m_Name: TestLightAttack1 MovementData
+  m_Name: TestLightAttack1 MovementData 1
   m_EditorClassIdentifier: 
   ActionDescription: 
   moveInfluence: 1
   turningInfluence: 1
   moveDirPredefinition: 1
   turningDirPredefinition: 1
-  turningRelations: 1
-  forbidAdditinalRotation: 0
+  turningRelations: 3
+  forbidAdditinalRotation: 1
   variableValue:
-  - valueName: 4
-    ignore: 1
+  - valueName: 3
+    ignore: 0
     settings:
       valueType: 1
-      value: 9.45
+      value: 0
       valueSettings:
-        startEnd: {x: 0, y: 0.10157486}
+        startEnd: {x: 0, y: 1}
         curveValue:
           serializedVersion: 2
           m_Curve: []
@@ -35,9 +35,9 @@ MonoBehaviour:
           m_RotationOrder: 4
       customInfluenceOverInput:
         influenceType: 0
-        influence: 1
+        influence: 0
         influenceSettings:
-          startEnd: {x: 0, y: 0.99999994}
+          startEnd: {x: 0, y: 1}
           curveValue:
             serializedVersion: 2
             m_Curve: []
@@ -56,7 +56,7 @@ MonoBehaviour:
           m_Curve: []
           m_PreInfinity: 0
           m_PostInfinity: 0
-          m_RotationOrder: 4
+          m_RotationOrder: 0
       customInfluenceOverInput:
         influenceType: 0
         influence: 1
