@@ -19,7 +19,7 @@ MonoBehaviour:
   turningDirPredefinition: 1
   targetRelations: 0
   turningRelations: 1
-  forbidAdditinalRotation: 0
+  forbidAdditinalRotation: 1
   variableValue:
   - valueName: 1
     ignore: 0
@@ -88,7 +88,7 @@ MonoBehaviour:
             m_PostInfinity: 2
             m_RotationOrder: 4
   - valueName: 3
-    ignore: 0
+    ignore: 1
     settings:
       valueType: 0
       value: 180

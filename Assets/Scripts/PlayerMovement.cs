@@ -18,6 +18,11 @@ using Unity.VisualScripting;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public GameObject testMoveDirection;
+    public GameObject testTurningDirection;
+
+
+
     private CharacterController m_characterController;
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
@@ -142,6 +147,8 @@ public class PlayerMovement : MonoBehaviour
         SetValues();
         TriggerTurning();
 
+        testMoveDirection.transform.localScale = new Vector3(0.07f, 0.07f, Mathf.Min(Mathf.Max(m_moveStrength, 0.2f), 1.5f));
+
         if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/)
         {
             MovingPlayer();
@@ -156,7 +163,13 @@ public class PlayerMovement : MonoBehaviour
 
         SetAnimatorMoveValues();
         CheckAnimation();
-        
+
+
+        //if (m_isAction && m_speed == 0) Debug.Log("EEEEEEEEEE"); 
+        testMoveDirection.transform.position = new Vector3(transform.position.x, testMoveDirection.transform.position.y, transform.position.z);
+        testTurningDirection.transform.position = new Vector3(transform.position.x, testTurningDirection.transform.position.y, transform.position.z);
+
+
     }
 
     private Coroutine SwitchFreelyMoving;
@@ -514,8 +527,8 @@ public class PlayerMovement : MonoBehaviour
         //FacingDir
         Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS;
         Vector3 desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByAction;
-        if (m_isLockOn && (int)m_actionTargetRelations == 1/*TurningDirFollowsTarget*/)  desiredFacingRotationDirInWSByAction = Quaternion.FromToRotation(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction) * PlayerToTargetXZVector; 
-        else if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/)  desiredFacingRotationDirInWSByAction = Quaternion.FromToRotation(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction) * m_nowDestinedMoveDir  /*Quaternion.FromToRotation(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction) * m_prevMove*/;
+        if (m_isLockOn && (int)m_actionTargetRelations == 1/*TurningDirFollowsTarget*/) desiredFacingRotationDirInWSByAction = Quaternion.FromToRotation(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction) * PlayerToTargetXZVector;
+        else if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/) desiredFacingRotationDirInWSByAction = Quaternion.FromToRotation(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction) * m_nowDestinedMoveDir;
         Vector3 nowdesiredFacingRotationDirInWS = Vector3.Slerp(desiredFacingRotationDirInWSByInput.normalized, desiredFacingRotationDirInWSByAction.normalized, m_actionInfluenceOverDesiredFacingRotationDirInWS);
 
         //Speed
@@ -539,6 +552,9 @@ public class PlayerMovement : MonoBehaviour
 
         //RotateAround() isnt actually working when using Move()
         transform.RotateAround(transform.position/* + (transform.rotation * rotationCenterOffset)*/, Vector3.up, newAngle);
+
+        testTurningDirection.transform.rotation = Quaternion.LookRotation(nowdesiredFacingRotationDirInWS, Vector3.up);
+
 
     }
 
@@ -568,7 +584,12 @@ public class PlayerMovement : MonoBehaviour
         Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, nowMoveDirection * nowSpeed, Time.deltaTime * nowMoveAcceleration);
         m_characterController.Move(nowMove * Time.deltaTime);
         m_prevMove = nowMove;
-        
+
+
+        if (nowMove != Vector3.zero) testMoveDirection.transform.rotation = Quaternion.LookRotation(nowMove, Vector3.up);
+        else testMoveDirection.transform.localScale = new Vector3(0.5f, 0.07f, Mathf.Min(Mathf.Max(nowSpeed/2, 0.2f), 1.5f));
+
+
     }
 
 
@@ -646,19 +667,38 @@ public class PlayerMovement : MonoBehaviour
 
 
         //initial moveDir
-        Vector3 moveDir = m_inputDirInWS; /*LatestInput*/
-        if ((int)m_actionTurningRelations == 2 /*MoveDirFollowsTurningDir*/)    moveDir = transform.forward;
-        else if (moveDirPredefinition == 2 /*LatestFrame*/)                     moveDir = transform.forward;
+        if ((int)m_actionTurningRelations == 2 /*MoveDirFollowsTurningDir*/ || (int)m_actionTargetRelations == 2 /*MoveDirFollowsTarget*/) 
+        {
+            m_directionByAction = Quaternion.Inverse(AdditionalFacingRotation()) * Vector3.forward;
+            m_directionByActionBaseValue = Vector3.forward;
+        } 
+        else
+        {
+            Vector3 moveDir = Vector3.zero;
+            if (moveDirPredefinition == 1 /*LatestInput*/)      moveDir = m_inputDirInWS;
+            else /*(moveDirPredefinition == 2 /*LatestFrame)*/  moveDir = transform.forward;
+
+            m_directionByAction = m_directionByActionBaseValue = moveDir;
+        }
+
         //initial turningDir
-        Vector3 turningDir = Quaternion.Inverse(AdditionalFacingRotation()) * m_inputDir; /*latestInputWithAddTurning*/
-        if ((int)m_actionTurningRelations == 1 /*TurningDirFollowsMoveDir*/)    turningDir = moveDir;
-        else if (turningDirPredefinition == 2 /*latestFrame*/)                  turningDir = transform.forward;
-        //else if (turningDirPredefinition == 2/*latestInputWithOutAddTurning*/)  turningDir = m_desiredFacingRotationDirInWS;
+        if ((int)m_actionTurningRelations == 1 /*TurningDirFollowsMoveDir*/ || (int)m_actionTargetRelations == 1 /*TurningDirFollowsTarget*/) 
+        {
+            m_desiredFacingRotationDirInWSByAction = AdditionalFacingRotation() * Vector3.forward;
+            m_desiredFacingRotationDirInWSByActionBaseValue = Vector3.forward;
+        }  
+        else
+        {
+            Vector3 turningDir = Vector3.zero;
+            if (turningDirPredefinition == 1 /*latestInputWithAddTurning*/) turningDir = AdditionalFacingRotation() * m_inputDirInWS;
+            else /*(turningDirPredefinition == 2 /*latestFrame)*/           turningDir = transform.forward;
+
+            m_desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByActionBaseValue = turningDir;
+        }
 
 
 
         //move
-        m_directionByAction = m_directionByActionBaseValue = moveDir;
         m_actionInfluenceOverMoveDirection = startMoveInfluence;
         m_speedByAction = 0; // is set to 0
         m_actionInfluenceOverMoveSpeed = startMoveInfluence;
@@ -666,7 +706,6 @@ public class PlayerMovement : MonoBehaviour
         m_actionInfluenceOverMoveAcceleration = startMoveInfluence;
 
         //turning
-        m_desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByActionBaseValue = turningDir;
         m_actionInfluenceOverDesiredFacingRotationDirInWS = startTurningInfluence;
         m_turningStrenghtByAction = m_turningStrenght; // is set to current strenght
         m_actionInfluenceOverTurningStrenght = startTurningInfluence;
