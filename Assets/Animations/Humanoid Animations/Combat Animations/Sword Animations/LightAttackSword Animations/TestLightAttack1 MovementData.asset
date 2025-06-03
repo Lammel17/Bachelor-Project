@@ -16,15 +16,16 @@ MonoBehaviour:
   moveInfluence: 1
   turningInfluence: 1
   moveDirPredefinition: 1
-  turningDirPredefinition: 1
+  turningDirPredefinition: 2
+  targetRelations: 2
   turningRelations: 1
   forbidAdditinalRotation: 0
   variableValue:
   - valueName: 4
-    ignore: 1
+    ignore: 0
     settings:
-      valueType: 1
-      value: 9.45
+      valueType: 0
+      value: 50
       valueSettings:
         startEnd: {x: 0, y: 0.10157486}
         curveValue:

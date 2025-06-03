@@ -18,12 +18,13 @@ public class AnimationMovementData : ScriptableObject
     [SerializeField] public InfluenceValuePredefinitions turningInfluence = InfluenceValuePredefinitions.NoInputInfluence;
     [Space]
     [Header("Initial Directions by:")]
-    [Tooltip("1: will use the latestInput ss starting orientation. 2: willuse the latest actual Orientation as starting orientation. 3. Will override the influence to 0. 4. Will ")]
+    [Tooltip("1: will use the latestInput ss starting orientation. 2: will use the latest actual Orientation as starting orientation.")]
     [SerializeField] public MoveDirectionPredefinitions moveDirPredefinition = MoveDirectionPredefinitions.LatestInput;
-    [Tooltip("1: will use the latestInput ss starting orientation. 2: willuse the latest actual Orientation as starting orientation. 3. Will override the influence to 0. 4. Will ")]
-    [SerializeField] public TurningDirectionPredefinitions turningDirPredefinition = TurningDirectionPredefinitions.LatestInput;
-    [Header("Direction and Turning Relations")]
-    [Tooltip("  ")]
+    [Tooltip("1: will use the latestInput ss starting orientation. 2: will use the latest actual Orientation as starting orientation. 3. will use the latest Orientation without the additional rotation as starting orientation . ")]
+    [SerializeField] public TurningDirectionPredefinitions turningDirPredefinition = TurningDirectionPredefinitions.LatestInputWithAddTurning;
+    [Header("Target and Turning Relations")]
+    [Tooltip("Applies only when LockOn ")]
+    [SerializeField] public TargetRelations targetRelations = TargetRelations.None;
     [SerializeField] public TurningRelations turningRelations = TurningRelations.None;
     [Tooltip("If the lockOn directions are used or not. It wont be updated, but the initial rotation stays.")]
     [SerializeField] public bool forbidAdditinalRotation = false;
@@ -41,28 +42,31 @@ public class AnimationMovementData : ScriptableObject
 
     public enum TurningDirectionPredefinitions
     {
-        LatestInput = 1,    //Will use the latest inputDir and TurningDir as StartingPoint
-        LatestInputWithAddTurning,
-        LatestFrame,
+        LatestInputWithAddTurning = 1,    
+        //LatestInputWithoutAddTurning,
+        LatestFrameWithAddTurning
     }
 
     public enum InfluenceValuePredefinitions
     {
-        NoInputInfluence = 1,    //Will use the latest inputDir and TurningDir as StartingPoint
+        NoInputInfluence = 1,  
         FullInputInfluence
         
-
     }
 
     public enum TurningRelations
     {
         None = 0,
-        TurningDirFollowsTarget,   
-        TurningDirFollowsMoveDir,    //Will use the latest inputDir and TurningDir as StartingPoint
+        TurningDirFollowsMoveDir, 
         MoveDirFollowsTurningDir
-
-
     }
+    public enum TargetRelations
+    {
+        None = 0,
+        TurningDirFollowsTarget,
+        MoveDirFollowsTarget
+    }
+
 
     public enum ValueName
     {

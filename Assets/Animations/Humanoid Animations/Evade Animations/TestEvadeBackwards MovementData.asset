@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: TestEvadeBackwards MovementData
   m_EditorClassIdentifier: 
   ActionDescription: humanoid_evade_backwards
-  moveDirPredefinition: 1
-  turningDirPredefinition: 2
   moveInfluence: 1
   turningInfluence: 1
-  turningRelations: 2
+  moveDirPredefinition: 1
+  turningDirPredefinition: 1
+  targetRelations: 0
+  turningRelations: 1
   forbidAdditinalRotation: 0
   variableValue:
   - valueName: 1

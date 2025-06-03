@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: TestEvadeLeft MovementData
   m_EditorClassIdentifier: 
   ActionDescription: humanoid_evade_left
-  moveDirPredefinition: 1
-  turningDirPredefinition: 2
   moveInfluence: 1
   turningInfluence: 1
-  turningRelations: 2
-  forbidAdditinalRotation: 0
+  moveDirPredefinition: 1
+  turningDirPredefinition: 1
+  targetRelations: 0
+  turningRelations: 1
+  forbidAdditinalRotation: 1
   variableValue:
   - valueName: 1
     ignore: 0
