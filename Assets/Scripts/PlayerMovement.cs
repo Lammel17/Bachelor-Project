@@ -180,8 +180,8 @@ public class PlayerMovement : MonoBehaviour
         m_isStandingStill = ((m_isWalkingLocked == false && m_moveStrength == 0) || m_isWalkingLocked == true);
 
         bool prevFreelyMoving = m_isFreelyMoving;
-        //m_isFreelyMoving = /*m_actionDirectionConstrain != FacingDirectionTypeConstrains.LockedByAction*/ !m_isAction ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyMoving; //only change, when its not mid animation
-        m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
+        m_isFreelyMoving = m_actionDirectionConstrain != FacingDirectionTypeConstrains.LockedByAction ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyMoving; //only change, when its not mid animation
+        //m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         
         //Only for one thing, that when locked on and then start running, that the movement is for 0.2s set to input instead of forward
         if (prevFreelyMoving != m_isFreelyMoving) 
@@ -303,7 +303,7 @@ public class PlayerMovement : MonoBehaviour
         SetNextPossibleAttacks(currentAction: Evade);
 
         m_currentInteruptability = evadeInterruptability;
-        //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
+        m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction; ///////////////////////////////////////////////////////////// ?????????????????????????? still not happy with that
 
         InitAction(Evade, animData);
 
@@ -750,7 +750,6 @@ public class PlayerMovement : MonoBehaviour
                     if (valueTypeIsConstant)                m_desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, valueData.value, 0) * m_desiredFacingRotationDirInWSByActionBaseValue;
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
-                    Debug.Log($"AAAAAAAAAAAAAA   {Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up)}");
 
                     if (influenceValueTypeIsConstant)           m_actionInfluenceOverDesiredFacingRotationDirInWS = influenceData.influence;
                     else if (influenceValueTypeIsStartEnd)      RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd)); 
@@ -906,7 +905,7 @@ public class PlayerMovement : MonoBehaviour
         m_isAdditionalRotationForbidden = false;
         m_actionTargetRelations = 0;
         m_actionTurningRelations = 0;
-        //m_actionDirectionConstrain = FacingDirectionTypeConstrains.Free;
+        m_actionDirectionConstrain = FacingDirectionTypeConstrains.Free;
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
         m_isAction = false;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
@@ -1061,8 +1060,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!calledByAction && m_currentAnimation == animation)
             return;
-
-
+        
         if (crossFadeDuration < 0)
         {
             if (m_nextCrossfadeOutTime >= 0)
