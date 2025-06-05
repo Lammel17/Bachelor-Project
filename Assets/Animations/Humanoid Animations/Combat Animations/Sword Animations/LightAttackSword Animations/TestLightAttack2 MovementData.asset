@@ -15,8 +15,9 @@ MonoBehaviour:
   ActionDescription: 
   moveInfluence: 1
   turningInfluence: 1
-  moveDirPredefinition: 2
-  turningDirPredefinition: 3
+  moveDirPredefinition: 1
+  turningDirPredefinition: 1
+  targetRelations: 2
   turningRelations: 2
   forbidAdditinalRotation: 0
   variableValue:

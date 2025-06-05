@@ -21,7 +21,7 @@ public class AnimationMovementData : ScriptableObject
     [Tooltip("1: will use the latestInput ss starting orientation. 2: will use the latest actual Orientation as starting orientation.")]
     [SerializeField] public MoveDirectionPredefinitions moveDirPredefinition = MoveDirectionPredefinitions.LatestInput;
     [Tooltip("1: will use the latestInput ss starting orientation. 2: will use the latest actual Orientation as starting orientation. 3. will use the latest Orientation without the additional rotation as starting orientation . ")]
-    [SerializeField] public TurningDirectionPredefinitions turningDirPredefinition = TurningDirectionPredefinitions.LatestInputWithAddTurning;
+    [SerializeField] public TurningDirectionPredefinitions turningDirPredefinition = TurningDirectionPredefinitions.LatestInput;
     [Header("Target and Turning Relations")]
     [Tooltip("Applies only when LockOn ")]
     [SerializeField] public TargetRelations targetRelations = TargetRelations.None;
@@ -42,9 +42,9 @@ public class AnimationMovementData : ScriptableObject
 
     public enum TurningDirectionPredefinitions
     {
-        LatestInputWithAddTurning = 1,    
+        LatestInput = 1,    
         //LatestInputWithoutAddTurning,
-        LatestFrameWithAddTurning
+        LatestFrame
     }
 
     public enum InfluenceValuePredefinitions

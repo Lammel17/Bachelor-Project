@@ -16,7 +16,7 @@ MonoBehaviour:
   moveInfluence: 1
   turningInfluence: 1
   moveDirPredefinition: 1
-  turningDirPredefinition: 2
+  turningDirPredefinition: 1
   targetRelations: 2
   turningRelations: 1
   forbidAdditinalRotation: 0
