@@ -26,7 +26,7 @@ public class AnimationMovementData : ScriptableObject
     [Tooltip("Applies only when LockOn ")]
     [SerializeField] public TargetRelations targetRelations = TargetRelations.None;
     [SerializeField] public TurningRelations turningRelations = TurningRelations.None;
-    [Tooltip("If the lockOn directions are used or not. It wont be updated, but the initial rotation stays.")]
+    [Tooltip("only needed if InputInfluence for TurningDir is used in any way")]
     [SerializeField] public bool forbidAdditinalRotation = false;
     [Space]
     [Header("Animation Parameters for Movement and Rotation")]

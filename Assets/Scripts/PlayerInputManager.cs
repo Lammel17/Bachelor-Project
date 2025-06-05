@@ -370,8 +370,8 @@ public class PlayerInputManager : MonoBehaviour
 
         //Still! Stick value bounces when letting it go, thats sucks, problem for later?
         float magnitude = Snapping.Snap(Mathf.InverseLerp(0.2f, 1, m_extremeInputMagnitude) + 0.1f, 0.5f);
-        if (magnitude != m_thePlayerMovement.MoveStrenght)
-            m_thePlayerMovement.MoveStrenght = magnitude; //only gets set, when it differns from current magnitude
+        if (magnitude != m_thePlayerMovement.InputStrenght)
+            m_thePlayerMovement.InputStrenght = magnitude; //only gets set, when it differns from current magnitude
         if (magnitude > 0)
             m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
 
@@ -482,12 +482,12 @@ public class PlayerInputManager : MonoBehaviour
         if (context.performed)
         {
             //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East perf hold down");
-            m_thePlayerMovement.IsRunning = true;
+            m_thePlayerMovement.IsHoldRunning = true;
         }
         if (context.canceled)
         {
             //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East hold up");
-            m_thePlayerMovement.IsRunning = false;
+            m_thePlayerMovement.IsHoldRunning = false;
             //Beware, this canceled gets called even if hold was not performed
         }
     }

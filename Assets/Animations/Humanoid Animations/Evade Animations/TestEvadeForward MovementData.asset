@@ -112,7 +112,7 @@ MonoBehaviour:
             m_PostInfinity: 2
             m_RotationOrder: 4
   - valueName: 3
-    ignore: 1
+    ignore: 0
     settings:
       valueType: 0
       value: 0

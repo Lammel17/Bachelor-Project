@@ -97,15 +97,39 @@ MonoBehaviour:
     ignore: 0
     settings:
       valueType: 1
-      value: 4.24
+      value: 13.4
       valueSettings:
-        startEnd: {x: 0, y: 0.12645142}
+        startEnd: {x: 0.07240887, y: 0.79}
         curveValue:
           serializedVersion: 2
           m_Curve: []
           m_PreInfinity: 0
           m_PostInfinity: 0
           m_RotationOrder: 0
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 0}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 0
+            m_PostInfinity: 0
+            m_RotationOrder: 0
+  - valueName: 5
+    ignore: 0
+    settings:
+      valueType: 1
+      value: 30
+      valueSettings:
+        startEnd: {x: 0.1793187, y: 0.78999996}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
       customInfluenceOverInput:
         influenceType: 0
         influence: 1
