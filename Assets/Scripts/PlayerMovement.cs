@@ -13,6 +13,7 @@ using Unity.Hierarchy;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 
 [RequireComponent(typeof(CharacterController))]
 
@@ -75,9 +76,6 @@ public class PlayerMovement : MonoBehaviour
     private float m_prevPrevMoveStrength = 0;
     private Vector3 m_prevFacingRotationDir = Vector3.forward; //unused currently
 
-
-    private enum FacingDirectionTypeConstrains { Free, LockedByAction}
-    [SerializeField] [EditorAttributes.ReadOnly] private FacingDirectionTypeConstrains m_actionDirectionConstrain = FacingDirectionTypeConstrains.Free;
 
     private Coroutine m_actionChangesInterruptabilityCoroutine;
     private Coroutine m_ActionCoroutine = null;
@@ -180,8 +178,7 @@ public class PlayerMovement : MonoBehaviour
         m_isStandingStill = ((m_isWalkingLocked == false && m_moveStrength == 0) || m_isWalkingLocked == true);
 
         bool prevFreelyMoving = m_isFreelyMoving;
-        m_isFreelyMoving = m_actionDirectionConstrain != FacingDirectionTypeConstrains.LockedByAction ? !m_isLockOn || m_isRunning || m_isStandingStill : m_isFreelyMoving; //only change, when its not mid animation
-        //m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
+        m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         
         //Only for one thing, that when locked on and then start running, that the movement is for 0.2s set to input instead of forward
         if (prevFreelyMoving != m_isFreelyMoving) 
@@ -288,26 +285,26 @@ public class PlayerMovement : MonoBehaviour
         if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder
 
         AnimationData animData;
-        if (m_facingDirectionType == Direction.Forward)         animData = m_characterMovesetData.evadeForward;
-        else if (m_facingDirectionType == Direction.Left)       animData = m_characterMovesetData.evadeLeft;
-        else if (m_facingDirectionType == Direction.Right)      animData = m_characterMovesetData.evadeRight;
-        else                                                    animData = m_characterMovesetData.evadeBackwards;
+        int animHash = 0;
+        if (m_facingDirectionType == Direction.Forward)             { animData = m_characterMovesetData.evadeForward; animHash = Evade_Forward; }
+        else if (m_facingDirectionType == Direction.Left)           { animData = m_characterMovesetData.evadeLeft; animHash = Evade_Left; }
+        else if (m_facingDirectionType == Direction.Right)          { animData = m_characterMovesetData.evadeRight; animHash = Evade_Right; }
+        else                                                        { animData = m_characterMovesetData.evadeBackwards; animHash = Evade_Backwards; }
 
-        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+            if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
-        ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
+            ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
-        if (m_ActionCoroutine != null)
-            EndActionReset();
+            if (m_ActionCoroutine != null)
+                EndActionReset();
 
-        SetNextPossibleAttacks(currentAction: Evade);
+            SetNextPossibleAttacks(currentAction: animHash);
 
-        m_currentInteruptability = evadeInterruptability;
-        m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction; ///////////////////////////////////////////////////////////// ?????????????????????????? still not happy with that
+            m_currentInteruptability = evadeInterruptability;
 
-        InitAction(Evade, animData);
+            InitAction(animHash, animData);
 
-    }
+        }
 
 
     public void TriggerLightAttack()
@@ -390,7 +387,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetNextPossibleAttacks(WeaponData.WeaponAttack currentAttackData = null, int currentAction = 0)
     {
-        if (currentAction == Evade)
+        if (currentAction == Evade_Forward || currentAction == Evade_Left || currentAction == Evade_Right || currentAction == Evade_Backwards)
             m_nextPossibleActions = new NextPossibleActions(m_characterMovesetData.weapon.EvadeLightAttack, m_characterMovesetData.weapon.EvadeHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
 
         else if (currentAction == Running)
@@ -452,9 +449,6 @@ public class PlayerMovement : MonoBehaviour
 
 
     }
-
-
-
     public int GetInterruptabilityLight()
     {
         if (m_nextPossibleActions.light.AnimData == null || m_nextPossibleActions.light.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
@@ -501,11 +495,9 @@ public class PlayerMovement : MonoBehaviour
     {
         m_prevFacingRotationDir = m_desiredFacingRotationDirInWS; //hmm, vielleicht von dem nehmen: nowdesiredFacingRotationDirInWS
 
-        Quaternion additionalTurningRotation =  AdditionalFacingRotation();
-
         //if no input, then it should not recalculate the desired facing direction, because what if i stand still and then lock on something behind me, it should not affect any calculation as long as i dont move
         // also, actions like evading set their initial m_desiredFacingRotationDirInWS in their own Trigger function
-        m_desiredFacingRotationDirInWS = (!m_isStandingStill) ? additionalTurningRotation * m_inputDirInWS : m_desiredFacingRotationDirInWS;
+        m_desiredFacingRotationDirInWS = (!m_isStandingStill) ? AdditionalFacingRotation() * m_inputDirInWS : m_desiredFacingRotationDirInWS;
 
         //FacingDir
         Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS;
@@ -651,7 +643,7 @@ public class PlayerMovement : MonoBehaviour
 
 
         //initial moveDir
-        if ((int)m_actionTurningRelations == 2 /*MoveDirFollowsTurningDir*/ || (int)m_actionTargetRelations == 2 /*MoveDirFollowsTarget*/) 
+        if ((int)m_actionTurningRelations == 2 /*MoveDirFollowsTurningDir*/ || (m_isLockOn && (int)m_actionTargetRelations == 2 /*MoveDirFollowsTarget*/)) 
         {
             m_directionByAction = /*Quaternion.Inverse(AdditionalFacingRotation()) **/ Vector3.forward;
             m_directionByActionBaseValue = Vector3.forward;
@@ -671,7 +663,7 @@ public class PlayerMovement : MonoBehaviour
 
 
         //initial turningDir
-        if ((int)m_actionTurningRelations == 1 /*TurningDirFollowsMoveDir*/ || (int)m_actionTargetRelations == 1 /*TurningDirFollowsTarget*/) 
+        if ((int)m_actionTurningRelations == 1 /*TurningDirFollowsMoveDir*/ || (m_isLockOn && (int)m_actionTargetRelations == 1 /*TurningDirFollowsTarget*/)) 
         {
             m_desiredFacingRotationDirInWSByAction = /*AdditionalFacingRotation() **/ Vector3.forward;
             m_desiredFacingRotationDirInWSByActionBaseValue = Vector3.forward;
@@ -905,7 +897,6 @@ public class PlayerMovement : MonoBehaviour
         m_isAdditionalRotationForbidden = false;
         m_actionTargetRelations = 0;
         m_actionTurningRelations = 0;
-        m_actionDirectionConstrain = FacingDirectionTypeConstrains.Free;
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
         m_isAction = false;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
@@ -987,7 +978,11 @@ public class PlayerMovement : MonoBehaviour
     readonly int Locomotion                 = Animator.StringToHash("Locomotion");
     readonly int Turning                    = Animator.StringToHash("Turning");
     readonly int Turning_Running            = Animator.StringToHash("Turning_Running");
-    readonly int Evade                      = Animator.StringToHash("Evade");
+
+    readonly int Evade_Forward              = Animator.StringToHash("Evade_Forward");
+    readonly int Evade_Left                 = Animator.StringToHash("Evade_Left");
+    readonly int Evade_Right                = Animator.StringToHash("Evade_Right");
+    readonly int Evade_Backwards            = Animator.StringToHash("Evade_Backwards");
 
     readonly int Use_Item                   = Animator.StringToHash("Use_Item");
     readonly int Healing                    = Animator.StringToHash("Healing");
