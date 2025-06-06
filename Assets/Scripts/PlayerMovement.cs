@@ -74,7 +74,6 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 m_prevMove = Vector3.zero;
     private float m_prevInputStrength = 0;
     private float m_prevPrevInputStrength = 0;
-    private Vector3 m_prevFacingRotationDir = Vector3.forward; //unused currently
 
 
     private Coroutine m_actionChangesInterruptabilityCoroutine;
@@ -106,7 +105,7 @@ public class PlayerMovement : MonoBehaviour
         get => m_speed; 
         set 
         { 
-            if          (value == 0)        { m_speed = 0;                  m_turningStrenght = 0; }
+            if          (value == 0)        { m_speed = 0;                  m_turningStrenght = m_turningStrenghtBaseValues.x; }
             else if     (value == 0.5f)     { m_speed = m_speedValues.x;    m_turningStrenght = m_turningStrenghtBaseValues.x; }
             else if     (value == 1)        { m_speed = m_speedValues.y;    m_turningStrenght = m_turningStrenghtBaseValues.y; }
             else                            { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
@@ -177,6 +176,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
+        m_isStandingPrev = m_isStandingStill;
         m_isStandingStill = ((m_isWalkingLocked == false && m_inputStrenght == 0) || m_isWalkingLocked == true);
 
         bool prevFreelyMoving = m_isFreelyMoving;
@@ -254,7 +254,7 @@ public class PlayerMovement : MonoBehaviour
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
         float angleMoveDirToPrevMoveDir = m_turningAngle;
 
-        if (!m_isHoldRunning && m_isFreelyMoving && (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90)
+        if (!m_isHoldRunning && !m_isLockOn && m_isFreelyMoving && (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90)
         {
             if ( Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)     animData = m_characterMovesetData.turningLeft;
             else                                                animData = m_characterMovesetData.turningRight;   
@@ -502,13 +502,18 @@ public class PlayerMovement : MonoBehaviour
         else return Quaternion.Euler(0, 180, 0);
     }
 
+    bool m_isStandingPrev = true;
     private void RotatingPlayer()
     {
-        m_prevFacingRotationDir = m_desiredFacingRotationDirInWS; //hmm, vielleicht von dem nehmen: nowdesiredFacingRotationDirInWS
-
         //if no input, then it should not recalculate the desired facing direction, because what if i stand still and then lock on something behind me, it should not affect any calculation as long as i dont move
         // also, actions like evading set their initial m_desiredFacingRotationDirInWS in their own Trigger function
-        m_desiredFacingRotationDirInWS = (!m_isStandingStill) ? AdditionalFacingRotation() * m_inputDirInWS : m_desiredFacingRotationDirInWS;
+        if (!m_isStandingStill)
+            m_desiredFacingRotationDirInWS = AdditionalFacingRotation() * m_inputDirInWS;
+        else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && !m_isHoldRunning)
+            m_desiredFacingRotationDirInWS = PlayerToTargetXZVector;
+        else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && m_isHoldRunning)
+            m_desiredFacingRotationDirInWS = m_desiredFacingRotationDirInWS;
+
 
         //FacingDir
         Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS;
@@ -925,7 +930,6 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //Set Values
-        m_prevFacingRotationDir = transform.forward;
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
         if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;

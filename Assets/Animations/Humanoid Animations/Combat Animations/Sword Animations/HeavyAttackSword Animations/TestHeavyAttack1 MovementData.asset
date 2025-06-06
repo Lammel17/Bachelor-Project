@@ -13,11 +13,90 @@ MonoBehaviour:
   m_Name: TestHeavyAttack1 MovementData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  moveDirPredefinition: 1
-  turningDirPredefinition: 1
   moveInfluence: 1
   turningInfluence: 1
-  turningRelations: 0
+  moveDirPredefinition: 1
+  turningDirPredefinition: 1
+  targetRelations: 2
+  turningRelations: 1
   forbidAdditinalRotation: 0
-  variableValue: []
-  timeStepsForCurves: 0.05
+  variableValue:
+  - valueName: 1
+    ignore: 0
+    settings:
+      valueType: 2
+      value: 5
+      valueSettings:
+        startEnd: {x: 0, y: 0.58709}
+        curveValue:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: -0.5
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.25633824
+            value: -0.5
+            inSlope: -0
+            outSlope: 50.782494
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.26618415
+            value: 0
+            inSlope: 50.782494
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.71276504
+            value: 0
+            inSlope: -0
+            outSlope: 89.97804
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.72387886
+            value: 1
+            inSlope: 89.97804
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: -0
+            outSlope: 0
+            tangentMode: 69
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 0}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 0
+            m_PostInfinity: 0
+            m_RotationOrder: 0
+  timeStepsForCurves: 0.2
