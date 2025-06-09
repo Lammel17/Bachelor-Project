@@ -28,6 +28,7 @@ public class PlayerMovement : MonoBehaviour
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
     [SerializeField] private Animator m_animator;
+    private LookAt m_lookAtScript = null;
     [SerializeField] private CharacterMovesetData m_characterMovesetData;
     private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
 
@@ -97,10 +98,14 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
-
+    //PROPERTIES
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
-    public float InputStrenght { get => m_inputStrenght; set { if (m_isHoldRunning && value > 0f)  m_inputStrenght = m_runningMoveStrenght/*2*/; else m_inputStrenght = value; Speed = m_inputStrenght; } } //is already snapped by inputmanager
-    public float Speed 
+    public float InputStrenght //is already snapped by inputmanager
+    { 
+        get => m_inputStrenght; 
+        set { if (m_isHoldRunning && value > 0f)  m_inputStrenght = m_runningMoveStrenght/*2*/; else m_inputStrenght = value; Speed = m_inputStrenght; } 
+    } 
+    public float Speed //is already snapped by inputmanager
     { 
         get => m_speed; 
         set 
@@ -110,11 +115,18 @@ public class PlayerMovement : MonoBehaviour
             else if     (value == 1)        { m_speed = m_speedValues.y;    m_turningStrenght = m_turningStrenghtBaseValues.y; }
             else                            { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
         } 
-    } //is already snapped by inputmanager
+    } 
     public Quaternion CameraYAxisRotation { get => m_cameraYAxisRotationInWS; set => m_cameraYAxisRotationInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
-    public Transform Target { get { if (m_target != null) return m_target; else { Debug.Log("target gets called, but is empty"); return null; } } set { m_target = value; m_isLockOn = (m_target != null); } }
+    public Transform Target 
+    { 
+        get { if (m_target != null) return m_target; else { Debug.Log("target gets called, but is empty"); return null; } } 
+        set { m_target = value; m_isLockOn = (m_target != null); if (m_lookAtScript != null && !m_isAction) m_lookAtScript.SetTarget(value); } 
+    }
     public Vector3 TargetPos { get => Target.position; }
-    public Vector3 PlayerToTargetXZVector { get { if (m_target == null) { Debug.Log("No target, so no Direction to Target"); return transform.forward; }; return new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z).normalized; } }
+    public Vector3 PlayerToTargetXZVector 
+    { 
+        get { if (m_target == null) { Debug.Log("No target, so no Direction to Target"); return transform.forward; }; return new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z).normalized; } 
+    }
     public bool IsHoldRunning { get => m_isHoldRunning; set { m_isHoldRunning = value; InputStrenght = m_inputStrenght; m_animator.SetBool("IsRunning", value); } }
     public Vector3 PreviousMove { get => m_prevMove; }
 
@@ -126,6 +138,8 @@ public class PlayerMovement : MonoBehaviour
         m_playerInputManager = PlayerInputManager.Instance;
         m_characterController = GetComponent<CharacterController>();
         m_playerCameraHolder = PlayerCameraHolder.Instance;
+        if (TryGetComponent<LookAt>(out LookAt lookAt))
+            m_lookAtScript = lookAt;
 
         m_turningStrenght = m_turningStrenghtBaseValues[1];
         m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
@@ -373,7 +387,9 @@ public class PlayerMovement : MonoBehaviour
     private void InitAction(int animationHash, AnimationData animData)
     {
         m_isAction = true;
-        
+
+        if (m_lookAtScript != null) m_lookAtScript.SetTarget(null);
+
         SetAnimation(animationHash, true, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
         m_nextCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
 
@@ -933,6 +949,7 @@ public class PlayerMovement : MonoBehaviour
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
         if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
+        if (m_lookAtScript != null && m_isLockOn) m_lookAtScript.SetTarget(m_target);
 
         m_playerInputManager.RecallLatestBufferedInput();
     }
