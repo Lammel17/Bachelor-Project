@@ -32,9 +32,11 @@ public class LookAt : MonoBehaviour
     {
         if (Target == null)
         {
-            //m_isDeactivating = true;
-            m_isActive = false;
             m_target = null;
+            if (!m_isActive)
+                return;
+            m_isDeactivating = true;
+            //m_isActive = false;
             return;
         }
 
@@ -63,33 +65,32 @@ public class LookAt : MonoBehaviour
             Vector3 animForward = we.Element.transform.forward;
             Vector3 ToTarget = m_fallbackTargetPos - transform.position;
 
-            float angle = Vector3.SignedAngle(new Vector3(animForward.x, 0, animForward.z), new Vector3(ToTarget.x, 0, ToTarget.z), Vector3.up);
-
+            float angleToTarget = Vector3.SignedAngle(new Vector3(animForward.x, 0, animForward.z), new Vector3(ToTarget.x, 0, ToTarget.z), Vector3.up);
             float applyance = 0;
-            if (/*m_isDeactivating ||*/ we.ConstrainsAngleYAxis == Vector2.zero || angle - constraintAnglesAdded < we.ConstrainsAngleYAxis.x || angle - constraintAnglesAdded > we.ConstrainsAngleYAxis.y)
+
+            if (m_isDeactivating || we.ConstrainsAngleYAxis == Vector2.zero || angleToTarget - constraintAnglesAdded < we.ConstrainsAngleYAxis.x || angleToTarget - constraintAnglesAdded > we.ConstrainsAngleYAxis.y)
             {
                 applyance = UtilityFunctions.SmartLerp(we.LastApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
                 we.LastApplyance = applyance;
-                angle = we.LastAngle;
-                //if (m_isDeactivating && applyance == 0)
-                //{
-                //    m_isActive = false;
-                //    m_isDeactivating = false;
-                //}
+                angleToTarget = we.LastAngle;
+                if (m_isDeactivating && applyance == 0)
+                {
+                    m_isActive = false;
+                    m_isDeactivating = false;
+                }
             }
             else
             {
                 applyance = UtilityFunctions.SmartLerp(we.LastApplyance, 1, m_applyRemoveSpeed * Time.deltaTime);
                 we.LastApplyance = applyance;
-                constraintAnglesAdded += angle;
-                we.LastAngle = angle;
+                constraintAnglesAdded += angleToTarget;
+                we.LastAngle = angleToTarget;
             }
 
-            angle = Mathf.Lerp(0, angle, applyance);
+            float angleForSwitchingApplyance = Mathf.Lerp(0, angleToTarget, applyance);
+            float weightedAngle = Mathf.Lerp(0, angleForSwitchingApplyance, we.Weight);
 
-            angle = Mathf.Lerp(0, angle, we.Weight);
-
-            we.Element.transform.Rotate(new Vector3(0, angle + offset, 0), Space.World);
+            we.Element.transform.Rotate(new Vector3(0, weightedAngle + offset, 0), Space.World);
 
 
         }
