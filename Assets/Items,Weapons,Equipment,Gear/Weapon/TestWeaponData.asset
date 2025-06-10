@@ -95,7 +95,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SprintLightAttack:
-    AnimData: {fileID: 0}
+    AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
     DamageEnergyPoise: {x: 1, y: 0, z: 0}
     PhysicalType: 0
     nextLight: 1

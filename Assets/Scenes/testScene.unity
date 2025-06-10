@@ -1438,7 +1438,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1268966255
 Transform:
   m_ObjectHideFlags: 0
@@ -2031,6 +2031,7 @@ MonoBehaviour:
   m_isStandingStill: 0
   m_isLockOn: 0
   m_isHoldRunning: 0
+  m_isRunning: 0
   m_isFreelyMoving: 1
   m_isAction: 0
   m_isWalkingLocked: 0
@@ -2080,16 +2081,16 @@ MonoBehaviour:
   m_lookAtElement:
   - Element: {fileID: 370851467}
     Weight: 0.203
-    Ignore: 0
     ConstrainsAngleYAxis: {x: -90, y: 90}
+    Ignore: 0
   - Element: {fileID: 112108348}
     Weight: 0.445
-    Ignore: 0
     ConstrainsAngleYAxis: {x: -90, y: 90}
+    Ignore: 0
   - Element: {fileID: 1582009087}
     Weight: 1
-    Ignore: 0
     ConstrainsAngleYAxis: {x: -90, y: 90}
+    Ignore: 0
 --- !u!1 &2016108117
 GameObject:
   m_ObjectHideFlags: 0
@@ -2108,7 +2109,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &2016108118
 BoxCollider:
   m_ObjectHideFlags: 0

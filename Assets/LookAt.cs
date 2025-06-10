@@ -18,8 +18,8 @@ public class LookAt : MonoBehaviour
     [System.Serializable]
     public class LookAtElement : WeightedElement
     {
-        public bool Ignore = false;
         [GD.MinMaxSlider.MinMaxSlider(-180, 180)] public Vector2 ConstrainsAngleYAxis = new Vector2(0,0);
+        public bool Ignore = false;
         [NonSerialized] public float LastAngle = 0;
         [NonSerialized] public float LastApplyance = 0;
     }
@@ -40,6 +40,7 @@ public class LookAt : MonoBehaviour
             return;
         }
 
+        m_isDeactivating = false;
         m_isActive = true;
         m_target = Target;
         m_fallbackTargetPos = m_target.position;

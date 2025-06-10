@@ -39,7 +39,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float m_moveAcceleration = 20f;
     [SerializeField] private Vector3 m_turningStrenghtBaseValues = new Vector3(15, 15, 10); //slow, walk, running
     [SerializeField] private float m_maxTurningSpeedBaseValue = 50f;
-    private const int m_runningMoveStrenght = 2;
+    //private const int m_runningMoveStrenght = 2;
+    private Vector3 m_nowMoveDir = Vector3.forward;
 
     private float m_inputStrenght = 0f;
     private Vector3 m_inputDir = Vector3.forward;
@@ -64,6 +65,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isStandingStill = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isLockOn = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldRunning = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isRunning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isFreelyMoving = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isWalkingLocked = false;
@@ -75,6 +77,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 m_prevMove = Vector3.zero;
     private float m_prevInputStrength = 0;
     private float m_prevPrevInputStrength = 0;
+    bool m_isStandingPrev = true;
 
 
     private Coroutine m_actionChangesInterruptabilityCoroutine;
@@ -103,7 +106,7 @@ public class PlayerMovement : MonoBehaviour
     public float InputStrenght //is already snapped by inputmanager
     { 
         get => m_inputStrenght; 
-        set { if (m_isHoldRunning && value > 0f)  m_inputStrenght = m_runningMoveStrenght/*2*/; else m_inputStrenght = value; Speed = m_inputStrenght; } 
+        set { m_inputStrenght = value; Speed = m_inputStrenght; } 
     } 
     public float Speed //is already snapped by inputmanager
     { 
@@ -111,26 +114,28 @@ public class PlayerMovement : MonoBehaviour
         set 
         { 
             if          (value == 0)        { m_speed = 0;                  m_turningStrenght = m_turningStrenghtBaseValues.x; }
+            else if     (m_isHoldRunning)   { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
             else if     (value == 0.5f)     { m_speed = m_speedValues.x;    m_turningStrenght = m_turningStrenghtBaseValues.x; }
-            else if     (value == 1)        { m_speed = m_speedValues.y;    m_turningStrenght = m_turningStrenghtBaseValues.y; }
-            else                            { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
+            else /*if   (value == 1) */     { m_speed = m_speedValues.y;    m_turningStrenght = m_turningStrenghtBaseValues.y; }
         } 
     } 
     public Quaternion CameraYAxisRotation { get => m_cameraYAxisRotationInWS; set => m_cameraYAxisRotationInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
     public Transform Target 
     { 
         get { if (m_target != null) return m_target; else { Debug.Log("target gets called, but is empty"); return null; } } 
-        set { m_target = value; m_isLockOn = (m_target != null); if (m_lookAtScript != null && !m_isAction) m_lookAtScript.SetTarget(value); } 
+        set { m_target = value; m_isLockOn = (m_target != null); if (!m_isAction) SetLookAt(m_target); } 
     }
     public Vector3 TargetPos { get => Target.position; }
     public Vector3 PlayerToTargetXZVector 
     { 
         get { if (m_target == null) { Debug.Log("No target, so no Direction to Target"); return transform.forward; }; return new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z).normalized; } 
     }
-    public bool IsHoldRunning { get => m_isHoldRunning; set { m_isHoldRunning = value; InputStrenght = m_inputStrenght; m_animator.SetBool("IsRunning", value); } }
+    public bool IsHoldRunning { get => m_isHoldRunning; set { m_isHoldRunning = value; Speed = m_inputStrenght; } }
     public Vector3 PreviousMove { get => m_prevMove; }
 
     public AnimationInterruptableType CurrentInteruptability { get => m_currentInteruptability;  }
+
+
 
 
     void Start()
@@ -175,37 +180,48 @@ public class PlayerMovement : MonoBehaviour
         SetAnimatorMoveValues();
         CheckAnimation();
 
-        m_prevPrevInputStrength = m_prevInputStrength; m_prevInputStrength = m_inputStrenght;
+        m_prevPrevInputStrength = m_prevInputStrength; 
+        m_prevInputStrength = m_inputStrenght;
 
 
-        //if (m_isAction && m_speed == 0) Debug.Log("EEEEEEEEEE"); 
         testMoveDirection.transform.position = new Vector3(transform.position.x, testMoveDirection.transform.position.y, transform.position.z);
         testTurningDirection.transform.position = new Vector3(transform.position.x, testTurningDirection.transform.position.y, transform.position.z);
 
 
     }
 
+
     private Coroutine SwitchFreelyMoving;
     bool m_isAboutSwitchDirectionType = false;
 
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
+        //StandingStill
         m_isStandingPrev = m_isStandingStill;
         m_isStandingStill = ((m_isWalkingLocked == false && m_inputStrenght == 0) || m_isWalkingLocked == true);
 
-        bool prevFreelyMoving = m_isFreelyMoving;
-        m_isFreelyMoving = !m_isLockOn || m_isHoldRunning || m_isStandingStill;
+        //Running
+        if (m_isRunning != (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked))
+        {
+            m_isRunning = !m_isRunning;
+            if (m_isRunning)        { SetNextPossibleAttacks(currentAction: Running); SetLookAt(null); }
+            else if (!m_isAction)   { SetNextPossibleAttacks(currentAction: Reset); SetLookAt(m_target); }
+        }
         
-        //Only for one thing, that when locked on and then start running, that the movement is for 0.2s set to input instead of forward
-        if (prevFreelyMoving != m_isFreelyMoving) 
+        //FreelyMoving
+        bool prevFreelyMoving = m_isFreelyMoving;
+        m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
+        if (prevFreelyMoving != m_isFreelyMoving) //Only for one thing, that when locked on and then start running, that the movement is for 0.2s set to input instead of forward
         { 
             m_isAboutSwitchDirectionType = true; 
             SwitchFreelyMoving = StartCoroutine(UtilityFunctions.Wait(0.2f, () => { m_isAboutSwitchDirectionType = false; /*Debug.Log*/ })); 
         }
 
+        //TargetDist
         if (m_isLockOn) 
             m_targetDist = (TargetPos - transform.position).magnitude;
 
+        //VALUES
         if (m_isFreelyMoving)
         {
             // InputDirRelativeToCam is relative to cameraRotation, so it should not affect the InputDirRelativeToCam when for example standing still
@@ -268,14 +284,14 @@ public class PlayerMovement : MonoBehaviour
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
         float angleMoveDirToPrevMoveDir = m_turningAngle;
 
-        if (!m_isHoldRunning && !m_isLockOn && m_isFreelyMoving && (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90)
+        if (!m_isRunning && !m_isLockOn && m_isFreelyMoving && (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90)
         {
             if ( Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)     animData = m_characterMovesetData.turningLeft;
             else                                                animData = m_characterMovesetData.turningRight;   
             SetTriggerTurning();
         }
 
-        if (m_isHoldRunning && m_isFreelyMoving &&  (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)
+        if (m_isRunning && m_isFreelyMoving &&  (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)
         {
             if (Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)      animData = m_characterMovesetData.turningRunningLeft;
             else                                                animData = m_characterMovesetData.turningRunningRight;
@@ -294,7 +310,7 @@ public class PlayerMovement : MonoBehaviour
             m_animator.SetFloat("TurningDir", Mathf.Sign(angleMoveDirToPrevMoveDir));
             m_currentInteruptability = turningInterruptability;
 
-            InitAction(!m_isHoldRunning ? Turning : Turning_Running, animData);
+            InitAction(!m_isRunning ? Turning : Turning_Running, animData);
         }
     }
 
@@ -388,7 +404,7 @@ public class PlayerMovement : MonoBehaviour
     {
         m_isAction = true;
 
-        if (m_lookAtScript != null) m_lookAtScript.SetTarget(null);
+        SetLookAt(null);
 
         SetAnimation(animationHash, true, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
         m_nextCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
@@ -507,6 +523,16 @@ public class PlayerMovement : MonoBehaviour
 
 
 
+
+
+
+
+    private void SetLookAt(Transform transform)
+    {
+        if (m_lookAtScript != null)
+            m_lookAtScript.SetTarget(transform);
+
+    }
     private Quaternion AdditionalFacingRotation()
     {
         if (m_isAdditionalRotationForbidden)
@@ -517,17 +543,15 @@ public class PlayerMovement : MonoBehaviour
         else if (m_facingDirectionType == Direction.Left) return Quaternion.Euler(0, 90, 0);
         else return Quaternion.Euler(0, 180, 0);
     }
-
-    bool m_isStandingPrev = true;
     private void RotatingPlayer()
     {
         //if no input, then it should not recalculate the desired facing direction, because what if i stand still and then lock on something behind me, it should not affect any calculation as long as i dont move
         // also, actions like evading set their initial m_desiredFacingRotationDirInWS in their own Trigger function
         if (!m_isStandingStill)
             m_desiredFacingRotationDirInWS = AdditionalFacingRotation() * m_inputDirInWS;
-        else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && !m_isHoldRunning)
+        else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && !m_isRunning)
             m_desiredFacingRotationDirInWS = PlayerToTargetXZVector;
-        else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && m_isHoldRunning)
+        else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && m_isRunning)
             m_desiredFacingRotationDirInWS = m_desiredFacingRotationDirInWS;
 
 
@@ -535,7 +559,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS;
         Vector3 desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByAction;
         if (m_isLockOn && (int)m_actionTargetRelations == 1/*TurningDirFollowsTarget*/) desiredFacingRotationDirInWSByAction = Quaternion.Euler(0,Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up),0) * PlayerToTargetXZVector;
-        else if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/)        desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up), 0) * m_nowDestinedMoveDir;
+        else if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/)        desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up), 0) * m_nowMoveDir;
         Vector3 nowdesiredFacingRotationDirInWS = Vector3.Slerp(desiredFacingRotationDirInWSByInput.normalized, desiredFacingRotationDirInWSByAction.normalized, m_actionInfluenceOverDesiredFacingRotationDirInWS);
 
         //Speed
@@ -562,10 +586,7 @@ public class PlayerMovement : MonoBehaviour
 
         testTurningDirection.transform.rotation = Quaternion.Euler(0, Vector3.SignedAngle(Vector3.forward, nowdesiredFacingRotationDirInWS, Vector3.up),0);
 
-
     }
-
-    private Vector3 m_nowDestinedMoveDir = Vector3.forward;
 
     private void MovingPlayer()
     {
@@ -575,8 +596,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_isLockOn && (int)m_actionTargetRelations == 2/*MoveDirFollowsTarget*/)    directionByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_directionByActionBaseValue, m_directionByAction, Vector3.up), 0) * PlayerToTargetXZVector;
         else if ((int)m_actionTurningRelations == 2/*MoveDirFollowsTurningDir*/)        directionByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_directionByActionBaseValue, m_directionByAction, Vector3.up), 0) * transform.forward;
         Vector3 nowMoveDirection = Vector3.Lerp(directionByInput.normalized, directionByAction.normalized, m_actionInfluenceOverMoveDirection);
-        if (nowMoveDirection == Vector3.zero) nowMoveDirection = m_nowDestinedMoveDir;
-        m_nowDestinedMoveDir = nowMoveDirection.normalized;
+        if (nowMoveDirection != Vector3.zero) m_nowMoveDir = nowMoveDirection.normalized;
 
         //speed
         float speedByInput = (!m_isWalkingLocked) ? m_inputFactor * m_speed : 0;
@@ -589,7 +609,7 @@ public class PlayerMovement : MonoBehaviour
         float nowMoveAcceleration = Mathf.Lerp(moveAccelerationByInput, moveAccelerationByAction, m_actionInfluenceOverMoveAcceleration);
 
 
-        Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, nowMoveDirection * nowSpeed, Time.deltaTime * nowMoveAcceleration);
+        Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, m_nowMoveDir * nowSpeed, Time.deltaTime * nowMoveAcceleration);
         m_characterController.Move(nowMove * Time.deltaTime);
         m_prevMove = nowMove;
 
@@ -599,6 +619,10 @@ public class PlayerMovement : MonoBehaviour
 
 
     }
+
+
+
+
 
 
 
@@ -908,8 +932,11 @@ public class PlayerMovement : MonoBehaviour
             elapsedTime = Time.time - startTime; // time must be added after the first wait
         }
 
+
         //End of Action
-        SetNextPossibleAttacks(currentAction: Reset);
+        bool isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isWalkingLocked;
+        if (isRunning) SetNextPossibleAttacks(currentAction: Running);
+        else SetNextPossibleAttacks(currentAction: Reset);
 
         EndActionReset();
 
@@ -931,7 +958,8 @@ public class PlayerMovement : MonoBehaviour
         m_actionTurningRelations = 0;
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
         m_isAction = false;
-        m_isFreelyMoving = !m_isLockOn || m_isHoldRunning || m_isStandingStill;
+        m_isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked;
+        m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
 
         //End Coroutines
         if (m_ActionCoroutine != null)
@@ -949,7 +977,7 @@ public class PlayerMovement : MonoBehaviour
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
         if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
-        if (m_lookAtScript != null && m_isLockOn) m_lookAtScript.SetTarget(m_target);
+        if (m_isLockOn && !m_isRunning) SetLookAt(m_target);
 
         m_playerInputManager.RecallLatestBufferedInput();
     }
@@ -980,7 +1008,7 @@ public class PlayerMovement : MonoBehaviour
     private void SetAnimatorMoveValues()
     {
         float animationDampTime = !m_isAction ? 0.1f : 0; //smaller is faster transition
-        float MoveStrength = m_inputStrenght; //is already snapped in inputmanager
+        float MoveStrength = m_isRunning ? 2 : m_inputStrenght; //is already snapped in inputmanager
         Vector2 horAndVerMovement = new Vector2(0, 1);
 
         m_animator.SetFloat("MoveMag", MoveStrength, animationDampTime, Time.deltaTime);
