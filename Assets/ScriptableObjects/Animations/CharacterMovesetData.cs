@@ -36,7 +36,8 @@ public class CharacterMovesetData : ScriptableObject
     [Space]
     [Space]
     public WeaponData weapon;
-
+    [Space]
+    public ShieldData shield;
 
 
 

@@ -33,3 +33,4 @@ MonoBehaviour:
   evadeRight: {fileID: 11400000, guid: 82b6a1e8bfbf54545a41c7766554a1ef, type: 2}
   evadeBackwards: {fileID: 11400000, guid: 41be22d4c2a09ac4f9d67f91beecead0, type: 2}
   weapon: {fileID: 11400000, guid: 4590ae21db6dc2e42892fb2d3d42c3a1, type: 2}
+  shield: {fileID: 11400000, guid: 69262b0ec61ffe04ba9698ab9eadf0d5, type: 2}

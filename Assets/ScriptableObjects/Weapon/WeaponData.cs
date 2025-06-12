@@ -41,7 +41,7 @@ public class WeaponData : ScriptableObject
 
     [Space]
     [Header("Alternate Attack")]
-    public AlternateAttacks alternateAttacks;
+    public AlternateAttacks alternateAttacks; //Still unused
 
 
     [System.Serializable]

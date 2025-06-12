@@ -165,6 +165,7 @@ public class PlayerInputManager : MonoBehaviour
         L3ActionRef.performed           += OnL3;
         R3ActionRef.performed           += OnR3;
         L1ActionRef.performed           += OnL1;
+        L1ActionRef.canceled              += OnL1;
         R1ActionRef.performed           += OnR1;
         L2ActionRef.performed           += OnL2;
         R2ActionRef.performed           += OnR2;
@@ -196,6 +197,7 @@ public class PlayerInputManager : MonoBehaviour
         L3ActionRef.performed           -= OnL3;
         R3ActionRef.performed           -= OnR3;
         L1ActionRef.performed           -= OnL1;
+        L1ActionRef.canceled              -= OnL1;
         R1ActionRef.performed           -= OnR1;
         L2ActionRef.performed           -= OnL2;
         R2ActionRef.performed           -= OnR2;
@@ -411,8 +413,16 @@ public class PlayerInputManager : MonoBehaviour
     //ShoulderButtons
     private void OnL1(InputAction.CallbackContext context)
     {
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L1");
+        if (context.performed)
+        {
+            m_thePlayerMovement.TriggerShielding(true);
+        }
+
+        if (context.canceled)
+        {
+            m_thePlayerMovement.TriggerShielding(false);
+        }
+
     }
 
     private void OnR1(InputAction.CallbackContext context)

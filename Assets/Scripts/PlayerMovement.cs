@@ -70,6 +70,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isWalkingLocked = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionLocked = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldShielding = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isShielding = false;
 
     [SerializeField][EditorAttributes.ReadOnly] private int m_currentAnimation;
 
@@ -97,6 +99,8 @@ public class PlayerMovement : MonoBehaviour
             heavy = h;
             specialLight = sl; 
             specialHeavy = sh;
+
+
         }
     }
 
@@ -131,6 +135,7 @@ public class PlayerMovement : MonoBehaviour
         get { if (m_target == null) { Debug.Log("No target, so no Direction to Target"); return transform.forward; }; return new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z).normalized; } 
     }
     public bool IsHoldRunning { get => m_isHoldRunning; set { m_isHoldRunning = value; Speed = m_inputStrenght; } }
+    public bool IsHoldShielding { get => m_isHoldShielding; set { m_isHoldShielding = value; } }
     public Vector3 PreviousMove { get => m_prevMove; }
 
     public AnimationInterruptableType CurrentInteruptability { get => m_currentInteruptability;  }
@@ -399,9 +404,54 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+    public void TriggerShielding(bool isHoldShielding)
+    {
+        IsHoldShielding = isHoldShielding;
+
+        if (!m_isHoldShielding)
+        {
+            m_isShielding = false;
+            return;
+        }
+
+        AnimationInterruptableType shieldingInterruptability = AnimationInterruptableType.Easily_Interruptable;
+        if ((int)m_currentInteruptability > (int)shieldingInterruptability) return;
+
+        if (m_ActionCoroutine != null)
+            EndActionReset();
+
+        CheckAnimation();
+
+        m_isShielding = true;
+
+        //if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
+
+        //ShieldData.ShieldAction shieldAction = m_characterMovesetData.shield.shieldIdle; //////////////////////////// can be stored
+        //if (shieldAction == null) { Debug.Log("MISSING ATTACK DATA of a Shield Action"); return; }
+        //if (shieldAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Shield Action"); return; }
+
+
+        /////////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
+        /////
+
+
+        //m_currentInteruptability = shieldingInterruptability;
+
+
+
+    }
+
+
+
+
+
+
+
+
     //Coroutine m_resetNextPossibleActionsCoroutine;
     private void InitAction(int animationHash, AnimationData animData)
     {
+        m_isShielding = false;
         m_isAction = true;
 
         SetLookAt(null);
@@ -413,17 +463,22 @@ public class PlayerMovement : MonoBehaviour
 
         float animationDuration = animData.animationClip.length;
 
-        Action action = () =>
+        Action changeInteruptabilityAction = () =>
         {
             m_currentInteruptability = animData.ChangedInterruptability;
             m_actionChangesInterruptabilityCoroutine = null;
 
             if (m_playerInputManager.CheckRecallLatestBufferedInput())
                 EndActionReset();
+            else if (m_isHoldShielding)
+            {
+                EndActionReset();
+                m_isShielding = true;
+            }
         };
         
         //this is if a action is earlier interruptable than the lenght of the animation
-        m_actionChangesInterruptabilityCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn - animData.InterruptabilityChangeBeforeEndTime, action));
+        m_actionChangesInterruptabilityCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn - animData.InterruptabilityChangeBeforeEndTime, changeInteruptabilityAction));
 
         SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
     }
@@ -960,6 +1015,7 @@ public class PlayerMovement : MonoBehaviour
         m_isAction = false;
         m_isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
+        if (m_isHoldShielding) m_isShielding = true;
 
         //End Coroutines
         if (m_ActionCoroutine != null)
@@ -1024,11 +1080,11 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
+    readonly int Shielding_UpperBody        = Animator.StringToHash("Shielding_UpperBody");
+    readonly int Empty_UpperBody            = Animator.StringToHash("Empty_UpperBody");
 
-
-
-    readonly int Running                 = Animator.StringToHash("Running");
-    readonly int Reset                 = Animator.StringToHash("Reset");
+    readonly int Running                    = Animator.StringToHash("Running");
+    readonly int Reset                      = Animator.StringToHash("Reset");
 
     //animation States
     #region
@@ -1098,9 +1154,24 @@ public class PlayerMovement : MonoBehaviour
             if (!forceNewAnim) return;
 
         if (m_isStandingStill)
-            SetAnimation(Idle_1, false, crossFadeDuration);
+        {
+            if (m_isShielding)
+                SetAnimation(Shield_Idle, false, crossFadeDuration);
+            else
+                SetAnimation(Idle_1, false, crossFadeDuration);
+        }
         if (!m_isStandingStill)
+        {
             SetAnimation(Locomotion, false, crossFadeDuration, 0.25f);
+
+            if (!m_isShielding)
+                SetUpperBodyAnimation(Empty_UpperBody, crossFadeDuration: m_characterMovesetData.shield.shieldingUpperBody.AnimData.crossfadeOutTime); ///////// get this from a place where i save shield anims
+            else
+                SetUpperBodyAnimation(Shielding_UpperBody, crossFadeDuration: m_characterMovesetData.shield.shieldingUpperBody.AnimData.crossfadeInTime);
+
+        }
+
+
 
     }
 
@@ -1132,6 +1203,12 @@ public class PlayerMovement : MonoBehaviour
         
     }
 
+
+    private void SetUpperBodyAnimation(int animation, bool calledByAction = false, float crossFadeDuration = -1, float timeOffset = 0)
+    {
+        m_animator.CrossFade(animation, crossFadeDuration, 1, timeOffset);
+
+    }
 
 
 
