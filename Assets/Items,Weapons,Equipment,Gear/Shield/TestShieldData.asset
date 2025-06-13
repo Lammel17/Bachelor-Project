@@ -13,3 +13,19 @@ MonoBehaviour:
   m_Name: TestShieldData
   m_EditorClassIdentifier: 
   Description: 
+  shieldIdle:
+    AnimData: {fileID: 11400000, guid: 49deae5e4e8f5ea4dbe07365792115d7, type: 2}
+  shieldingUpperBody:
+    AnimData: {fileID: 11400000, guid: d24fc0b61d23c0349bd67ca626523f04, type: 2}
+  ShiledSpecial1:
+    AnimData: {fileID: 0}
+  ShiledSpecial2:
+    AnimData: {fileID: 0}
+  ShiledSpecial3:
+    AnimData: {fileID: 0}
+  ShiledSpecial4:
+    AnimData: {fileID: 0}
+  ShiledAlmostStanceBreak:
+    AnimData: {fileID: 0}
+  ShiledStanceBreak:
+    AnimData: {fileID: 0}

@@ -9,7 +9,15 @@ public class ShieldData : ScriptableObject
 
     public ShieldAction shieldIdle;
     public ShieldAction shieldingUpperBody;
-    
+
+    public ShieldAction ShiledSpecial1;
+    public ShieldAction ShiledSpecial2;
+    public ShieldAction ShiledSpecial3;
+    public ShieldAction ShiledSpecial4;
+
+    public ShieldAction ShiledAlmostStanceBreak;
+    public ShieldAction ShiledStanceBreak;
+
 
 
 

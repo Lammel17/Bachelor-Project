@@ -75,6 +75,9 @@ public class ChangeAnimation : MonoBehaviour
         //Weapons
         ChangeWeaponAnimations(newOverrideController, moveset.weapon);
 
+        //Shield
+        ChangeShieldAnimations(newOverrideController, moveset.shield);
+
 
 
 
@@ -165,6 +168,51 @@ public class ChangeAnimation : MonoBehaviour
 
 
     }
+
+    private static void ChangeShieldAnimations(AnimatorOverrideController newOverrideController, ShieldData shield)
+    {
+
+
+        //LightAttack
+        CheckClipAndChange(shield.shieldIdle.AnimData, "EmptyShieldIdle");
+        CheckClipAndChange(shield.shieldingUpperBody.AnimData, "EmptyShieldingUpperBody");
+
+        CheckClipAndChange(shield.ShiledSpecial1.AnimData, "EmptyShieldSpecial1");
+        CheckClipAndChange(shield.ShiledSpecial2.AnimData, "EmptyShieldSpecial2");
+        CheckClipAndChange(shield.ShiledSpecial3.AnimData, "EmptyShieldSpecial3");
+        CheckClipAndChange(shield.ShiledSpecial4.AnimData, "EmptyShieldSpecial4");
+
+        CheckClipAndChange(shield.ShiledAlmostStanceBreak.AnimData, "EmptyShieldAlmostStanceBreak");
+        CheckClipAndChange(shield.ShiledStanceBreak.AnimData, "EmptyShieldStanceBreak");
+
+
+
+
+
+        void CheckClipAndChange(AnimationData animData, string animName)
+        {
+            if (animData != null)
+            {
+                if (animData.animationClip != null)
+                {
+                    newOverrideController[animName] = animData.animationClip;
+                    return;
+                }
+                Debug.Log($"ERROR: no animation clip in AnimationData found in {animData.name}");
+            }
+
+            //newOverrideController[animName] = animData.animationClip;
+            return;
+
+        }
+
+
+    }
+
+
+
+
+
 
 
 
