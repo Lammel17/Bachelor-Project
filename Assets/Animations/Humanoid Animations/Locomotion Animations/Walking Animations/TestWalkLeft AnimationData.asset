@@ -13,14 +13,11 @@ MonoBehaviour:
   m_Name: TestWalkLeft AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 1dfd6481d296a1344b3dc73fd5e226f2, type: 2}
+  animationClip: {fileID: 7400000, guid: a692328e3ca8a374faea6b17bd67e204, type: 2}
   AnimationMovementData: {fileID: 0}
-  animationSpeed: 1
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
   crossfadeBeginn: 0
-  invincibilitySettings:
-    hasInvincibilityFrames: 0
-    invincibilityStart: 0
-    invincibilityDuration: 0
-  effectsList: []
+  CustomInterruptability: 5
+  InterruptabilityChangeBeforeEndTime: 0
+  ChangedInterruptability: 1

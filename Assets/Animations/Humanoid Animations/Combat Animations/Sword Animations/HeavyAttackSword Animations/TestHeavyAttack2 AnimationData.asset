@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TestHeavyAttack2 AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 896cd3704ec55274ca696b621b64c482, type: 2}
+  animationClip: {fileID: 7400000, guid: 92f2e5353c2a9d74badec448a40885ea, type: 2}
   AnimationMovementData: {fileID: 11400000, guid: 03b4cc703a9758d4a9965d0c145a1fe2, type: 2}
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2

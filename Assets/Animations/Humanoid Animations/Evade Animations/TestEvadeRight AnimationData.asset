@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TestEvadeRight AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 2824b5f3b1d622c448651cf8a4528fdf, type: 2}
+  animationClip: {fileID: 7400000, guid: 32d015fd2e6f7684ba3a6070f246a8b7, type: 2}
   AnimationMovementData: {fileID: 11400000, guid: 1e43119925b8246429eae356a2740780, type: 2}
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.3

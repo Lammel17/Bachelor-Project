@@ -1190,7 +1190,6 @@ public class PlayerMovement : MonoBehaviour
             else
                 SetAnimation(Idle_1, false, crossFadeDuration);
 
-            if (!m_isShielding)
                 SetUpperBodyAnimation(Empty_UpperBody, crossFadeDuration: m_characterMovesetData.shield.shieldingUpperBody.AnimData.crossfadeOutTime); ///////// get this from a place where i save shield anims
         }
         if (!m_isStandingStill)
@@ -1204,7 +1203,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
 
-        Debug.Log(m_characterMovesetData.shield.shieldIdle.AnimData.crossfadeInTime);
+        Debug.Log(m_characterMovesetData.shield.shieldingUpperBody.AnimData.crossfadeInTime); 
     }
 
 

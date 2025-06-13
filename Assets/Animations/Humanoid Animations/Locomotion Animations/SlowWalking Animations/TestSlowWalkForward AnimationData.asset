@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: TestSlowWalkForward AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 1f3bfb03d513d7845a72096243459aa1, type: 2}
-  animationSpeed: 1
+  animationClip: {fileID: 7400000, guid: 1f5081ee783ce944e9c2c4a789338b34, type: 2}
   AnimationMovementData: {fileID: 0}
-  invincibilitySettings:
-    hasInvincibilityFrames: 0
-    invincibilityStart: 0
-    invincibilityDuration: 0
-  effectsList: []
+  crossfadeInTime: 0.2
+  crossfadeOutTime: 0.2
+  crossfadeBeginn: 0.2
+  CustomInterruptability: 5
+  InterruptabilityChangeBeforeEndTime: 0
+  ChangedInterruptability: 1

@@ -13,14 +13,11 @@ MonoBehaviour:
   m_Name: TestTurningRight AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 9f2c39979277a55479ced109a29f3996, type: 2}
+  animationClip: {fileID: 7400000, guid: 33bd557ef8b4acc498726255ce0278c9, type: 2}
   AnimationMovementData: {fileID: 11400000, guid: b174990b90520f240b7ecbbb8b9c83a7, type: 2}
-  animationSpeed: 1
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
   crossfadeBeginn: 0.25
-  invincibilitySettings:
-    hasInvincibilityFrames: 0
-    invincibilityStart: 0
-    invincibilityDuration: 0
-  effectsList: []
+  CustomInterruptability: 5
+  InterruptabilityChangeBeforeEndTime: 0
+  ChangedInterruptability: 1

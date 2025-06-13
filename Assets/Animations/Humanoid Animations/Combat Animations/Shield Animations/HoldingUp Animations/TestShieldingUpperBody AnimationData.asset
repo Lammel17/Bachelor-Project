@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TestShieldingUpperBody AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 994b929522af73f428b35f79220dad46, type: 2}
+  animationClip: {fileID: 7400000, guid: ce8e6f8177b1d65409d3d9c7990fb787, type: 2}
   AnimationMovementData: {fileID: 0}
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2

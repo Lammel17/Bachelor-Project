@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: TestIdle 1 AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: d8fa2dcdb13c2fd4387de2f9196315c7, type: 2}
-  animationSpeed: 1
+  animationClip: {fileID: 7400000, guid: b96c9761381aa4842afd36f652c5ab7c, type: 2}
   AnimationMovementData: {fileID: 0}
-  invincibilitySettings:
-    hasInvincibilityFrames: 0
-    invincibilityStart: 0
-    invincibilityDuration: 0
-  effectsList: []
+  crossfadeInTime: 0.2
+  crossfadeOutTime: 0.2
+  crossfadeBeginn: 0.2
+  CustomInterruptability: 5
+  InterruptabilityChangeBeforeEndTime: 0
+  ChangedInterruptability: 1

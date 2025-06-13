@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TestShieldIdle AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 44cc928c4fbc33e4b9618748696fab75, type: 2}
+  animationClip: {fileID: 7400000, guid: 50a752998e04ec545aaa525ad643ba56, type: 2}
   AnimationMovementData: {fileID: 0}
   crossfadeInTime: 0.02
   crossfadeOutTime: 0.08
