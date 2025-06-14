@@ -52,7 +52,6 @@ public class PlayerMovement : MonoBehaviour
     private float m_turningStrenght;
     private float m_maxTurningSpeed;
     private float m_speed = 0; //slow, walk, running
-    bool m_isAdditionalRotationForbidden = false;
 
     //Values Depending on Camera
     private Quaternion m_cameraYAxisRotationInWS = Quaternion.identity;
@@ -62,6 +61,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private Direction m_facingDirectionType = Direction.Forward;
 
     //bools
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isAdditionalRotationForbidden = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isStandingStill = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isLockOn = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldRunning = false;
@@ -478,8 +478,10 @@ public class PlayerMovement : MonoBehaviour
     //Coroutine m_resetNextPossibleActionsCoroutine;
     private void InitAction(int animationHash, AnimationData animData)
     {
-        m_isShielding = false;
         m_isAction = true;
+
+        m_isShielding = false;
+        SetUpperBodyAnimation(Empty_UpperBody, crossFadeDuration: 0.1f);
 
         SetLookAt(null);
 
@@ -1106,6 +1108,8 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+    readonly int Shielding_TorsoStabilizing = Animator.StringToHash("Shielding_TorsoStabilizing");
+    readonly int Empty_TorsoStabilizer = Animator.StringToHash("Empty_TorsoStabilizer");
 
     readonly int Shielding_UpperBody        = Animator.StringToHash("Shielding_UpperBody");
     readonly int Empty_UpperBody            = Animator.StringToHash("Empty_UpperBody");
@@ -1184,26 +1188,27 @@ public class PlayerMovement : MonoBehaviour
         {
             if (m_isShielding)
             {
-                SetAnimation(Shield_Idle, false, crossFadeDuration: m_characterMovesetData.shield.shieldIdle.AnimData.crossfadeInTime);
-                m_nextCrossfadeOutTime = m_characterMovesetData.shield.shieldIdle.AnimData.crossfadeOutTime;
+                SetAnimation(Shield_Idle, false, crossFadeDuration: m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeInTime);
+                m_nextCrossfadeOutTime = m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeOutTime;
             }
             else
                 SetAnimation(Idle_1, false, crossFadeDuration);
-
-                SetUpperBodyAnimation(Empty_UpperBody, crossFadeDuration: m_characterMovesetData.shield.shieldingUpperBody.AnimData.crossfadeOutTime); ///////// get this from a place where i save shield anims
         }
         if (!m_isStandingStill)
         {
             SetAnimation(Locomotion, false, crossFadeDuration, 0.25f);
-
-            if (!m_isShielding)
-                SetUpperBodyAnimation(Empty_UpperBody, crossFadeDuration: m_characterMovesetData.shield.shieldingUpperBody.AnimData.crossfadeOutTime); ///////// get this from a place where i save shield anims
-            else
-                SetUpperBodyAnimation(Shielding_UpperBody, crossFadeDuration: m_characterMovesetData.shield.shieldingUpperBody.AnimData.crossfadeInTime);
         }
 
 
-        Debug.Log(m_characterMovesetData.shield.shieldingUpperBody.AnimData.crossfadeInTime); 
+        //UpperBody
+        if (m_isShielding)
+        {
+            SetUpperBodyAnimation(Shielding_UpperBody, crossFadeDuration: m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeInTime); ///////// get this from a place where i save shield anims
+            m_nextUpperBodyCrossfadeOutTime = m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeOutTime;
+        }
+        else
+            SetUpperBodyAnimation(Empty_UpperBody); 
+
     }
 
 
@@ -1212,6 +1217,7 @@ public class PlayerMovement : MonoBehaviour
 
     private float m_baseCrossFadeDuration = 0.15f;
     private float m_nextCrossfadeOutTime = -1f; //crossfadeOut is set by an animation and stored only for the next crossfadeOut if its not interrupted by an crossfade in of another anim
+    private float m_nextUpperBodyCrossfadeOutTime = -1f; //crossfadeOut is set by an animation and stored only for the next crossfadeOut if its not interrupted by an crossfade in of another anim
 
     private void SetAnimation(int animation, bool calledByAction = false, float crossFadeDuration = -1, float timeOffset = 0)
     {
@@ -1235,13 +1241,22 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
-    private void SetUpperBodyAnimation(int upperBodyAnimation, bool calledByAction = false, float crossFadeDuration = -1, float timeOffset = 0)
+    private void SetUpperBodyAnimation(int upperBodyAnimation, bool calledByAction = false, float crossFadeDuration = 0.1f, float timeOffset = 0)
     {
         if (!calledByAction && m_currentUpperBodyAnimation == upperBodyAnimation)
             return;
 
+        if (m_nextUpperBodyCrossfadeOutTime >= 0)
+        {
+            crossFadeDuration = m_nextUpperBodyCrossfadeOutTime;
+            m_nextUpperBodyCrossfadeOutTime = -1;
+        }
+
         m_animator.CrossFade(upperBodyAnimation, crossFadeDuration, 1, timeOffset);
         m_currentUpperBodyAnimation = upperBodyAnimation;
+
+        if (upperBodyAnimation == Shielding_UpperBody) m_animator.CrossFade(Shielding_TorsoStabilizing, crossFadeDuration, 2, timeOffset);
+        else if (upperBodyAnimation == Empty_UpperBody) m_animator.CrossFade(Empty_TorsoStabilizer, crossFadeDuration, 2, timeOffset);
 
     }
 
