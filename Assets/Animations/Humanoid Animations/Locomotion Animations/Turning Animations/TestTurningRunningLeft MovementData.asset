@@ -13,20 +13,21 @@ MonoBehaviour:
   m_Name: TestTurningRunningLeft MovementData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  moveDirPredefinition: 1
-  turningDirPredefinition: 1
   moveInfluence: 1
   turningInfluence: 1
+  moveDirPredefinition: 1
+  turningDirPredefinition: 1
+  targetRelations: 0
   turningRelations: 0
   forbidAdditinalRotation: 0
   variableValue:
   - valueName: 4
-    ignore: 1
+    ignore: 0
     settings:
-      valueType: 0
-      value: 18
+      valueType: 2
+      value: 25.3
       valueSettings:
-        startEnd: {x: 0, y: 0.58445305}
+        startEnd: {x: 0.07, y: 0.8472727}
         curveValue:
           serializedVersion: 2
           m_Curve:
@@ -84,43 +85,43 @@ MonoBehaviour:
     ignore: 0
     settings:
       valueType: 2
-      value: 10
+      value: 19
       valueSettings:
-        startEnd: {x: 0, y: 1}
+        startEnd: {x: 0.20757575, y: 1}
         curveValue:
           serializedVersion: 2
           m_Curve:
           - serializedVersion: 3
             time: 0
-            value: 1
+            value: 0.63796234
             inSlope: 0
-            outSlope: -0.002731992
+            outSlope: 0.0113770105
             tangentMode: 69
             weightedMode: 0
             inWeight: 0.33333334
             outWeight: 0.33333334
           - serializedVersion: 3
-            time: 0.1264748
-            value: 0.9996545
-            inSlope: -0.002731992
-            outSlope: -3.1755898
+            time: 0.13558643
+            value: 0.6395049
+            inSlope: 0.0113770105
+            outSlope: 1.068241
             tangentMode: 69
             weightedMode: 0
             inWeight: 0.33333334
             outWeight: 0.33333334
           - serializedVersion: 3
-            time: 0.24337712
-            value: 0.62842065
-            inSlope: -3.1755898
-            outSlope: -0.16972874
+            time: 0.41763684
+            value: 0.94080275
+            inSlope: 1.068241
+            outSlope: -0.01224477
             tangentMode: 69
             weightedMode: 0
             inWeight: 0.33333334
             outWeight: 0.33333334
           - serializedVersion: 3
-            time: 1
-            value: 0.5
-            inSlope: -0.16972874
+            time: 0.99890137
+            value: 0.9336853
+            inSlope: -0.01224477
             outSlope: 0
             tangentMode: 69
             weightedMode: 0

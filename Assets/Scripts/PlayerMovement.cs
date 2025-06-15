@@ -67,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldRunning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isRunning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isFreelyMoving = true;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isWalkingLocked = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionLocked = false;
@@ -313,6 +314,7 @@ public class PlayerMovement : MonoBehaviour
 
         AnimationData animData = null;
 
+
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
         float angleMoveDirToPrevMoveDir = m_turningAngle;
 
@@ -322,7 +324,6 @@ public class PlayerMovement : MonoBehaviour
             else                                                animData = m_characterMovesetData.turningRight;   
             SetTriggerTurning();
         }
-
         if (m_isRunning && m_isFreelyMoving &&  (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)
         {
             if (Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)      animData = m_characterMovesetData.turningRunningLeft;
@@ -335,7 +336,9 @@ public class PlayerMovement : MonoBehaviour
             if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
             ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
-            ///
+        
+            m_isTurning = true;
+            
             if (m_ActionCoroutine != null)
                 EndActionReset();
 
@@ -441,30 +444,15 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        AnimationInterruptableType shieldingInterruptability = AnimationInterruptableType.Easily_Interruptable;
-        if ((int)m_currentInteruptability > (int)shieldingInterruptability) return;
+        AnimationInterruptableType shieldingInterruptabilityLimit = AnimationInterruptableType.Hardly_Interruptable;
+        if ((int)m_currentInteruptability >= (int)shieldingInterruptabilityLimit) return;
 
-        if (m_ActionCoroutine != null)
+        if (m_ActionCoroutine != null && !m_isTurning) //stop current animation if its not those: turning
             EndActionReset();
-
-        CheckAnimation();
 
         m_isShielding = true;
 
-        //if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
-
-        //ShieldData.ShieldAction shieldAction = m_characterMovesetData.shield.shieldIdle; //////////////////////////// can be stored
-        //if (shieldAction == null) { Debug.Log("MISSING ATTACK DATA of a Shield Action"); return; }
-        //if (shieldAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Shield Action"); return; }
-
-
-        /////////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
-        /////
-
-
-        //m_currentInteruptability = shieldingInterruptability;
-
-
+        CheckAnimation();
 
     }
 
@@ -480,8 +468,12 @@ public class PlayerMovement : MonoBehaviour
     {
         m_isAction = true;
 
-        m_isShielding = false;
-        SetUpperBodyAnimation(Empty_UpperBody, crossFadeDuration: 0.1f);
+        if (!m_isTurning) //stop upperbody animations
+        {
+            m_isShielding = false;
+            SetUpperBodyAnimation(Empty_UpperBody, crossFadeDuration: 0.1f);
+        }
+
 
         SetLookAt(null);
 
@@ -1044,6 +1036,7 @@ public class PlayerMovement : MonoBehaviour
         m_isAction = false;
         m_isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
+        m_isTurning = false;
         if (m_isHoldShielding) m_isShielding = true;
 
         //End Coroutines
