@@ -15,8 +15,8 @@ MonoBehaviour:
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: 50a752998e04ec545aaa525ad643ba56, type: 2}
   AnimationMovementData: {fileID: 0}
-  crossfadeInTime: 0.02
-  crossfadeOutTime: 0.08
+  crossfadeInTime: 0.2
+  crossfadeOutTime: 0.14
   crossfadeBeginn: 0
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0
