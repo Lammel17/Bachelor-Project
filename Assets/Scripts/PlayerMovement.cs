@@ -143,7 +143,7 @@ public class PlayerMovement : MonoBehaviour
     public Transform Target 
     { 
         get { if (m_target != null) return m_target; else { Debug.Log("target gets called, but is empty"); return null; } } 
-        set { m_target = value; m_isLockOn = (m_target != null); if (!m_isAction) SetLookAt(m_target); } 
+        set { m_target = value; m_isLockOn = (m_target != null); if (!m_isAction) SetLookAtTarget(m_target); } 
     }
     public Vector3 TargetPos { get => Target.position; }
     public Vector3 PlayerToTargetXZVector 
@@ -152,6 +152,7 @@ public class PlayerMovement : MonoBehaviour
     }
     public bool IsHoldRunning { get => m_isHoldRunning; set { m_isHoldRunning = value; Speed = m_inputStrenght; } }
     public bool IsHoldShielding { get => m_isHoldShielding; set { m_isHoldShielding = value; } }
+    public bool IsShielding { get => m_isShielding; set { m_isShielding = value; SetLookAtForward(m_isShielding); } }
     public Vector3 PreviousMove { get => m_prevMove; }
 
     public AnimationInterruptableType CurrentInteruptability { get => m_currentInteruptability;  }
@@ -237,8 +238,8 @@ public class PlayerMovement : MonoBehaviour
         if (m_isRunning != (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked))
         {
             m_isRunning = !m_isRunning;
-            if (m_isRunning)        { SetNextPossibleAttacks(currentAction: Running); SetLookAt(null); }
-            else if (!m_isAction)   { SetNextPossibleAttacks(currentAction: Reset); SetLookAt(m_target); }
+            if (m_isRunning)        { SetNextPossibleAttacks(currentAction: Running); SetLookAtTarget(null); }
+            else if (!m_isAction)   { SetNextPossibleAttacks(currentAction: Reset); SetLookAtTarget(m_target); }
         }
         
         //FreelyMoving
@@ -440,7 +441,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (!m_isHoldShielding)
         {
-            m_isShielding = false;
+            IsShielding = false;
             return;
         }
 
@@ -450,7 +451,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_ActionCoroutine != null && !m_isTurning) //stop current animation if its not those: turning
             EndActionReset();
 
-        m_isShielding = true;
+        IsShielding = true;
 
         CheckAnimation();
 
@@ -470,12 +471,12 @@ public class PlayerMovement : MonoBehaviour
 
         if (!m_isTurning) //stop upperbody animations
         {
-            m_isShielding = false;
+            IsShielding = false;
             SetUpperBodyAnimation(Empty_UpperBody, crossFadeDuration: 0.1f);
         }
 
 
-        SetLookAt(null);
+        SetLookAtTarget(null);
 
         SetAnimation(animationHash, true, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
         m_nextCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
@@ -598,12 +599,15 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-
-
-    private void SetLookAt(Transform transform)
+    private void SetLookAtTarget(Transform transform)
     {
         if (m_lookAtScript != null)
             m_lookAtScript.SetTarget(transform);
+    }
+    private void SetLookAtForward(bool active)
+    {
+        if (m_lookAtScript != null)
+            m_lookAtScript.SetForward(active);
 
     }
     private Quaternion AdditionalFacingRotation()
@@ -1035,7 +1039,7 @@ public class PlayerMovement : MonoBehaviour
         m_isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         m_isTurning = false;
-        if (m_isHoldShielding) m_isShielding = true;
+        if (m_isHoldShielding) IsShielding = true;
 
         //End Coroutines
         if (m_ActionCoroutine != null)
@@ -1053,7 +1057,7 @@ public class PlayerMovement : MonoBehaviour
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
         if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
-        if (m_isLockOn && !m_isRunning) SetLookAt(m_target);
+        if (m_isLockOn && !m_isRunning) SetLookAtTarget(m_target);
 
         m_playerInputManager.RecallLatestBufferedInput();
     }

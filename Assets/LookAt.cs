@@ -17,6 +17,9 @@ public class LookAt : MonoBehaviour
 
     [Header("Order: from Root to ends")]
     [SerializeField] private LookAtElement[] m_targetLookAt;
+    [Space]
+    [SerializeField] private bool m_applyAddRot = true;
+    [SerializeField] private Vector3 m_addRotEuler = Vector3.zero; //////////////////// later add this to the shield and take it from there
     [SerializeField] private ForwardElement[] m_forwardCorrection;
 
     [System.Serializable]
@@ -36,9 +39,9 @@ public class LookAt : MonoBehaviour
     public class ForwardElement
     {
         public Transform Element;
-        [Range(0, 1)] public float Weight = 0;
         [Tooltip("This has no effect on the first element in list")]
         public bool IsUsingOrigRot = true;
+        [Range(0, 1)] public float Weight = 0;
         public IgnoreAxis IgnoreAxis = IgnoreAxis.None;
         public bool Ignore = false;
         [NonSerialized] public float LastApplyance = 0;
@@ -70,7 +73,6 @@ public class LookAt : MonoBehaviour
             if (!m_isActiveTarget)
                 return;
             m_isDeactivatingLookAt = true;
-            //m_isActive = false;
             return;
         }
 
@@ -79,6 +81,27 @@ public class LookAt : MonoBehaviour
         m_target = Target;
         m_fallbackTargetPos = m_target.position;
     }
+
+
+    public void SetForward(bool active)
+    {
+        
+        if (!active)
+        {
+            if (!m_isActiveForwardCorrection)
+                return;
+            Debug.Log(active);
+            m_isDeactivatingForward = true;
+            return;
+        }
+
+        m_isDeactivatingForward = false;
+        m_isActiveForwardCorrection = true;
+    }
+
+
+
+
 
 
     // Update is called once per frame
@@ -154,16 +177,17 @@ public class LookAt : MonoBehaviour
                 if (we.Ignore) { continue; }
 
                 float applyance = 0;
-                Quaternion usedRot = Quaternion.LookRotation(transform.forward);
+                Quaternion usedRot = m_applyAddRot ? Quaternion.Euler(m_addRotEuler.x, m_addRotEuler.y, m_addRotEuler.z) * Quaternion.LookRotation(transform.forward) : Quaternion.LookRotation(transform.forward);
 
                 if (m_isDeactivatingForward) // when deactivating
                 {
                     applyance = UtilityFunctions.SmartLerp(we.LastApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
                     we.LastApplyance = applyance;
-                    if (m_isDeactivatingLookAt && applyance == 0)
+
+                    if (m_isDeactivatingForward && applyance == 0)
                     {
                         m_isActiveForwardCorrection = false;
-                        m_isDeactivatingLookAt = false;
+                        m_isDeactivatingForward = false;
                     }
                 }
                 else //when activating or is active
