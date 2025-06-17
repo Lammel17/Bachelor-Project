@@ -509,6 +509,9 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context, priority))
             return;
 
+        m_thePlayerMovement.TriggerItemUse();
+
+
         //if (context.performed)
         //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA West");
     }

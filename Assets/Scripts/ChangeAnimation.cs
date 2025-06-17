@@ -44,33 +44,33 @@ public class ChangeAnimation : MonoBehaviour
         }
 
         //TURNING
-        CheckClipAndChange(moveset.turningLeft, "EmptyTurningLeft");
-        CheckClipAndChange(moveset.turningRight, "EmptyTurningRight");
+        CheckClipAndChange(newOverrideController, moveset.turningLeft, "EmptyTurningLeft");
+        CheckClipAndChange(newOverrideController, moveset.turningRight, "EmptyTurningRight");
 
         //SLOWWALKING
-        CheckClipAndChange(moveset.slowWalkingForward, "EmptySlowWalkingForward");
-        CheckClipAndChange(moveset.slowWalkingLeft, "EmptySlowWalkingLeft");
-        CheckClipAndChange(moveset.slowWalkingRight, "EmptySlowWalkingRight");
-        CheckClipAndChange(moveset.slowWalkingBackwards, "EmptySlowWalkingBackwards");
+        CheckClipAndChange(newOverrideController, moveset.slowWalkingForward, "EmptySlowWalkingForward");
+        CheckClipAndChange(newOverrideController, moveset.slowWalkingLeft, "EmptySlowWalkingLeft");
+        CheckClipAndChange(newOverrideController, moveset.slowWalkingRight, "EmptySlowWalkingRight");
+        CheckClipAndChange(newOverrideController, moveset.slowWalkingBackwards, "EmptySlowWalkingBackwards");
 
         //WALKING
-        CheckClipAndChange(moveset.walkingForward, "EmptyWalkingForward");
-        CheckClipAndChange(moveset.walkingLeft, "EmptyWalkingLeft");
-        CheckClipAndChange(moveset.walkingRight, "EmptyWalkingRight");
-        CheckClipAndChange(moveset.walkingBackwards, "EmptyWalkingBackwards");
+        CheckClipAndChange(newOverrideController, moveset.walkingForward, "EmptyWalkingForward");
+        CheckClipAndChange(newOverrideController, moveset.walkingLeft, "EmptyWalkingLeft");
+        CheckClipAndChange(newOverrideController, moveset.walkingRight, "EmptyWalkingRight");
+        CheckClipAndChange(newOverrideController, moveset.walkingBackwards, "EmptyWalkingBackwards");
 
         //RUNNING
-        CheckClipAndChange(moveset.running, "EmptyRunning");
+        CheckClipAndChange(newOverrideController, moveset.running, "EmptyRunning");
 
         //TurningRunning
-        CheckClipAndChange(moveset.turningRunningLeft, "EmptyTurningRunningLeft");
-        CheckClipAndChange(moveset.turningRunningRight, "EmptyTurningRunningRight");
+        CheckClipAndChange(newOverrideController, moveset.turningRunningLeft, "EmptyTurningRunningLeft");
+        CheckClipAndChange(newOverrideController, moveset.turningRunningRight, "EmptyTurningRunningRight");
 
         //EVADE
-        CheckClipAndChange(moveset.evadeForward, "EmptyEvadeForward");
-        CheckClipAndChange(moveset.evadeLeft, "EmptyEvadeLeft");
-        CheckClipAndChange(moveset.evadeRight, "EmptyEvadeRight");
-        CheckClipAndChange(moveset.evadeBackwards, "EmptyEvadeBackwards");
+        CheckClipAndChange(newOverrideController, moveset.evadeForward, "EmptyEvadeForward");
+        CheckClipAndChange(newOverrideController, moveset.evadeLeft, "EmptyEvadeLeft");
+        CheckClipAndChange(newOverrideController, moveset.evadeRight, "EmptyEvadeRight");
+        CheckClipAndChange(newOverrideController, moveset.evadeBackwards, "EmptyEvadeBackwards");
 
         //Weapons
         ChangeWeaponAnimations(newOverrideController, moveset.weapon);
@@ -78,6 +78,9 @@ public class ChangeAnimation : MonoBehaviour
         //Shield
         ChangeShieldAnimations(newOverrideController, moveset.shield);
 
+        //Item
+        ChangeItemAnimations(newOverrideController, moveset.item);
+        //ChangeItemAnimations(newOverrideController, moveset.healing);
 
 
 
@@ -85,18 +88,6 @@ public class ChangeAnimation : MonoBehaviour
         animator.runtimeAnimatorController = newOverrideController;
 
 
-
-        void CheckClipAndChange(AnimationData animData, string animName)
-        {
-            if (animData != null)
-            {
-                if (animData.animationClip != null)
-                {
-                    newOverrideController[animName] = animData.animationClip;
-
-                }
-            }
-        }
 
 
     }
@@ -122,98 +113,81 @@ public class ChangeAnimation : MonoBehaviour
 
     private static void ChangeWeaponAnimations( AnimatorOverrideController newOverrideController, WeaponData weaponMoveset)
     {
-
+        if(weaponMoveset == null)
+            return ;
 
         //LightAttack
-        CheckClipAndChange(weaponMoveset.LightAttack1.AnimData, "EmptyLightAttack1");
-        CheckClipAndChange(weaponMoveset.LightAttack2.AnimData, "EmptyLightAttack2");
-        CheckClipAndChange(weaponMoveset.LightAttack3.AnimData, "EmptyLightAttack3");
-        CheckClipAndChange(weaponMoveset.LightAttack4.AnimData, "EmptyLightAttack4");
-        CheckClipAndChange(weaponMoveset.LightAttack5.AnimData, "EmptyLightAttack5");
-        CheckClipAndChange(weaponMoveset.LightAttack6.AnimData, "EmptyLightAttack6");
-        CheckClipAndChange(weaponMoveset.SprintLightAttack.AnimData, "EmptySprintLightAttack");
-        CheckClipAndChange(weaponMoveset.EvadeLightAttack.AnimData, "EmptyEvadeLightAttack");
-        CheckClipAndChange(weaponMoveset.SpecialLightAttack1.AnimData, "EmptySpecialLightAttack1");
-        CheckClipAndChange(weaponMoveset.SpecialLightAttack2.AnimData, "EmptySpecialLightAttack2");
+        CheckClipAndChange(newOverrideController, weaponMoveset.LightAttack1.AnimData, "EmptyLightAttack1");
+        CheckClipAndChange(newOverrideController, weaponMoveset.LightAttack2.AnimData, "EmptyLightAttack2");
+        CheckClipAndChange(newOverrideController, weaponMoveset.LightAttack3.AnimData, "EmptyLightAttack3");
+        CheckClipAndChange(newOverrideController, weaponMoveset.LightAttack4.AnimData, "EmptyLightAttack4");
+        CheckClipAndChange(newOverrideController, weaponMoveset.LightAttack5.AnimData, "EmptyLightAttack5");
+        CheckClipAndChange(newOverrideController, weaponMoveset.LightAttack6.AnimData, "EmptyLightAttack6");
+        CheckClipAndChange(newOverrideController, weaponMoveset.SprintLightAttack.AnimData, "EmptySprintLightAttack");
+        CheckClipAndChange(newOverrideController, weaponMoveset.EvadeLightAttack.AnimData, "EmptyEvadeLightAttack");
+        CheckClipAndChange(newOverrideController, weaponMoveset.SpecialLightAttack1.AnimData, "EmptySpecialLightAttack1");
+        CheckClipAndChange(newOverrideController, weaponMoveset.SpecialLightAttack2.AnimData, "EmptySpecialLightAttack2");
 
         //HeavyAttack
-        CheckClipAndChange(weaponMoveset.HeavyAttack1.AnimData, "EmptyHeavyAttack1");
-        CheckClipAndChange(weaponMoveset.HeavyAttack2.AnimData, "EmptyHeavyAttack2");
-        CheckClipAndChange(weaponMoveset.HeavyAttack3.AnimData, "EmptyHeavyAttack3");
-        CheckClipAndChange(weaponMoveset.HeavyAttack4.AnimData, "EmptyHeavyAttack4");
-        CheckClipAndChange(weaponMoveset.SprintHeavyAttack.AnimData, "EmptySprintHeavyAttack");
-        CheckClipAndChange(weaponMoveset.EvadeHeavyAttack.AnimData, "EmptyEvadeHeavyAttack");
-        CheckClipAndChange(weaponMoveset.SpecialHeavyAttack1.AnimData, "EmptySpecialHeavyAttack1");
-        CheckClipAndChange(weaponMoveset.SpecialHeavyAttack2.AnimData, "EmptySpecialHeavyAttack2");
-
-
-
-
-        void CheckClipAndChange(AnimationData animData, string animName)
-        {
-            if (animData != null)
-            {
-                if (animData.animationClip != null)
-                {
-                    newOverrideController[animName] = animData.animationClip;
-                    return;
-                }
-                Debug.Log($"ERROR: no animation clip in AnimationData found in {animData.name}");
-            }
-
-            //newOverrideController[animName] = animData.animationClip;
-            return;
-            
-        }
-
+        CheckClipAndChange(newOverrideController, weaponMoveset.HeavyAttack1.AnimData, "EmptyHeavyAttack1");
+        CheckClipAndChange(newOverrideController, weaponMoveset.HeavyAttack2.AnimData, "EmptyHeavyAttack2");
+        CheckClipAndChange(newOverrideController, weaponMoveset.HeavyAttack3.AnimData, "EmptyHeavyAttack3");
+        CheckClipAndChange(newOverrideController, weaponMoveset.HeavyAttack4.AnimData, "EmptyHeavyAttack4");
+        CheckClipAndChange(newOverrideController, weaponMoveset.SprintHeavyAttack.AnimData, "EmptySprintHeavyAttack");
+        CheckClipAndChange(newOverrideController, weaponMoveset.EvadeHeavyAttack.AnimData, "EmptyEvadeHeavyAttack");
+        CheckClipAndChange(newOverrideController, weaponMoveset.SpecialHeavyAttack1.AnimData, "EmptySpecialHeavyAttack1");
+        CheckClipAndChange(newOverrideController, weaponMoveset.SpecialHeavyAttack2.AnimData, "EmptySpecialHeavyAttack2");
 
     }
 
-    private static void ChangeShieldAnimations(AnimatorOverrideController newOverrideController, ShieldData shield)
+    private static void ChangeShieldAnimations(AnimatorOverrideController newOverrideController, ShieldData shieldMoveset)
     {
-
-
-        //LightAttack
-        CheckClipAndChange(shield.shieldIdle.AnimData, "EmptyShieldIdle");
-        CheckClipAndChange(shield.shieldingUpperBody.AnimData, "EmptyShieldingUpperBody");
-
-        CheckClipAndChange(shield.ShiledSpecial1.AnimData, "EmptyShieldSpecial1");
-        CheckClipAndChange(shield.ShiledSpecial2.AnimData, "EmptyShieldSpecial2");
-        CheckClipAndChange(shield.ShiledSpecial3.AnimData, "EmptyShieldSpecial3");
-        CheckClipAndChange(shield.ShiledSpecial4.AnimData, "EmptyShieldSpecial4");
-
-        CheckClipAndChange(shield.ShiledAlmostStanceBreak.AnimData, "EmptyShieldAlmostStanceBreak");
-        CheckClipAndChange(shield.ShiledStanceBreak.AnimData, "EmptyShieldStanceBreak");
-
-
-
-
-
-        void CheckClipAndChange(AnimationData animData, string animName)
-        {
-            if (animData != null)
-            {
-                if (animData.animationClip != null)
-                {
-                    newOverrideController[animName] = animData.animationClip;
-                    return;
-                }
-                Debug.Log($"ERROR: no animation clip in AnimationData found in {animData.name}");
-            }
-
-            //newOverrideController[animName] = animData.animationClip;
+        if (shieldMoveset == null)
             return;
 
-        }
+        CheckClipAndChange(newOverrideController, shieldMoveset.shieldIdle.AnimData, "EmptyShieldIdle");
+        CheckClipAndChange(newOverrideController, shieldMoveset.shieldingUpperBody.AnimData, "EmptyShieldingUpperBody");
 
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecial1.AnimData, "EmptyShieldSpecial1");
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecial2.AnimData, "EmptyShieldSpecial2");
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecial3.AnimData, "EmptyShieldSpecial3");
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecial4.AnimData, "EmptyShieldSpecial4");
+
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledAlmostStanceBreak.AnimData, "EmptyShieldAlmostStanceBreak");
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledStanceBreak.AnimData, "EmptyShieldStanceBreak");
+
+
+    }
+
+    private static void ChangeItemAnimations(AnimatorOverrideController newOverrideController, ItemData ItemMoveset)
+    {
+        if (ItemMoveset == null)
+            return;
+
+        CheckClipAndChange(newOverrideController, ItemMoveset.ItemUse.AnimData, "EmptyUseItem");
+        CheckClipAndChange(newOverrideController, ItemMoveset.ItemUseHold.AnimData, "EmptyuseItemHold");
 
     }
 
 
 
 
+    private static void CheckClipAndChange(AnimatorOverrideController newOverrideController, AnimationData animData, string animName)
+    {
+        if (animData != null)
+        {
+            if (animData.animationClip != null)
+            {
+                newOverrideController[animName] = animData.animationClip;
+                return;
+            }
+            Debug.Log($"ERROR: no animation clip in AnimationData found in {animData.name}");
+        }
 
+        //newOverrideController[animName] = animData.animationClip;
+        return;
 
+    }
 
 
 

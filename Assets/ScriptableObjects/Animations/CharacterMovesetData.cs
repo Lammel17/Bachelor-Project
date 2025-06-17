@@ -38,6 +38,9 @@ public class CharacterMovesetData : ScriptableObject
     public WeaponData weapon;
     [Space]
     public ShieldData shield;
+    [Space]
+    //public ItemData healing;
+    public ItemData item;
 
 
 

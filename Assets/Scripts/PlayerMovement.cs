@@ -171,8 +171,7 @@ public class PlayerMovement : MonoBehaviour
         m_turningStrenght = m_turningStrenghtBaseValues[1];
         m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
 
-        ChangeMoveset.SetWeapon(m_characterMovesetData.weapon, m_characterMovesetData);
-        ChangeMoveset.SetShield(m_characterMovesetData.shield, m_characterMovesetData);
+        ChangeMoveset.SetInitializingEquippment(m_characterMovesetData);
         ChangeAnimation.InitializeAnimationOverrideController(m_animator, m_characterMovesetData);
 
         m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
@@ -437,6 +436,8 @@ public class PlayerMovement : MonoBehaviour
 
     public void TriggerShielding(bool isHoldShielding)
     {
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
+        
         IsHoldShielding = isHoldShielding;
 
         if (!m_isHoldShielding)
@@ -454,6 +455,29 @@ public class PlayerMovement : MonoBehaviour
         IsShielding = true;
 
         CheckAnimation();
+
+    }
+
+    public void TriggerItemUse()
+    {
+        if (m_isActionLocked) return;
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
+
+        if (m_characterMovesetData.item == null) { Debug.Log("MISSING Item DATA"); return; }
+        ItemData.ItemAction thisAction = m_characterMovesetData.item.ItemUse;
+        if (thisAction == null) { Debug.Log("MISSING ACTION DATA of a Item Action"); return; }
+        if (thisAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Item Action"); return; }
+
+        AnimationInterruptableType itemUseInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
+
+        if ((int)m_currentInteruptability >= (int)itemUseInterruptability) return;
+
+        if (m_ActionCoroutine != null)
+            EndActionReset();
+
+        m_currentInteruptability = itemUseInterruptability;
+
+        InitAction(Use_Item, thisAction.AnimData);
 
     }
 
@@ -1103,8 +1127,8 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-    readonly int Shielding_TorsoStabilizing = Animator.StringToHash("Shielding_TorsoStabilizing");
-    readonly int Empty_TorsoStabilizer = Animator.StringToHash("Empty_TorsoStabilizer");
+    //readonly int Shielding_TorsoStabilizing = Animator.StringToHash("Shielding_TorsoStabilizing");
+    //readonly int Empty_TorsoStabilizer      = Animator.StringToHash("Empty_TorsoStabilizer");
 
     readonly int Shielding_UpperBody        = Animator.StringToHash("Shielding_UpperBody");
     readonly int Empty_UpperBody            = Animator.StringToHash("Empty_UpperBody");
@@ -1127,6 +1151,7 @@ public class PlayerMovement : MonoBehaviour
     readonly int Evade_Backwards            = Animator.StringToHash("Evade_Backwards");
 
     readonly int Use_Item                   = Animator.StringToHash("Use_Item");
+    readonly int Use_Item_Hold              = Animator.StringToHash("Use_Item_Hold");
     readonly int Healing                    = Animator.StringToHash("Healing");
     readonly int Environment_Interaction    = Animator.StringToHash("Environment_Interaction");
     readonly int Pick_Up_Item_Low           = Animator.StringToHash("Pick_Up_Item_Low");
@@ -1259,8 +1284,8 @@ public class PlayerMovement : MonoBehaviour
         m_animator.CrossFadeInFixedTime(upperBodyAnimation, crossFadeDuration, 1, timeOffset);
         m_currentUpperBodyAnimation = upperBodyAnimation;
 
-        if (upperBodyAnimation == Shielding_UpperBody) m_animator.CrossFadeInFixedTime(Shielding_TorsoStabilizing, crossFadeDuration, 2, timeOffset);
-        else if (upperBodyAnimation == Empty_UpperBody) m_animator.CrossFadeInFixedTime(Empty_TorsoStabilizer, crossFadeDuration, 2, timeOffset);
+        //if (upperBodyAnimation == Shielding_UpperBody) m_animator.CrossFadeInFixedTime(Shielding_TorsoStabilizing, crossFadeDuration, 2, timeOffset);
+        //else if (upperBodyAnimation == Empty_UpperBody) m_animator.CrossFadeInFixedTime(Empty_TorsoStabilizer, crossFadeDuration, 2, timeOffset);
 
     }
 

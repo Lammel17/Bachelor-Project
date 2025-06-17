@@ -25,7 +25,7 @@ public class ShieldData : ScriptableObject
     public class ShieldAction
     {
         public AnimationData AnimData;
-        [NonSerialized] public int ActionkHash;
+        //[NonSerialized] public int ActionkHash;
 
         ////[ToggleGroup("settings", nameof(DamageEnergyPoise), nameof(PhysicalType), nameof(nextLight), nameof(nextHeavy), nameof(nextSpecialLight), nameof(nextSpecialHeavy))]
         ////[SerializeField] private Void groupHolder;

@@ -90,7 +90,6 @@ public class LookAt : MonoBehaviour
         {
             if (!m_isActiveForwardCorrection)
                 return;
-            Debug.Log(active);
             m_isDeactivatingForward = true;
             return;
         }
