@@ -1083,7 +1083,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetAnimatorMoveValues()
     {
-        float animationDampTime = !m_isAction ? 0.1f : 0; //smaller is faster transition
+        float animationDampTime = !m_isAction ? 0.12f : 0; //smaller is faster transition
         float MoveStrength = m_isRunning ? 2 : m_inputStrenght; //is already snapped in inputmanager
         Vector2 horAndVerMovement = new Vector2(0, 1);
 
@@ -1229,7 +1229,7 @@ public class PlayerMovement : MonoBehaviour
             else
                 crossFadeDuration = m_baseCrossFadeDuration;
         }
-        Debug.Log(crossFadeDuration);
+
         m_animator.CrossFadeInFixedTime(animation, crossFadeDuration, 0, timeOffset);
         m_currentAnimation = animation;
         

@@ -8,40 +8,74 @@ public class LookAt : MonoBehaviour
 
     //[SerializeField] private WeightedElement[] m_weightedElement;
 
-    [SerializeField] private bool m_isActive = false;
+    [SerializeField] private bool m_isActive = true;
+    [SerializeField] private bool m_isActiveTarget = false;
+    [SerializeField] private bool m_isActiveForwardCorrection = false;
     [SerializeField] [Range(-180, 180)] private float offset = 0;
     [SerializeField] private float m_applyRemoveSpeed = 1;
 
 
     [Header("Order: from Root to ends")]
-    [SerializeField] private LookAtElement[] m_lookAtElement;
+    [SerializeField] private LookAtElement[] m_targetLookAt;
+    [SerializeField] private ForwardElement[] m_forwardCorrection;
+
     [System.Serializable]
-    public class LookAtElement : WeightedElement
+    public class LookAtElement 
     {
-        [GD.MinMaxSlider.MinMaxSlider(-180, 180)] public Vector2 ConstrainsAngleYAxis = new Vector2(0,0);
+        public Transform Element;
+        [Range(-1, 1)] public float Weight = 0;
+        [GD.MinMaxSlider.MinMaxSlider(-180, 180)] public Vector2 ConstrainsAngleYAxis = new Vector2(0,0); // if 0,0, them it will be used always
         public bool Ignore = false;
         [NonSerialized] public float LastAngle = 0;
         [NonSerialized] public float LastApplyance = 0;
+
+        [NonSerialized] public Quaternion LastRot = Quaternion.identity;
+    }
+
+    [System.Serializable]
+    public class ForwardElement
+    {
+        public Transform Element;
+        [Range(0, 1)] public float Weight = 0;
+        [Tooltip("This has no effect on the first element in list")]
+        public bool IsUsingOrigRot = true;
+        public IgnoreAxis IgnoreAxis = IgnoreAxis.None;
+        public bool Ignore = false;
+        [NonSerialized] public float LastApplyance = 0;
+        [NonSerialized] public Quaternion originalRot = Quaternion.identity;
+
+    }
+
+    public enum IgnoreAxis
+    {
+        None = 0,
+        IgnoreX,
+        IgnoreY,
+        IgnoreZ,
+        IgnoreXY,
+        IgnoreXZ,
+        IgnoreYZ,
     }
 
 
 
-    bool m_isDeactivating = false;
+    bool m_isDeactivatingLookAt = false;
+    bool m_isDeactivatingForward = false;
 
     public void SetTarget(Transform Target)
     {
         if (Target == null)
         {
             m_target = null;
-            if (!m_isActive)
+            if (!m_isActiveTarget)
                 return;
-            m_isDeactivating = true;
+            m_isDeactivatingLookAt = true;
             //m_isActive = false;
             return;
         }
 
-        m_isDeactivating = false;
-        m_isActive = true;
+        m_isDeactivatingLookAt = false;
+        m_isActiveTarget = true;
         m_target = Target;
         m_fallbackTargetPos = m_target.position;
     }
@@ -53,48 +87,111 @@ public class LookAt : MonoBehaviour
         if (!m_isActive)
             return;
 
-        if (m_target == null && m_fallbackTargetPos == Vector3.zero)
-            return;
-
-        float constraintAnglesAdded = 0; //with every next bone, the current angle must be subtracted, otherwise overshoot
-
-        foreach(LookAtElement we in m_lookAtElement)
+        if (m_isActiveTarget)
         {
-            if (we.Ignore) continue;
-            if (m_target != null) m_fallbackTargetPos = m_target.position;
+            if (m_target == null && m_fallbackTargetPos == Vector3.zero)
+                return;
 
-            Vector3 animForward = we.Element.transform.forward;
-            Vector3 ToTarget = m_fallbackTargetPos - transform.position;
+            float constraintAnglesAdded = 0; //with every next bone, the current angle must be subtracted, otherwise overshoot
 
-            float angleToTarget = Vector3.SignedAngle(new Vector3(animForward.x, 0, animForward.z), new Vector3(ToTarget.x, 0, ToTarget.z), Vector3.up);
-            float applyance = 0;
-
-            if (m_isDeactivating || we.ConstrainsAngleYAxis == Vector2.zero || angleToTarget - constraintAnglesAdded < we.ConstrainsAngleYAxis.x || angleToTarget - constraintAnglesAdded > we.ConstrainsAngleYAxis.y)
+            foreach (LookAtElement we in m_targetLookAt)
             {
-                applyance = UtilityFunctions.SmartLerp(we.LastApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
-                we.LastApplyance = applyance;
-                angleToTarget = we.LastAngle;
-                if (m_isDeactivating && applyance == 0)
+                if (we.Ignore) continue;
+                if (m_target != null) m_fallbackTargetPos = m_target.position;
+
+                Vector3 boneForward = we.Element.forward;
+                Vector3 ToTarget = m_fallbackTargetPos - transform.position;
+
+                float angleToTarget = Vector3.SignedAngle(new Vector3(boneForward.x, 0, boneForward.z), new Vector3(ToTarget.x, 0, ToTarget.z), Vector3.up);
+                float applyance = 0;
+                float usedAngle = 0;
+
+                if (we.ConstrainsAngleYAxis != Vector2.zero && (m_isDeactivatingLookAt || angleToTarget - constraintAnglesAdded < we.ConstrainsAngleYAxis.x || angleToTarget - constraintAnglesAdded > we.ConstrainsAngleYAxis.y))
                 {
-                    m_isActive = false;
-                    m_isDeactivating = false;
+                    applyance = UtilityFunctions.SmartLerp(we.LastApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
+                    we.LastApplyance = applyance;
+                    usedAngle = we.LastAngle;
+                    if (m_isDeactivatingLookAt && applyance == 0)
+                    {
+                        m_isActiveTarget = false;
+                        m_isDeactivatingLookAt = false;
+                    }
                 }
+                else //when activating or is active
+                {
+                    applyance = UtilityFunctions.SmartLerp(we.LastApplyance, 1, m_applyRemoveSpeed * Time.deltaTime);
+                    we.LastApplyance = applyance;
+                    usedAngle = angleToTarget;
+                    we.LastAngle = usedAngle;
+                }
+
+                if (we.Weight < 0) // -1 will turn it to the ausgangsrotation
+                    usedAngle = -constraintAnglesAdded;
+
+                float weightedAngle = Mathf.Lerp(0, usedAngle, Mathf.Abs(we.Weight)); //weight is not changed in runtime
+                float angle = Mathf.Lerp(0, weightedAngle, applyance); //applyance is if targeting switches on or off
+
+                constraintAnglesAdded += angle; 
+
+                we.Element.Rotate(new Vector3(0, angle + offset, 0), Space.World);
+
             }
-            else
-            {
-                applyance = UtilityFunctions.SmartLerp(we.LastApplyance, 1, m_applyRemoveSpeed * Time.deltaTime);
-                we.LastApplyance = applyance;
-                constraintAnglesAdded += angleToTarget;
-                we.LastAngle = angleToTarget;
-            }
-
-            float angleForSwitchingApplyance = Mathf.Lerp(0, angleToTarget, applyance);
-            float weightedAngle = Mathf.Lerp(0, angleForSwitchingApplyance, we.Weight);
-
-            we.Element.transform.Rotate(new Vector3(0, weightedAngle + offset, 0), Space.World);
-
-
         }
+
+
+
+
+        if (m_isActiveForwardCorrection)
+        {
+            foreach (ForwardElement we in m_forwardCorrection)
+            {
+                if (we.Ignore) { continue; }
+                we.originalRot = we.Element.rotation;
+            }
+
+            foreach (ForwardElement we in m_forwardCorrection)
+            {
+                if (we.Ignore) { continue; }
+
+                float applyance = 0;
+                Quaternion usedRot = Quaternion.LookRotation(transform.forward);
+
+                if (m_isDeactivatingForward) // when deactivating
+                {
+                    applyance = UtilityFunctions.SmartLerp(we.LastApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
+                    we.LastApplyance = applyance;
+                    if (m_isDeactivatingLookAt && applyance == 0)
+                    {
+                        m_isActiveForwardCorrection = false;
+                        m_isDeactivatingLookAt = false;
+                    }
+                }
+                else //when activating or is active
+                {
+                    applyance = UtilityFunctions.SmartLerp(we.LastApplyance, 1, m_applyRemoveSpeed * Time.deltaTime);
+                    we.LastApplyance = applyance;
+                }
+
+                // never try local space stuff here, better just change the word space to the inital bone rot as new worldspace and work from there
+                switch (we.IgnoreAxis)
+                {
+                    case IgnoreAxis.None: { break; }
+                    case IgnoreAxis.IgnoreX: { usedRot = Quaternion.Euler(we.originalRot.eulerAngles.x, usedRot.eulerAngles.y, usedRot.eulerAngles.z); break; }
+                    case IgnoreAxis.IgnoreY: { usedRot = Quaternion.Euler(usedRot.eulerAngles.x, we.originalRot.eulerAngles.y, usedRot.eulerAngles.z); break; }
+                    case IgnoreAxis.IgnoreZ: { usedRot = Quaternion.Euler(usedRot.eulerAngles.x, usedRot.eulerAngles.y, we.originalRot.eulerAngles.z); break; }
+                    case IgnoreAxis.IgnoreXY: { usedRot = Quaternion.Euler(we.originalRot.eulerAngles.x, we.originalRot.eulerAngles.y, usedRot.eulerAngles.z); break; }
+                    case IgnoreAxis.IgnoreXZ: { usedRot = Quaternion.Euler(we.originalRot.eulerAngles.x, usedRot.eulerAngles.y, we.originalRot.eulerAngles.z); break; }
+                    case IgnoreAxis.IgnoreYZ: { usedRot = Quaternion.Euler(usedRot.eulerAngles.x, we.originalRot.eulerAngles.y, we.originalRot.eulerAngles.z); break; }
+                }
+
+                Quaternion weightedRot = Quaternion.Slerp(we.IsUsingOrigRot ? we.originalRot : we.Element.rotation, usedRot, we.Weight); //weight is not changed in runtime
+                Quaternion rot = Quaternion.Slerp(we.Element.rotation, weightedRot, applyance); //applyance is if targeting switches on or off
+                we.Element.rotation = rot;
+
+
+            }
+        }
+
     }
 
 

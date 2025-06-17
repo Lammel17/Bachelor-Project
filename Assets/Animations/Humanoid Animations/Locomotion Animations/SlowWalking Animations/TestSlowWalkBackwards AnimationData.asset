@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TestSlowWalkBackwards AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 275cf8487a98fa04ea95fa7bf004a56b, type: 2}
+  animationClip: {fileID: 7400000, guid: b02dfcf9ce785a74eb2c702b71b6b308, type: 2}
   AnimationMovementData: {fileID: 0}
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
