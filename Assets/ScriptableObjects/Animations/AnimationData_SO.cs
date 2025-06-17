@@ -10,6 +10,7 @@ public class AnimationData : ScriptableObject
     [Header("Animation Data")]
     public AnimationClip animationClip = null;
     public AnimationMovementData AnimationMovementData;
+    public bool isAnUpperBodyAnimation = false;
     [Space]
     public float crossfadeInTime = 0.2f;
     public float crossfadeOutTime = 0.2f;

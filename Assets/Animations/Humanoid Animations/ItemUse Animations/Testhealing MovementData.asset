@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Testhealing MovementData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  moveInfluence: 1
-  turningInfluence: 1
+  moveInfluence: 2
+  turningInfluence: 2
   moveDirPredefinition: 1
   turningDirPredefinition: 1
   targetRelations: 0

@@ -69,6 +69,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isFreelyMoving = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionUpperBody = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isWalkingLocked = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionLocked = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldShielding = false;
@@ -269,7 +270,7 @@ public class PlayerMovement : MonoBehaviour
             Quaternion playerToTargetAndCameraForwardSlerp = Quaternion.Slerp(m_cameraYAxisRotationInWS, playerToTargetLookRotation, 0.5f);
             m_inputDirInWS = playerToTargetAndCameraForwardSlerp * m_inputDir;
 
-            if (!m_isAction) //if action started, the facingType should stay, since its needed for the SetAnimatorMoveValues()
+            if (!(m_isAction && !m_isActionUpperBody)) //if action started, the facingType should stay, since its needed for the SetAnimatorMoveValues()
                 SetFacingDirectionType();
             return;
         }
@@ -472,12 +473,15 @@ public class PlayerMovement : MonoBehaviour
 
         if ((int)m_currentInteruptability >= (int)itemUseInterruptability) return;
 
-        if (m_ActionCoroutine != null)
+        if (m_ActionCoroutine != null && (!m_isTurning || !thisAction.AnimData.isAnUpperBodyAnimation))
             EndActionReset();
 
         m_currentInteruptability = itemUseInterruptability;
 
-        InitAction(Use_Item, thisAction.AnimData);
+        if(!thisAction.AnimData.isAnUpperBodyAnimation)
+            InitAction(Use_Item, thisAction.AnimData);
+        else
+            InitActionUpperBody(Use_Item_UpperBody, thisAction.AnimData);
 
     }
 
@@ -520,6 +524,38 @@ public class PlayerMovement : MonoBehaviour
             //    EndActionReset();
         };
         
+        //this is if a action is earlier interruptable than the lenght of the animation
+        m_actionChangesInterruptabilityCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn - animData.InterruptabilityChangeBeforeEndTime, changeInteruptabilityAction));
+
+        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
+    }
+
+    private void InitActionUpperBody(int animationHash, AnimationData animData)
+    {
+        m_isAction = true;
+        m_isActionUpperBody = true;
+        IsShielding = false;
+
+        //SetLookAtTarget(null); //????? Depends on animation and if AddTurning
+
+        SetUpperBodyAnimation(animationHash, true, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
+        m_nextUpperBodyCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
+
+        SetValues(); //needed, because what if it jumps from one action directly into another
+
+        float animationDuration = animData.animationClip.length;
+
+        Action changeInteruptabilityAction = () =>
+        {
+            m_currentInteruptability = animData.ChangedInterruptability;
+            m_actionChangesInterruptabilityCoroutine = null;
+
+            if (m_playerInputManager.CheckRecallLatestBufferedInput())
+                EndActionReset();
+            //else if (m_isHoldShielding)
+            //    EndActionReset();
+        };
+
         //this is if a action is earlier interruptable than the lenght of the animation
         m_actionChangesInterruptabilityCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn - animData.InterruptabilityChangeBeforeEndTime, changeInteruptabilityAction));
 
@@ -1060,6 +1096,7 @@ public class PlayerMovement : MonoBehaviour
         m_actionTurningRelations = 0;
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
         m_isAction = false;
+        m_isActionUpperBody = false;
         m_isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         m_isTurning = false;
@@ -1111,7 +1148,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetAnimatorMoveValues()
     {
-        float animationDampTime = !m_isAction ? 0.12f : 0; //smaller is faster transition
+        float animationDampTime = !m_isAction ? 0.12f : 0.12f; //smaller is faster transition
         float MoveStrength = m_isRunning ? 2 : m_inputStrenght; //is already snapped in inputmanager
         Vector2 horAndVerMovement = new Vector2(0, 1);
 
@@ -1129,8 +1166,8 @@ public class PlayerMovement : MonoBehaviour
 
     //readonly int Shielding_TorsoStabilizing = Animator.StringToHash("Shielding_TorsoStabilizing");
     //readonly int Empty_TorsoStabilizer      = Animator.StringToHash("Empty_TorsoStabilizer");
-
     readonly int Shielding_UpperBody        = Animator.StringToHash("Shielding_UpperBody");
+    readonly int Use_Item_UpperBody         = Animator.StringToHash("Use_Item_UpperBody");
     readonly int Empty_UpperBody            = Animator.StringToHash("Empty_UpperBody");
 
     readonly int Running                    = Animator.StringToHash("Running");
@@ -1201,7 +1238,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void CheckAnimation(bool forceNewAnim = false, float crossFadeDuration = -1)
     {
-        if ((m_isAction))
+        if (m_isAction && !m_isActionUpperBody)
             if (!forceNewAnim) return;
         
         if (m_isStandingStill)
@@ -1220,6 +1257,8 @@ public class PlayerMovement : MonoBehaviour
         if (!m_isStandingStill && m_currentAnimation != Locomotion)
             SetAnimation(Locomotion, false, crossFadeDuration, 0.25f);
 
+        if (m_isActionUpperBody)
+            return;
 
         //UpperBody
         if (m_isShielding)

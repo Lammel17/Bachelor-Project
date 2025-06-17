@@ -15,6 +15,7 @@ MonoBehaviour:
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: cd1a3de5b3505c746b986a8d521ba413, type: 2}
   AnimationMovementData: {fileID: 11400000, guid: 3eac751c813730d4e98c725d2102a394, type: 2}
+  isAnUpperBodyAnimation: 1
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
   crossfadeBeginn: 0.2
