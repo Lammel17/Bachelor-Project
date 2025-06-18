@@ -2049,12 +2049,13 @@ MonoBehaviour:
   m_isFreelyMoving: 1
   m_isTurning: 0
   m_isAction: 0
+  m_isActionUpperBody: 0
   m_isWalkingLocked: 0
   m_isActionLocked: 0
   m_isHoldShielding: 0
   m_isShielding: 0
-  m_currentAnimation: 0
-  m_currentUpperBodyAnimation: 0
+  m_currentBaseLayerAnimation: 0
+  m_currentUpperBodyAnimation: {x: 0, y: 0}
 --- !u!143 &1756236763
 CharacterController:
   m_ObjectHideFlags: 0
@@ -2116,7 +2117,7 @@ MonoBehaviour:
   m_forwardCorrection:
   - Element: {fileID: 422825814}
     IsUsingOrigRot: 1
-    Weight: 0.839
+    Weight: 0.829
     IgnoreAxis: 1
     Ignore: 0
   - Element: {fileID: 422825807}

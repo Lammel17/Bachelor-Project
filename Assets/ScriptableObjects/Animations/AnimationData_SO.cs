@@ -10,7 +10,7 @@ public class AnimationData : ScriptableObject
     [Header("Animation Data")]
     public AnimationClip animationClip = null;
     public AnimationMovementData AnimationMovementData;
-    public bool isAnUpperBodyAnimation = false;
+    public BodyParts bodyParts = BodyParts.WholeBody;
     [Space]
     public float crossfadeInTime = 0.2f;
     public float crossfadeOutTime = 0.2f;
@@ -31,7 +31,12 @@ public class AnimationData : ScriptableObject
     //[Space]
     //[SerializeField] public Effects[] effectsList;
 
-
+    public enum BodyParts
+    {
+        WholeBody = 0,
+        UpperBody = 1,
+        Arms = 2,
+    }
 
 
 

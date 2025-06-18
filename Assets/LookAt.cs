@@ -85,7 +85,7 @@ public class LookAt : MonoBehaviour
 
     public void SetForward(bool active)
     {
-        
+        return;
         if (!active)
         {
             if (!m_isActiveForwardCorrection)

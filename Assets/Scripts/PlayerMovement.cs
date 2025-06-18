@@ -75,8 +75,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldShielding = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isShielding = false;
 
-    [SerializeField][EditorAttributes.ReadOnly] private int m_currentAnimation;
-    [SerializeField][EditorAttributes.ReadOnly] private int m_currentUpperBodyAnimation;
+    [SerializeField][EditorAttributes.ReadOnly] private int m_currentBaseLayerAnimation;
+    //[SerializeField][EditorAttributes.ReadOnly] private int m_currentUpperBodyAnimation;
+    [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_currentUpperBodyAnimation;
 
     //Previous Frame Values
     private Vector3 m_prevMove = Vector3.zero;
@@ -178,8 +179,8 @@ public class PlayerMovement : MonoBehaviour
         m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
         m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecial1, m_characterMovesetData.shield.ShiledSpecial3);
 
-        m_currentAnimation = Idle_1;
-        m_currentUpperBodyAnimation = Empty_UpperBody;
+        m_currentBaseLayerAnimation = Idle_1;
+        m_currentUpperBodyAnimation = new Vector2(Empty_UpperBody, 0);
 
     }
 
@@ -455,8 +456,6 @@ public class PlayerMovement : MonoBehaviour
 
         IsShielding = true;
 
-        CheckAnimation();
-
     }
 
     public void TriggerItemUse()
@@ -473,15 +472,17 @@ public class PlayerMovement : MonoBehaviour
 
         if ((int)m_currentInteruptability >= (int)itemUseInterruptability) return;
 
-        if (m_ActionCoroutine != null && (!m_isTurning || !thisAction.AnimData.isAnUpperBodyAnimation))
+        if (m_ActionCoroutine != null && (!m_isTurning || thisAction.AnimData.bodyParts == AnimationData.BodyParts.WholeBody))
             EndActionReset();
 
         m_currentInteruptability = itemUseInterruptability;
 
-        if(!thisAction.AnimData.isAnUpperBodyAnimation)
+        if(thisAction.AnimData.bodyParts == AnimationData.BodyParts.WholeBody)
             InitAction(Use_Item, thisAction.AnimData);
-        else
-            InitActionUpperBody(Use_Item_UpperBody, thisAction.AnimData);
+        else if (thisAction.AnimData.bodyParts == AnimationData.BodyParts.UpperBody)
+            InitActionUpperBody(Use_Item_UpperBody, thisAction.AnimData, 1);
+        else if (thisAction.AnimData.bodyParts == AnimationData.BodyParts.Arms)
+            InitActionUpperBody(Use_Item_UpperBody, thisAction.AnimData, 2);
 
     }
 
@@ -500,13 +501,13 @@ public class PlayerMovement : MonoBehaviour
         if (!m_isTurning) //stop upperbody animations
         {
             IsShielding = false;
-            SetUpperBodyAnimation(Empty_UpperBody, crossFadeDuration: 0.1f);
+            SetUpperBodyAnimation(Empty_UpperBody, 0, crossFadeDuration: 0.1f);
         }
 
 
         SetLookAtTarget(null);
 
-        SetAnimation(animationHash, true, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
+        SetAnimation(animationHash, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
         m_nextCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
 
         SetValues(); //needed, because what if it jumps from one action directly into another
@@ -530,7 +531,7 @@ public class PlayerMovement : MonoBehaviour
         SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
     }
 
-    private void InitActionUpperBody(int animationHash, AnimationData animData)
+    private void InitActionUpperBody(int animationHash, AnimationData animData, int layer)
     {
         m_isAction = true;
         m_isActionUpperBody = true;
@@ -538,7 +539,7 @@ public class PlayerMovement : MonoBehaviour
 
         //SetLookAtTarget(null); //????? Depends on animation and if AddTurning
 
-        SetUpperBodyAnimation(animationHash, true, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
+        SetUpperBodyAnimation(animationHash, layer, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
         m_nextUpperBodyCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
 
         SetValues(); //needed, because what if it jumps from one action directly into another
@@ -1236,7 +1237,7 @@ public class PlayerMovement : MonoBehaviour
     #endregion 
 
 
-    private void CheckAnimation(bool forceNewAnim = false, float crossFadeDuration = -1)
+    private void CheckAnimation(bool forceNewAnim = false)
     {
         if (m_isAction && !m_isActionUpperBody)
             if (!forceNewAnim) return;
@@ -1245,32 +1246,37 @@ public class PlayerMovement : MonoBehaviour
         {
             if (m_isShielding)
             {
-                if (m_currentAnimation != Shield_Idle)
+                if (m_currentBaseLayerAnimation != Shield_Idle)
                 {
-                    SetAnimation(Shield_Idle, false, crossFadeDuration: m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeInTime);
+                    SetAnimation(Shield_Idle, crossFadeDuration: m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeInTime);
                     m_nextCrossfadeOutTime = m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeOutTime;
                 }
             }
-            else if (m_currentAnimation != Idle_1)
-                SetAnimation(Idle_1, false, crossFadeDuration);
+            else if (m_currentBaseLayerAnimation != Idle_1)
+                SetAnimation(Idle_1, m_nextCrossfadeOutTime);
         }
-        if (!m_isStandingStill && m_currentAnimation != Locomotion)
-            SetAnimation(Locomotion, false, crossFadeDuration, 0.25f);
+        if (!m_isStandingStill && m_currentBaseLayerAnimation != Locomotion)
+            SetAnimation(Locomotion, m_nextCrossfadeOutTime, 0.25f);
 
+
+
+
+        //UpperBody
         if (m_isActionUpperBody)
             return;
 
-        //UpperBody
         if (m_isShielding)
         {
-            if(m_currentUpperBodyAnimation != Shielding_UpperBody)
+            if(m_currentUpperBodyAnimation.x != Shielding_UpperBody)
             {
-                SetUpperBodyAnimation(Shielding_UpperBody, crossFadeDuration: m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeInTime); ///////// get this from a place where i save shield anims
+                SetUpperBodyAnimation(Shielding_UpperBody, (int)m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.bodyParts, crossFadeDuration: m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeInTime);
                 m_nextUpperBodyCrossfadeOutTime = m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeOutTime;
             }
         }
-        else if (m_currentUpperBodyAnimation != Empty_UpperBody)
-            SetUpperBodyAnimation(Empty_UpperBody); 
+        else if (!m_isShielding && m_currentUpperBodyAnimation.x != Empty_UpperBody)
+        {
+            SetUpperBodyAnimation(Empty_UpperBody, 0, m_nextUpperBodyCrossfadeOutTime); 
+        }
 
     }
 
@@ -1282,51 +1288,37 @@ public class PlayerMovement : MonoBehaviour
     private float m_nextCrossfadeOutTime = 0; //crossfadeOut is set by an animation and stored only for the next crossfadeOut if its not interrupted by an crossfade in of another anim
     private float m_nextUpperBodyCrossfadeOutTime = 0; //crossfadeOut is set by an animation and stored only for the next crossfadeOut if its not interrupted by an crossfade in of another anim
 
-    private void SetAnimation(int animation, bool calledByAction = false, float crossFadeDuration = -1, float timeOffset = 0)
+    private void SetAnimation(int animation, float crossFadeDuration, float timeOffset = 0)
     {
-        if (!calledByAction && m_currentAnimation == animation)
-            return;
-
-        if (crossFadeDuration < 0)
-        {
-            if (m_nextCrossfadeOutTime >= 0)
-            { 
-                crossFadeDuration = m_nextCrossfadeOutTime; 
-                m_nextCrossfadeOutTime = -1; 
-            }
-            else
-                crossFadeDuration = m_baseCrossFadeDuration;
-        }
-
         m_animator.CrossFadeInFixedTime(animation, crossFadeDuration, 0, timeOffset);
-        m_currentAnimation = animation;
+        m_currentBaseLayerAnimation = animation;
+        m_nextCrossfadeOutTime = m_baseCrossFadeDuration; 
         
     }
 
 
-    private void SetUpperBodyAnimation(int upperBodyAnimation, bool calledByAction = false, float crossFadeDuration = -1, float timeOffset = 0)
+    private void SetUpperBodyAnimation(int upperBodyAnimation,  int layer, float crossFadeDuration, float timeOffset = 0)
     {
-        if (!calledByAction && m_currentUpperBodyAnimation == upperBodyAnimation)
-            return;
+        if (layer == 0 && upperBodyAnimation != Empty_UpperBody)
+        { Debug.Log("This animationData should have a different animation layer, choose a bodypart beside wholeBody!"); return; }
 
-        if (crossFadeDuration < 0)
+        if (layer == 0 && m_currentUpperBodyAnimation.y != 0)
         {
-            if (m_nextUpperBodyCrossfadeOutTime >= 0)
-            {
-                crossFadeDuration = m_nextUpperBodyCrossfadeOutTime;
-                m_nextUpperBodyCrossfadeOutTime = -1;
-            }
-            else
-                crossFadeDuration = m_baseCrossFadeDuration;
+            m_animator.CrossFadeInFixedTime(Empty_UpperBody, crossFadeDuration, (int)m_currentUpperBodyAnimation.y, timeOffset);
+            m_currentUpperBodyAnimation = new Vector2(Empty_UpperBody, 0);
+        }
+        else if (layer != 0)
+        {
+            m_animator.CrossFadeInFixedTime(upperBodyAnimation, crossFadeDuration, layer, timeOffset);
+            if((int)m_currentUpperBodyAnimation.y != 0) m_animator.CrossFadeInFixedTime(Empty_UpperBody, m_nextUpperBodyCrossfadeOutTime, (int)m_currentUpperBodyAnimation.y, timeOffset);
+            m_currentUpperBodyAnimation = new Vector2(upperBodyAnimation, layer);
         }
 
-        m_animator.CrossFadeInFixedTime(upperBodyAnimation, crossFadeDuration, 1, timeOffset);
-        m_currentUpperBodyAnimation = upperBodyAnimation;
+        m_nextUpperBodyCrossfadeOutTime = m_baseCrossFadeDuration;
 
-        //if (upperBodyAnimation == Shielding_UpperBody) m_animator.CrossFadeInFixedTime(Shielding_TorsoStabilizing, crossFadeDuration, 2, timeOffset);
-        //else if (upperBodyAnimation == Empty_UpperBody) m_animator.CrossFadeInFixedTime(Empty_TorsoStabilizer, crossFadeDuration, 2, timeOffset);
 
     }
+
 
 
 
