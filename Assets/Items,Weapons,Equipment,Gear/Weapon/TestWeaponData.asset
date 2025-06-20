@@ -159,7 +159,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SprintHeavyAttack:
-    AnimData: {fileID: 0}
+    AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
     Dmg_Poise_EP_SEP: {x: 1.5, y: 0, z: 0, w: 0}
     PhysicalType: 0
     nextLight: 0

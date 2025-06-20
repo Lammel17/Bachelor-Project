@@ -13,11 +13,84 @@ MonoBehaviour:
   m_Name: TestSprintHeavyAttack MovementData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  moveDirPredefinition: 1
-  turningDirPredefinition: 1
   moveInfluence: 1
   turningInfluence: 1
-  turningRelations: 0
+  moveDirPredefinition: 1
+  turningDirPredefinition: 1
+  targetRelations: 1
+  turningRelations: 2
   forbidAdditinalRotation: 0
-  variableValue: []
+  variableValue:
+  - valueName: 1
+    ignore: 0
+    settings:
+      valueType: 1
+      value: 3.61
+      valueSettings:
+        startEnd: {x: 0, y: 0.48427433}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 0}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 0
+            m_PostInfinity: 0
+            m_RotationOrder: 0
+  - valueName: 3
+    ignore: 0
+    settings:
+      valueType: 0
+      value: 0
+      valueSettings:
+        startEnd: {x: 0, y: 0.48427433}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 0
+        influenceSettings:
+          startEnd: {x: 0, y: 0}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 0
+            m_PostInfinity: 0
+            m_RotationOrder: 0
+  - valueName: 4
+    ignore: 0
+    settings:
+      valueType: 1
+      value: 0.8
+      valueSettings:
+        startEnd: {x: 0, y: 0.48427433}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 0}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 0
+            m_PostInfinity: 0
+            m_RotationOrder: 0
   timeStepsForCurves: 0.05

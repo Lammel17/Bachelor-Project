@@ -15,9 +15,15 @@ MonoBehaviour:
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: f90664e0868d1dc4cbc6b121be852880, type: 2}
   AnimationMovementData: {fileID: 11400000, guid: edf7396c723d85f4391704ee6dc87743, type: 2}
+  bodyParts: 0
   crossfadeInTime: 0.2
-  crossfadeOutTime: 0.2
-  crossfadeBeginn: 0
+  crossfadeOutTime: 0.4
+  crossfadeBeginn: 0.5
   CustomInterruptability: 5
-  InterruptabilityChangeBeforeEndTime: 0
+  InterruptabilityChangeBeforeEndTime: 0.2
   ChangedInterruptability: 1
+  useLookAtData: 0
+  lookAtData:
+    m_applyAddRot: 0
+    m_addRotEuler: {x: 0, y: 0, z: 0}
+    m_forwardCorrections: []
