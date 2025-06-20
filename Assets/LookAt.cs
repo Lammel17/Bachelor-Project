@@ -85,7 +85,6 @@ public class LookAt : MonoBehaviour
 
     public void SetForward(bool active)
     {
-        return;
         if (!active)
         {
             if (!m_isActiveForwardCorrection)
@@ -168,7 +167,7 @@ public class LookAt : MonoBehaviour
             foreach (ForwardElement we in m_forwardCorrection)
             {
                 if (we.Ignore) { continue; }
-                we.originalRot = we.Element.rotation;
+                we.originalRot = Quaternion.Inverse(transform.rotation) * we.Element.rotation;
             }
 
             foreach (ForwardElement we in m_forwardCorrection)
@@ -176,7 +175,7 @@ public class LookAt : MonoBehaviour
                 if (we.Ignore) { continue; }
 
                 float applyance = 0;
-                Quaternion usedRot = m_applyAddRot ? Quaternion.Euler(m_addRotEuler.x, m_addRotEuler.y, m_addRotEuler.z) * Quaternion.LookRotation(transform.forward) : Quaternion.LookRotation(transform.forward);
+                Quaternion usedRot = m_applyAddRot ? Quaternion.Euler(m_addRotEuler.x, m_addRotEuler.y, m_addRotEuler.z) : Quaternion.identity;
 
                 if (m_isDeactivatingForward) // when deactivating
                 {
@@ -208,7 +207,7 @@ public class LookAt : MonoBehaviour
                 }
 
                 Quaternion weightedRot = Quaternion.Slerp(we.IsUsingOrigRot ? we.originalRot : we.Element.rotation, usedRot, we.Weight); //weight is not changed in runtime
-                Quaternion rot = Quaternion.Slerp(we.Element.rotation, weightedRot, applyance); //applyance is if targeting switches on or off
+                Quaternion rot = Quaternion.Slerp(we.Element.rotation, transform.rotation * weightedRot, applyance); //applyance is if targeting switches on or off
                 we.Element.rotation = rot;
 
 

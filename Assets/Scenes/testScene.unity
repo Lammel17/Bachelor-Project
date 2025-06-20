@@ -2113,7 +2113,7 @@ MonoBehaviour:
     ConstrainsAngleYAxis: {x: -90, y: 90}
     Ignore: 0
   m_applyAddRot: 1
-  m_addRotEuler: {x: 0, y: 19, z: -1.8}
+  m_addRotEuler: {x: 0, y: 19, z: 0}
   m_forwardCorrection:
   - Element: {fileID: 422825814}
     IsUsingOrigRot: 1
