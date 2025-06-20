@@ -22,3 +22,18 @@ MonoBehaviour:
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0
   ChangedInterruptability: 1
+  useLookAtData: 1
+  lookAtData:
+    m_applyAddRot: 0
+    m_addRotEuler: {x: 0, y: 0, z: 0}
+    m_forwardCorrections:
+    - Element: 2
+      IsUsingOrigRot: 1
+      Weight: 1
+      IgnoreAxis: 4
+      Ignore: 0
+    - Element: 6
+      IsUsingOrigRot: 1
+      Weight: 1
+      IgnoreAxis: 0
+      Ignore: 0

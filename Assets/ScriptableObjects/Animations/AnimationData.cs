@@ -23,7 +23,11 @@ public class AnimationData : ScriptableObject
     [Tooltip("If 0, its ignored")]
     public float InterruptabilityChangeBeforeEndTime = 0;
     public AnimationInterruptableType ChangedInterruptability = AnimationInterruptableType.Easily_Interruptable;
-
+    [Space]
+    [Space]
+    [Header("CorrectSpineRotations")]
+    public bool useLookAtData = false;
+    public LookAtForwardData lookAtData;
 
     //[Header("Invincibility")]
     //public Invincibility invincibilitySettings;

@@ -136,7 +136,7 @@ public class PlayerMovement : MonoBehaviour
         set 
         { 
             if          (value == 0)        { m_speed = 0;                  m_turningStrenght = m_turningStrenghtBaseValues.x; }
-            else if     (m_isHoldRunning)   { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
+            else if     (m_isRunning)   { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
             else if     (value == 0.5f)     { m_speed = m_speedValues.x;    m_turningStrenght = m_turningStrenghtBaseValues.x; }
             else /*if   (value == 1) */     { m_speed = m_speedValues.y;    m_turningStrenght = m_turningStrenghtBaseValues.y; }
         } 
@@ -152,9 +152,25 @@ public class PlayerMovement : MonoBehaviour
     { 
         get { if (m_target == null) { Debug.Log("No target, so no Direction to Target"); return transform.forward; }; return new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z).normalized; } 
     }
-    public bool IsHoldRunning { get => m_isHoldRunning; set { m_isHoldRunning = value; Speed = m_inputStrenght; } }
+    public bool IsHoldRunning { get => m_isHoldRunning; set { m_isHoldRunning = value; } }
+    public bool IsRunning
+    {
+        get => m_isRunning;
+        set 
+        {
+            if (value == m_isRunning) 
+                return;
+
+            m_isRunning = value;
+            if (m_isRunning) { SetNextPossibleAttacks(currentAction: Running); SetLookAtTarget(null); }
+            else if (!m_isRunning && !m_isAction) { SetNextPossibleAttacks(currentAction: Reset); } 
+            if (!m_isRunning && !m_isAction && m_target != null) { SetLookAtTarget(m_target); }
+
+            Speed = m_inputStrenght;
+        } 
+    }
     public bool IsHoldShielding { get => m_isHoldShielding; set { m_isHoldShielding = value; } }
-    public bool IsShielding { get => m_isShielding; set { m_isShielding = value; SetLookAtForward(m_isShielding); } }
+    public bool IsShielding { get => m_isShielding; set { m_isShielding = value; SetLookAtForward(m_isShielding, m_isShielding ? m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData : null); } }
     public Vector3 PreviousMove { get => m_prevMove; }
 
     public AnimationInterruptableType CurrentInteruptability { get => m_currentInteruptability;  }
@@ -236,13 +252,8 @@ public class PlayerMovement : MonoBehaviour
         m_isStandingStill = ((m_isWalkingLocked == false && m_inputStrenght == 0) || m_isWalkingLocked == true);
 
         //Running
-        if (m_isRunning != (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked))
-        {
-            m_isRunning = !m_isRunning;
-            if (m_isRunning)        { SetNextPossibleAttacks(currentAction: Running); SetLookAtTarget(null); }
-            else if (!m_isAction)   { SetNextPossibleAttacks(currentAction: Reset); SetLookAtTarget(m_target); }
-        }
-        
+        IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked);
+
         //FreelyMoving
         bool prevFreelyMoving = m_isFreelyMoving;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
@@ -497,6 +508,7 @@ public class PlayerMovement : MonoBehaviour
     private void InitAction(int animationHash, AnimationData animData)
     {
         m_isAction = true;
+        IsRunning = false;
 
         if (!m_isTurning) //stop upperbody animations
         {
@@ -535,7 +547,10 @@ public class PlayerMovement : MonoBehaviour
     {
         m_isAction = true;
         m_isActionUpperBody = true;
+        IsRunning = false;
         IsShielding = false;
+        if (animData.useLookAtData)
+            SetLookAtForward(true, animData.lookAtData);
 
         //SetLookAtTarget(null); //????? Depends on animation and if AddTurning
 
@@ -543,6 +558,7 @@ public class PlayerMovement : MonoBehaviour
         m_nextUpperBodyCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
 
         SetValues(); //needed, because what if it jumps from one action directly into another
+
 
         float animationDuration = animData.animationClip.length;
 
@@ -665,10 +681,13 @@ public class PlayerMovement : MonoBehaviour
         if (m_lookAtScript != null)
             m_lookAtScript.SetTarget(transform);
     }
-    private void SetLookAtForward(bool active)
+    private void SetLookAtForward(bool active, LookAtForwardData forwardData = null)
     {
-        if (m_lookAtScript != null)
-            m_lookAtScript.SetForward(active);
+        if (m_lookAtScript == null)
+            return;
+            
+        if (active) m_lookAtScript.SetForwardActive(forwardData);
+        else m_lookAtScript.SetForwardDeactive();
 
     }
     private Quaternion AdditionalFacingRotation()
@@ -987,13 +1006,6 @@ public class PlayerMovement : MonoBehaviour
             switch (name)
             {
                 case ProcessedAnimationMovementData.ValueName.Move_Direction_Angle:                     
-                    //if (processedData.turningRelations == 1 /*TurningDirFollowsMoveDir*/) 
-                    //{ //the facingdirBaseValue must be updated, and then the turning also needs to be recalculated
-                    //    m_desiredFacingRotationDirInWSByActionBaseValue = m_directionByAction; 
-
-                    //    Quaternion presumableTurningValueOffsetData = Quaternion.FromToRotation(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction);
-                    //    m_desiredFacingRotationDirInWSByAction = presumableTurningValueOffsetData * m_desiredFacingRotationDirInWSByActionBaseValue;
-                    //}
                     m_directionByAction = Quaternion.Euler(0, newValue, 0) * m_directionByActionBaseValue;
                     break;
                 case ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle:         m_actionInfluenceOverMoveDirection                      = newValue; break;
@@ -1003,14 +1015,6 @@ public class PlayerMovement : MonoBehaviour
                 case ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Acceleration:            m_actionInfluenceOverMoveAcceleration                   = newValue; break;
                 
                 case ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle:
-                    //Debug.Log(processedData.turningRelations);
-                    //if (processedData.turningRelations == 2 /*MoveDirFollowsTurningDir*/)
-                    //{ //the movedirBase value must be updated and then applied
-                    //    Debug.Log("EEEEEEEEEEEEEEEEEEEEEEEEEE");
-                    //    m_directionByActionBaseValue = m_desiredFacingRotationDirInWSByAction;
-                    //    Quaternion presumableMoveDirValueOffsetData = Quaternion.FromToRotation(m_directionByActionBaseValue, m_directionByAction);
-                    //    m_directionByAction = presumableMoveDirValueOffsetData * m_directionByActionBaseValue;
-                    //}
                     m_desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, newValue, 0) * m_desiredFacingRotationDirInWSByActionBaseValue;
                     break; 
                 case ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle:      m_actionInfluenceOverDesiredFacingRotationDirInWS       = newValue; break;
@@ -1072,9 +1076,9 @@ public class PlayerMovement : MonoBehaviour
 
 
         //End of Action
-        bool isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isWalkingLocked;
-        if (isRunning) SetNextPossibleAttacks(currentAction: Running);
-        else SetNextPossibleAttacks(currentAction: Reset);
+        //bool isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isWalkingLocked;
+        //if (isRunning) SetNextPossibleAttacks(currentAction: Running);
+        SetNextPossibleAttacks(currentAction: Reset);
 
         EndActionReset();
 
@@ -1098,9 +1102,11 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
         m_isAction = false;
         m_isActionUpperBody = false;
-        m_isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked;
+        //IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked);  //this is funny, many stab attacks haha
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         m_isTurning = false;
+
+        SetLookAtForward(false);
         if (m_isHoldShielding) IsShielding = true;
 
         //End Coroutines
@@ -1119,7 +1125,6 @@ public class PlayerMovement : MonoBehaviour
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
         if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
         m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
-        if (m_isLockOn && !m_isRunning) SetLookAtTarget(m_target);
 
         m_playerInputManager.RecallLatestBufferedInput();
     }

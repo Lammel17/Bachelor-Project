@@ -2097,8 +2097,8 @@ MonoBehaviour:
   m_isActive: 1
   m_isActiveTarget: 0
   m_isActiveForwardCorrection: 0
-  offset: 0
   m_applyRemoveSpeed: 15
+  offset: 0
   m_targetLookAt:
   - Element: {fileID: 422825816}
     Weight: 0.203
@@ -2112,19 +2112,21 @@ MonoBehaviour:
     Weight: 1
     ConstrainsAngleYAxis: {x: -90, y: 90}
     Ignore: 0
-  m_applyAddRot: 1
-  m_addRotEuler: {x: 0, y: 19, z: 0}
-  m_forwardCorrection:
-  - Element: {fileID: 422825814}
-    IsUsingOrigRot: 1
-    Weight: 0.829
-    IgnoreAxis: 1
-    Ignore: 0
-  - Element: {fileID: 422825807}
-    IsUsingOrigRot: 1
-    Weight: 0
-    IgnoreAxis: 0
-    Ignore: 0
+  m_bones:
+  - Bone: 0
+    BoneRef: {fileID: 422825817}
+  - Bone: 1
+    BoneRef: {fileID: 422825816}
+  - Bone: 2
+    BoneRef: {fileID: 422825815}
+  - Bone: 3
+    BoneRef: {fileID: 422825814}
+  - Bone: 4
+    BoneRef: {fileID: 422825809}
+  - Bone: 5
+    BoneRef: {fileID: 422825808}
+  - Bone: 6
+    BoneRef: {fileID: 422825807}
 --- !u!1 &2016108117
 GameObject:
   m_ObjectHideFlags: 0

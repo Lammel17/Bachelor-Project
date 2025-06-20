@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class LookAt : MonoBehaviour
@@ -9,18 +10,34 @@ public class LookAt : MonoBehaviour
     //[SerializeField] private WeightedElement[] m_weightedElement;
 
     [SerializeField] private bool m_isActive = true;
+    [Space]
     [SerializeField] private bool m_isActiveTarget = false;
     [SerializeField] private bool m_isActiveForwardCorrection = false;
-    [SerializeField] [Range(-180, 180)] private float offset = 0;
+    [Space]
     [SerializeField] private float m_applyRemoveSpeed = 1;
 
+    [Header("/////////////////////////////////////////////////////////////////")]
 
     [Header("Order: from Root to ends")]
+    [SerializeField] [Range(-180, 180)] private float offset = 0;
     [SerializeField] private LookAtElement[] m_targetLookAt;
     [Space]
-    [SerializeField] private bool m_applyAddRot = true;
-    [SerializeField] private Vector3 m_addRotEuler = Vector3.zero; //////////////////// later add this to the shield and take it from there
-    [SerializeField] private ForwardElement[] m_forwardCorrection;
+    [Header("/////////////////////////////////////////////////////////////////")]
+    [Header("Order: from Root to ends")]
+    [SerializeField] private Bones[] m_bones;
+    private LookAtForwardData m_forwardData;
+    //private bool m_applyAddRot = true;
+    //private Vector3 m_addRotEuler = Vector3.zero; //////////////////// later add this to the shield and take it from there
+    //private ForwardElement[] m_forwardCorrection;
+
+
+
+    [System.Serializable]
+    public class Bones
+    {
+        public LookAtForwardData.SpineParts Bone;
+        public Transform BoneRef;
+    }
 
     [System.Serializable]
     public class LookAtElement 
@@ -35,19 +52,19 @@ public class LookAt : MonoBehaviour
         [NonSerialized] public Quaternion LastRot = Quaternion.identity;
     }
 
-    [System.Serializable]
-    public class ForwardElement
-    {
-        public Transform Element;
-        [Tooltip("This has no effect on the first element in list")]
-        public bool IsUsingOrigRot = true;
-        [Range(0, 1)] public float Weight = 0;
-        public IgnoreAxis IgnoreAxis = IgnoreAxis.None;
-        public bool Ignore = false;
-        [NonSerialized] public float LastApplyance = 0;
-        [NonSerialized] public Quaternion originalRot = Quaternion.identity;
+    //[System.Serializable]
+    //public class ForwardElement
+    //{
+    //    public Transform Element;
+    //    [Tooltip("This has no effect on the first element in list")]
+    //    public bool IsUsingOrigRot = true;
+    //    [Range(0, 1)] public float Weight = 0;
+    //    public IgnoreAxis IgnoreAxis = IgnoreAxis.None;
+    //    public bool Ignore = false;
+    //    [NonSerialized] public float LastApplyance = 0;
+    //    [NonSerialized] public Quaternion originalRot = Quaternion.identity;
 
-    }
+    //}
 
     public enum IgnoreAxis
     {
@@ -83,18 +100,28 @@ public class LookAt : MonoBehaviour
     }
 
 
-    public void SetForward(bool active)
+    public void SetForwardActive(LookAtForwardData data)
     {
-        if (!active)
-        {
-            if (!m_isActiveForwardCorrection)
-                return;
-            m_isDeactivatingForward = true;
+        if (data == null)
             return;
+
+        foreach (LookAtForwardData.ForwardElement we in data.m_forwardCorrections)
+        {
+            if (we.bone == null)
+                we.bone = m_bones[(int)we.Element].BoneRef;
         }
+
+        m_forwardData = data;
 
         m_isDeactivatingForward = false;
         m_isActiveForwardCorrection = true;
+    }
+    public void SetForwardDeactive()
+    {
+        if (!m_isActiveForwardCorrection)
+            return;
+        m_isDeactivatingForward = true;
+        return;
     }
 
 
@@ -164,18 +191,18 @@ public class LookAt : MonoBehaviour
 
         if (m_isActiveForwardCorrection)
         {
-            foreach (ForwardElement we in m_forwardCorrection)
+            foreach (LookAtForwardData.ForwardElement we in m_forwardData.m_forwardCorrections)
             {
                 if (we.Ignore) { continue; }
-                we.originalRot = Quaternion.Inverse(transform.rotation) * we.Element.rotation;
+                we.originalRot = Quaternion.Inverse(transform.rotation) * we.bone.rotation;
             }
 
-            foreach (ForwardElement we in m_forwardCorrection)
+            foreach (LookAtForwardData.ForwardElement we in m_forwardData.m_forwardCorrections)
             {
                 if (we.Ignore) { continue; }
 
                 float applyance = 0;
-                Quaternion usedRot = m_applyAddRot ? Quaternion.Euler(m_addRotEuler.x, m_addRotEuler.y, m_addRotEuler.z) : Quaternion.identity;
+                Quaternion usedRot = m_forwardData.m_applyAddRot ? Quaternion.Euler(m_forwardData.m_addRotEuler.x, m_forwardData.m_addRotEuler.y, m_forwardData.m_addRotEuler.z) : Quaternion.identity;
 
                 if (m_isDeactivatingForward) // when deactivating
                 {
@@ -206,9 +233,11 @@ public class LookAt : MonoBehaviour
                     case IgnoreAxis.IgnoreYZ: { usedRot = Quaternion.Euler(usedRot.eulerAngles.x, we.originalRot.eulerAngles.y, we.originalRot.eulerAngles.z); break; }
                 }
 
-                Quaternion weightedRot = Quaternion.Slerp(we.IsUsingOrigRot ? we.originalRot : we.Element.rotation, usedRot, we.Weight); //weight is not changed in runtime
-                Quaternion rot = Quaternion.Slerp(we.Element.rotation, transform.rotation * weightedRot, applyance); //applyance is if targeting switches on or off
-                we.Element.rotation = rot;
+                if (m_isActiveTarget && !m_isDeactivatingLookAt) usedRot = Quaternion.Euler(usedRot.eulerAngles.x, we.originalRot.eulerAngles.y, usedRot.eulerAngles.z);
+
+                Quaternion weightedRot = Quaternion.Slerp(we.IsUsingOrigRot ? we.originalRot : we.bone.rotation, usedRot, we.Weight); //weight is not changed in runtime
+                Quaternion rot = Quaternion.Slerp(we.bone.rotation, transform.rotation * weightedRot, applyance); //applyance is if targeting switches on or off
+                we.bone.rotation = rot;
 
 
             }
