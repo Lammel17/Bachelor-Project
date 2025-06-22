@@ -111,7 +111,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SpecialLightAttack1:
-    AnimData: {fileID: 0}
+    AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
     Dmg_Poise_EP_SEP: {x: 1, y: 0, z: 0, w: 0}
     PhysicalType: 0
     nextLight: 1
@@ -162,7 +162,7 @@ MonoBehaviour:
     AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
     Dmg_Poise_EP_SEP: {x: 1.5, y: 0, z: 0, w: 0}
     PhysicalType: 0
-    nextLight: 0
+    nextLight: 1
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
@@ -170,12 +170,12 @@ MonoBehaviour:
     AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
     Dmg_Poise_EP_SEP: {x: 1.5, y: 0, z: 0, w: 0}
     PhysicalType: 0
-    nextLight: 0
+    nextLight: 1
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SpecialHeavyAttack1:
-    AnimData: {fileID: 0}
+    AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
     Dmg_Poise_EP_SEP: {x: 1.5, y: 0, z: 0, w: 0}
     PhysicalType: 0
     nextLight: 0

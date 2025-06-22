@@ -18,8 +18,10 @@ public class PlayerInputManager : MonoBehaviour
 
     private Vector2 m_leftStick = new Vector2();
     private Vector2 m_rightStick = new Vector2();
+    private bool m_isNorth = false;
 
-    /*[SerializeField] */private float m_inputBufferTime = 0.5f;
+    /*[SerializeField] */
+    private float m_inputBufferTime = 0.5f;
 
     private InputAction.CallbackContext m_lastBuffedInput = new();
     private Coroutine c_inputBufferCoroutine;
@@ -40,9 +42,10 @@ public class PlayerInputManager : MonoBehaviour
     private InputAction L2ActionRef;
 
     private InputAction SouthActionRef;
-    private InputAction EastActionRef;
+    private InputAction EastTapActionRef;
     private InputAction EastHoldActionRef;
     private InputAction WestActionRef;
+    private InputAction NorthTapActionRef;
     private InputAction NorthActionRef;
 
     private InputAction DownActionRef;
@@ -78,9 +81,10 @@ public class PlayerInputManager : MonoBehaviour
         L2ActionRef             = playerActionMap.FindAction("L2");
         R2ActionRef             = playerActionMap.FindAction("R2");
         SouthActionRef          = playerActionMap.FindAction("South");
-        EastActionRef           = playerActionMap.FindAction("East");
+        EastTapActionRef           = playerActionMap.FindAction("EastTap");
         EastHoldActionRef           = playerActionMap.FindAction("EastHold");
         WestActionRef           = playerActionMap.FindAction("West");
+        NorthTapActionRef          = playerActionMap.FindAction("NorthTap");
         NorthActionRef          = playerActionMap.FindAction("North");
         DownActionRef           = playerActionMap.FindAction("Down");
         RightActionRef          = playerActionMap.FindAction("Right");
@@ -111,21 +115,31 @@ public class PlayerInputManager : MonoBehaviour
         {
             LeftStickActionRef.Enable();
             RightStickActionRef.Enable();
+
             L3ActionRef.Enable();
             R3ActionRef.Enable();
+
             L1ActionRef.Enable();
             R1ActionRef.Enable();
+
             L2ActionRef.Enable();
             R2ActionRef.Enable();
+
             SouthActionRef.Enable();
-            EastActionRef.Enable();
-                EastHoldActionRef.Enable();
+
+            EastTapActionRef.Enable();
+            EastHoldActionRef.Enable();
+
             WestActionRef.Enable();
+
+            NorthTapActionRef.Enable();
             NorthActionRef.Enable();
+
             DownActionRef.Enable();
             RightActionRef.Enable();
             LeftActionRef.Enable();
             UpActionRef.Enable();
+
             Options1ActionRef.Enable();
             Options2ActionRef.Enable();
         }
@@ -133,21 +147,31 @@ public class PlayerInputManager : MonoBehaviour
         {
             LeftStickActionRef.Disable();
             RightStickActionRef.Disable();
+
             L3ActionRef.Disable();
             R3ActionRef.Disable();
+
             L1ActionRef.Disable();
             R1ActionRef.Disable();
+
             L2ActionRef.Disable();
             R2ActionRef.Disable();
+
             SouthActionRef.Disable();
-            EastActionRef.Disable();
-                EastHoldActionRef.Disable();
+
+            EastTapActionRef.Disable();
+            EastHoldActionRef.Disable();
+
             WestActionRef.Disable();
+               
+            NorthTapActionRef.Disable();
             NorthActionRef.Disable();
+
             DownActionRef.Disable();
             RightActionRef.Disable();
             LeftActionRef.Disable();
             UpActionRef.Disable();
+
             Options1ActionRef.Disable();
             Options2ActionRef.Disable();
         }
@@ -164,21 +188,31 @@ public class PlayerInputManager : MonoBehaviour
 
         L3ActionRef.performed           += OnL3;
         R3ActionRef.performed           += OnR3;
+
         L1ActionRef.performed           += OnL1;
-        L1ActionRef.canceled              += OnL1;
+        L1ActionRef.canceled            += OnL1;
         R1ActionRef.performed           += OnR1;
+
         L2ActionRef.performed           += OnL2;
         R2ActionRef.performed           += OnR2;
+
         SouthActionRef.performed        += OnSouth;
-        EastActionRef.performed         += OnEast;
-        EastHoldActionRef.performed       += OnEastHold;
-        EastHoldActionRef.canceled        += OnEastHold;
+
+        EastTapActionRef.performed      += OnEastTap;
+        EastHoldActionRef.performed     += OnEastHold;
+        EastHoldActionRef.canceled      += OnEastHold;
+
         WestActionRef.performed         += OnWest;
+
+        NorthTapActionRef.performed     += OnNorthTap;
         NorthActionRef.performed        += OnNorth;
+        NorthActionRef.canceled         += OnNorth;
+
         DownActionRef.performed         += OnDown;
         RightActionRef.performed        += OnRight;
         LeftActionRef.performed         += OnLeft;
         UpActionRef.performed           += OnUp;
+
         Options1ActionRef.performed     += OnOption1;
         Options2ActionRef.performed     += OnOption2;
 
@@ -193,24 +227,37 @@ public class PlayerInputManager : MonoBehaviour
     private void OnDisable()
     {
         LeftStickActionRef.performed    -= OnLeftStick;
+        LeftStickActionRef.canceled     -= OnLeftStick;
         RightStickActionRef.performed   -= OnRightStick;
+        RightStickActionRef.canceled    -= OnRightStick;
+
         L3ActionRef.performed           -= OnL3;
         R3ActionRef.performed           -= OnR3;
+
         L1ActionRef.performed           -= OnL1;
-        L1ActionRef.canceled              -= OnL1;
+        L1ActionRef.canceled            -= OnL1;
         R1ActionRef.performed           -= OnR1;
+
         L2ActionRef.performed           -= OnL2;
         R2ActionRef.performed           -= OnR2;
+
         SouthActionRef.performed        -= OnSouth;
-        EastActionRef.performed         -= OnEast;
-        EastHoldActionRef.performed        -= OnEastHold;
-        EastHoldActionRef.canceled         -= OnEastHold;
+
+        EastTapActionRef.performed      -= OnEastTap;
+        EastHoldActionRef.performed     -= OnEastHold;
+        EastHoldActionRef.canceled      -= OnEastHold;
+
         WestActionRef.performed         -= OnWest;
+
+        NorthTapActionRef.performed     -= OnNorthTap;
         NorthActionRef.performed        -= OnNorth;
+        NorthActionRef.canceled         -= OnNorth;
+
         DownActionRef.performed         -= OnDown;
         RightActionRef.performed        -= OnRight;
         LeftActionRef.performed         -= OnLeft;
         UpActionRef.performed           -= OnUp;
+
         Options1ActionRef.performed     -= OnOption1;
         Options2ActionRef.performed     -= OnOption2;
 
@@ -250,7 +297,7 @@ public class PlayerInputManager : MonoBehaviour
                 OnSouth(m_lastBuffedInput);
                 break;
             case "East":
-                OnEast(m_lastBuffedInput);
+                OnEastTap(m_lastBuffedInput);
                 break;
             case "West":
                 OnWest(m_lastBuffedInput);
@@ -432,7 +479,10 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context, priority))
             return;
 
-        m_thePlayerMovement.TriggerLightAttack();
+        if (!m_isNorth)
+            m_thePlayerMovement.TriggerLightAttack();
+        else
+            m_thePlayerMovement.TriggerSpecialLightAttack();
 
     }
 
@@ -455,7 +505,10 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context, priority))
             return;
 
-        m_thePlayerMovement.TriggerHeavyAttack();
+        if (!m_isNorth)
+            m_thePlayerMovement.TriggerHeavyAttack();
+        else
+            m_thePlayerMovement.TriggerSpecialHeavyAttack();
 
         //if (context.performed)
         //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R2");
@@ -476,7 +529,7 @@ public class PlayerInputManager : MonoBehaviour
         //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA South");
     }
 
-    private void OnEast(InputAction.CallbackContext context)
+    private void OnEastTap(InputAction.CallbackContext context)
     {
         int priority = 3;
 
@@ -516,10 +569,23 @@ public class PlayerInputManager : MonoBehaviour
         //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA West");
     }
 
+
+    private void OnNorthTap(InputAction.CallbackContext context)
+    {
+            //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA North TAP");
+
+    }
     private void OnNorth(InputAction.CallbackContext context)
     {
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA North");
+        if (context.performed)
+        {
+            m_isNorth = true; 
+        }
+
+        if (context.canceled)
+        {
+            m_isNorth = false;
+        }
     }
 
 

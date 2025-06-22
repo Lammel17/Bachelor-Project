@@ -87,7 +87,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "East",
+                    "name": "EastTap",
                     "type": "Button",
                     "id": "6180e4ae-58a4-4e85-8a00-0443d9bd4ac8",
                     "expectedControlType": "",
@@ -108,6 +108,15 @@
                     "name": "West",
                     "type": "Button",
                     "id": "b67d6db7-bb02-4ff7-9c8c-001faafe3e60",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "NorthTap",
+                    "type": "Button",
+                    "id": "edf7d6a7-4c01-46a7-bf60-5baa3ad48831",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -284,7 +293,7 @@
                     "interactions": "Tap",
                     "processors": "",
                     "groups": "",
-                    "action": "East",
+                    "action": "EastTap",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -318,6 +327,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "North",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "17084473-99e0-4445-99a2-3d03641d6767",
+                    "path": "<Gamepad>/buttonNorth",
+                    "interactions": "Tap",
+                    "processors": "",
+                    "groups": "",
+                    "action": "NorthTap",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

@@ -172,7 +172,6 @@ public class PlayerMovement : MonoBehaviour
     public bool IsHoldShielding { get => m_isHoldShielding; set { m_isHoldShielding = value; } }
     public bool IsShielding { get => m_isShielding; set { m_isShielding = value; SetLookAtForward(m_isShielding, m_isShielding ? m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData : null); } }
     public Vector3 PreviousMove { get => m_prevMove; }
-
     public AnimationInterruptableType CurrentInteruptability { get => m_currentInteruptability;  }
 
 
@@ -421,6 +420,31 @@ public class PlayerMovement : MonoBehaviour
         InitAction(thisAttack.AttackHash, thisAttack.AnimData);
     }
 
+    public void TriggerSpecialLightAttack()
+    {
+        if (m_isActionLocked) return;
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
+
+        WeaponData.WeaponAttack thisAttack = m_nextPossibleWeaponActions.specialLight;
+        if (thisAttack == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
+        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
+
+        AnimationInterruptableType specialLightAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
+        if ((int)m_currentInteruptability >= (int)specialLightAttackInterruptability) return;
+
+        ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
+
+        if (m_ActionCoroutine != null)
+            EndActionReset();
+
+        SetNextPossibleAttacks(thisAttack);
+
+        m_currentInteruptability = specialLightAttackInterruptability;
+        //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
+
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData);
+    }
+
     public void TriggerHeavyAttack()
     {
         if (m_isActionLocked) return;
@@ -441,6 +465,31 @@ public class PlayerMovement : MonoBehaviour
         SetNextPossibleAttacks(thisAttack);
 
         m_currentInteruptability = heavyAttackInterruptability;
+        //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
+
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData);
+
+    }
+    public void TriggerSpecialHeavyAttack()
+    {
+        if (m_isActionLocked) return;
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
+
+        WeaponData.WeaponAttack thisAttack = m_nextPossibleWeaponActions.specialHeavy;
+        if (thisAttack == null) { Debug.Log("MISSING ATTACK DATA of a Heavy Attack"); return; }
+        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Heavy Attack"); return; }
+
+        AnimationInterruptableType specialHeavyAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
+        if ((int)m_currentInteruptability >= (int)specialHeavyAttackInterruptability) return;
+
+        ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
+
+        if (m_ActionCoroutine != null)
+            EndActionReset();
+
+        SetNextPossibleAttacks(thisAttack);
+
+        m_currentInteruptability = specialHeavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
         InitAction(thisAttack.AttackHash, thisAttack.AnimData);
@@ -516,7 +565,6 @@ public class PlayerMovement : MonoBehaviour
             SetUpperBodyAnimation(Empty_UpperBody, 0, crossFadeDuration: 0.1f);
         }
 
-
         SetLookAtTarget(null);
 
         SetAnimation(animationHash, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
@@ -558,7 +606,6 @@ public class PlayerMovement : MonoBehaviour
         m_nextUpperBodyCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
 
         SetValues(); //needed, because what if it jumps from one action directly into another
-
 
         float animationDuration = animData.animationClip.length;
 
@@ -607,6 +654,7 @@ public class PlayerMovement : MonoBehaviour
                 case WeaponData.LightAttack.Sprint_Light_Attack: if (m_characterMovesetData.weapon.SprintLightAttack.AnimData != null) return m_characterMovesetData.weapon.SprintLightAttack; break;
                 case WeaponData.LightAttack.Evade_Light_Attack: if (m_characterMovesetData.weapon.EvadeLightAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeLightAttack; break;
             }
+            Debug.Log("Warning: Next Possible Light Attack in line has no AnimationData, so the next will be the first one again");
             return m_characterMovesetData.weapon.LightAttack1;
         }
         WeaponData.WeaponAttack GetNextAttackHeavy(WeaponData.HeavyAttack heavy)
@@ -620,6 +668,7 @@ public class PlayerMovement : MonoBehaviour
                 case WeaponData.HeavyAttack.Sprint_Heavy_Attack: if (m_characterMovesetData.weapon.SprintHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.SprintHeavyAttack; break;
                 case WeaponData.HeavyAttack.Evade_Heavy_Attack: if (m_characterMovesetData.weapon.EvadeHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeHeavyAttack; break;
             }
+            Debug.Log("Warning: Next Possible Heavy Attack in line has no AnimationData, so the next will be the first one again");
             return m_characterMovesetData.weapon.HeavyAttack1;
         }
         WeaponData.WeaponAttack GetNextAttackSpecialLight(WeaponData.LightAttackSpecial specialLight)
@@ -629,6 +678,7 @@ public class PlayerMovement : MonoBehaviour
                 case WeaponData.LightAttackSpecial.Special_Light_Attack_1: if (m_characterMovesetData.weapon.SpecialLightAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack1; break;
                 case WeaponData.LightAttackSpecial.Special_Light_Attack_2: if (m_characterMovesetData.weapon.SpecialLightAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack2; break;
             }
+            Debug.Log("Warning: Next Possible Special Light Attack in line has no AnimationData, so the next will be the first one again");
             return m_characterMovesetData.weapon.SpecialLightAttack1;
         }
         WeaponData.WeaponAttack GetNextAttackSpecialHeavy(WeaponData.HeavyAttackSpecial specialHeavy)
@@ -638,6 +688,7 @@ public class PlayerMovement : MonoBehaviour
                 case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_1: if (m_characterMovesetData.weapon.SpecialHeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack1; break;
                 case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_2: if (m_characterMovesetData.weapon.SpecialHeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack2; break;
             }
+            Debug.Log("Warning: Next Possible Special Heavy Attack in line has no AnimationData, so the next will be the first one again");
             return m_characterMovesetData.weapon.SpecialHeavyAttack1;
         }
 
