@@ -7,50 +7,71 @@ public class ShieldData : ScriptableObject
 {
     public string Description = "";
 
-    public ShieldAction shieldIdle;
-    public ShieldAction shieldingUpperBody;
+    public DamageTableData DamageNegationTable;
 
-    public ShieldAction ShiledSpecial1;
-    public ShieldAction ShiledSpecial2;
-    public ShieldAction ShiledSpecial3;
-    public ShieldAction ShiledSpecial4;
 
-    public ShieldAction ShiledAlmostStanceBreak;
-    public ShieldAction ShiledStanceBreak;
+    [Header("Shielding")]
+    public SimpleShieldAction shieldIdle;
+    public SimpleShieldAction shieldingUpperBody;
+    public ShieldAction m_STILL_UNKNOWN; //????????????????
+    public SimpleShieldAction ShiledAlmostStanceBreak;
+    public SimpleShieldAction ShiledStanceBreak;
 
+    [Header("ShieldActions")]
+    public DamageTableData DamageTable;
+    [Space]
+    public ShieldAction ShiledSpecial1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_1"));
+    public ShieldAction ShiledSpecial2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_1"));
+
+    public ShieldAction ShiledSpecial3 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_1"));
+    public ShieldAction ShiledSpecial4 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_1"));
+
+
+
+
+    public enum ShieldSpecialLight
+    {
+        Special_Shield_Attack_1,
+        Special_Shield_Attack_2,
+        end
+    }
+    public enum ShieldSpecialHeavy
+    {
+        Special_Shield_Attack_3,
+        Special_Shield_Attack_4,
+        end
+    }
 
 
 
     [System.Serializable]
+    public class SimpleShieldAction
+    {
+        public AnimationData AnimData;
+    }
+
+
+        [System.Serializable]
     public class ShieldAction
     {
         public AnimationData AnimData;
-        //[NonSerialized] public int ActionkHash;
 
-        ////[ToggleGroup("settings", nameof(DamageEnergyPoise), nameof(PhysicalType), nameof(nextLight), nameof(nextHeavy), nameof(nextSpecialLight), nameof(nextSpecialHeavy))]
-        ////[SerializeField] private Void groupHolder;
-        //public Vector3 DamageEnergyPoise = new Vector3(1, 0, 0);
-        ////public float DamageFactor = 1;
-        ////public float EnergyConsumption;
-        ////public float PoiseDamage;
-        //public PhysicalDamageType PhysicalType;
-        //[Space]
-        //public LightAttack nextLight;
-        //public HeavyAttack nextHeavy;
-        //public LightAttackSpecial nextSpecialLight;
-        //public HeavyAttackSpecial nextSpecialHeavy;
+        [NonSerialized] public int ActionkHash;
+        public ActionDamageData DamageData = new ActionDamageData(1, 1, 1, 1);
+        public float EnergyCost = 20;
+        public float SpecialEnergyCost = 0;
+        public ShieldSpecialLight nextSpecialLight;
+        public ShieldSpecialHeavy nextSpecialHeavy;
 
-        //public ShieldMove(float damage, float energyCost, float poiseDamage, PhysicalDamageType type, LightAttack la, HeavyAttack ha, LightAttackSpecial las, HeavyAttackSpecial has, int name)
-        //{
-        //    DamageEnergyPoise = new Vector3(damage, energyCost, poiseDamage);
-        //    PhysicalType = type;
-        //    nextLight = la;
-        //    nextHeavy = ha;
-        //    nextSpecialLight = las;
-        //    nextSpecialHeavy = has;
-        //    AttackHash = name;
-        //}
 
+        public ShieldAction(ShieldSpecialLight ssl, ShieldSpecialHeavy ssh, int hash)
+        {
+            nextSpecialLight = ssl;
+            nextSpecialHeavy = ssh;
+
+            ActionkHash = hash;
+
+        }
     }
 
 

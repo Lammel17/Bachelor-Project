@@ -41,6 +41,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float m_maxTurningSpeedBaseValue = 50f;
     //private const int m_runningMoveStrenght = 2;
     private Vector3 m_nowMoveDir = Vector3.forward;
+    private float m_gravity = -9.81f;
+    private float m_velocityThroughGravity;
+    private Vector3 m_controllerVelocity;
 
     private float m_inputStrenght = 0f;
     private Vector3 m_inputDir = Vector3.forward;
@@ -109,21 +112,22 @@ public class PlayerMovement : MonoBehaviour
     }
     public class NextPossibleShieldActions
     {
-        public ShieldData.ShieldAction shieldIdle;
-        public ShieldData.ShieldAction ShieldingUpperBody;
-        public ShieldData.ShieldAction special12;
-        public ShieldData.ShieldAction special34;
+        public ShieldData.SimpleShieldAction shieldIdle;
+        public ShieldData.SimpleShieldAction ShieldingUpperBody;
+        public ShieldData.ShieldAction specialShieldLight;
+        public ShieldData.ShieldAction specialShieldHeavy;
 
-        public NextPossibleShieldActions(ShieldData.ShieldAction i, ShieldData.ShieldAction s, ShieldData.ShieldAction s12, ShieldData.ShieldAction s34)
+        public NextPossibleShieldActions(ShieldData.SimpleShieldAction i, ShieldData.SimpleShieldAction s, ShieldData.ShieldAction s12, ShieldData.ShieldAction s34)
         {
             shieldIdle = i;
             ShieldingUpperBody = s;
-            special12 = s12;
-            special34 = s34;
+
+            specialShieldLight = s12;
+            specialShieldHeavy = s34;
         }
     }
 
-    //PROPERTIES
+    #region PROPERTIES
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
     public float InputStrenght //is already snapped by inputmanager
     { 
@@ -174,7 +178,7 @@ public class PlayerMovement : MonoBehaviour
     public Vector3 PreviousMove { get => m_prevMove; }
     public AnimationInterruptableType CurrentInteruptability { get => m_currentInteruptability;  }
 
-
+    #endregion
 
 
     void Start()
@@ -210,20 +214,21 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+
         SetValues();
         TriggerTurning();
 
         testMoveDirection.transform.localScale = new Vector3(0.07f, 0.07f, Mathf.Min(Mathf.Max(m_inputStrenght, 0.2f), 1.5f));
 
-        if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/)
+        if ((int)m_actionTurningRelations != 1/*TurningDirFollowsMoveDir*/)
         {
-            MovingPlayer();
             RotatingPlayer();
+            MovingPlayer();
         }
         else
         {
-            RotatingPlayer();
             MovingPlayer();
+            RotatingPlayer();
         }
 
 
@@ -241,11 +246,15 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
+    #region INITIAL FRAME VALUES
+
     private Coroutine SwitchFreelyMoving;
     bool m_isAboutSwitchDirectionType = false;
 
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
+        m_controllerVelocity = m_characterController.velocity;
+
         //StandingStill
         m_isStandingPrev = m_isStandingStill;
         m_isStandingStill = ((m_isWalkingLocked == false && m_inputStrenght == 0) || m_isWalkingLocked == true);
@@ -310,12 +319,12 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+    #endregion
 
 
 
 
-
-
+    #region TRIGGER ACTIONS
 
     void TriggerTurning()
     {
@@ -546,14 +555,13 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+    #endregion
 
 
 
 
+    #region SET ACTIONS
 
-
-
-    //Coroutine m_resetNextPossibleActionsCoroutine;
     private void InitAction(int animationHash, AnimationData animData)
     {
         m_isAction = true;
@@ -654,7 +662,7 @@ public class PlayerMovement : MonoBehaviour
                 case WeaponData.LightAttack.Sprint_Light_Attack: if (m_characterMovesetData.weapon.SprintLightAttack.AnimData != null) return m_characterMovesetData.weapon.SprintLightAttack; break;
                 case WeaponData.LightAttack.Evade_Light_Attack: if (m_characterMovesetData.weapon.EvadeLightAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeLightAttack; break;
             }
-            Debug.Log("Warning: Next Possible Light Attack in line has no AnimationData, so the next will be the first one again");
+            //Debug.Log("Warning: Next Possible Light Attack in line has no AnimationData, so the next will be the first one again");
             return m_characterMovesetData.weapon.LightAttack1;
         }
         WeaponData.WeaponAttack GetNextAttackHeavy(WeaponData.HeavyAttack heavy)
@@ -668,7 +676,7 @@ public class PlayerMovement : MonoBehaviour
                 case WeaponData.HeavyAttack.Sprint_Heavy_Attack: if (m_characterMovesetData.weapon.SprintHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.SprintHeavyAttack; break;
                 case WeaponData.HeavyAttack.Evade_Heavy_Attack: if (m_characterMovesetData.weapon.EvadeHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeHeavyAttack; break;
             }
-            Debug.Log("Warning: Next Possible Heavy Attack in line has no AnimationData, so the next will be the first one again");
+            //Debug.Log("Warning: Next Possible Heavy Attack in line has no AnimationData, so the next will be the first one again");
             return m_characterMovesetData.weapon.HeavyAttack1;
         }
         WeaponData.WeaponAttack GetNextAttackSpecialLight(WeaponData.LightAttackSpecial specialLight)
@@ -678,7 +686,7 @@ public class PlayerMovement : MonoBehaviour
                 case WeaponData.LightAttackSpecial.Special_Light_Attack_1: if (m_characterMovesetData.weapon.SpecialLightAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack1; break;
                 case WeaponData.LightAttackSpecial.Special_Light_Attack_2: if (m_characterMovesetData.weapon.SpecialLightAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack2; break;
             }
-            Debug.Log("Warning: Next Possible Special Light Attack in line has no AnimationData, so the next will be the first one again");
+            //Debug.Log("Warning: Next Possible Special Light Attack in line has no AnimationData, so the next will be the first one again");
             return m_characterMovesetData.weapon.SpecialLightAttack1;
         }
         WeaponData.WeaponAttack GetNextAttackSpecialHeavy(WeaponData.HeavyAttackSpecial specialHeavy)
@@ -688,7 +696,7 @@ public class PlayerMovement : MonoBehaviour
                 case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_1: if (m_characterMovesetData.weapon.SpecialHeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack1; break;
                 case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_2: if (m_characterMovesetData.weapon.SpecialHeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack2; break;
             }
-            Debug.Log("Warning: Next Possible Special Heavy Attack in line has no AnimationData, so the next will be the first one again");
+            //Debug.Log("Warning: Next Possible Special Heavy Attack in line has no AnimationData, so the next will be the first one again");
             return m_characterMovesetData.weapon.SpecialHeavyAttack1;
         }
 
@@ -715,6 +723,7 @@ public class PlayerMovement : MonoBehaviour
         else return (int)m_nextPossibleWeaponActions.specialHeavy.AnimData.CustomInterruptability;
     }
 
+    #endregion
 
 
 
@@ -723,9 +732,7 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-
-
-
+    #region MOVING AND ROTATING
 
     private void SetLookAtTarget(Transform transform)
     {
@@ -818,8 +825,15 @@ public class PlayerMovement : MonoBehaviour
 
 
         Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, m_nowMoveDir * nowSpeed, Time.deltaTime * nowMoveAcceleration);
-        m_characterController.Move(nowMove * Time.deltaTime);
+
+        if (m_characterController.isGrounded && m_velocityThroughGravity < 0)
+            m_velocityThroughGravity = -2f; // small downward force to keep grounded
+        m_velocityThroughGravity += m_gravity * Time.deltaTime;
+        Vector3 gravity = new Vector3(0, m_velocityThroughGravity, 0);
+
+        m_characterController.Move((nowMove + gravity) * Time.deltaTime);
         m_prevMove = nowMove;
+
 
 
         if (nowMove != Vector3.zero) testMoveDirection.transform.rotation = Quaternion.LookRotation(nowMove, Vector3.up);
@@ -829,6 +843,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
+    #endregion
 
 
 
@@ -844,9 +859,7 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-
-
-    #region
+    #region ACTION CALCULATIONS
 
     //Action Influence Values
     private Vector3 m_directionByAction = Vector3.forward;
@@ -873,7 +886,6 @@ public class PlayerMovement : MonoBehaviour
     private AnimationMovementData.TargetRelations m_actionTargetRelations = 0;
     private AnimationMovementData.TurningRelations m_actionTurningRelations = 0;
 
-    #endregion
 
 
     private void SetActionValues(AnimationMovementData animData, float animationDuration, float crossfadeOutTime, float crossfadeStartBeforeEndTime = 0.1f)
@@ -1180,6 +1192,7 @@ public class PlayerMovement : MonoBehaviour
         m_playerInputManager.RecallLatestBufferedInput();
     }
 
+    #endregion
 
 
 
@@ -1200,8 +1213,7 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-
-
+    #region ANIMATION
 
     private void SetAnimatorMoveValues()
     {
@@ -1375,7 +1387,7 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-
+    #endregion
 
 
 
