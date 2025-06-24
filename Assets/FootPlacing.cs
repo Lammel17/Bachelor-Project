@@ -4,7 +4,11 @@ using UnityEngine;
 public class FootPlacing : MonoBehaviour
 {
     [SerializeField] private Transform m_footBoneLeft;
+    [SerializeField] private Transform m_shinBoneLeft;
+    [SerializeField] private Transform m_thighBoneLeft;
     [SerializeField] private Transform m_footBoneRight;
+    [SerializeField] private Transform m_shinBoneRight;
+    [SerializeField] private Transform m_thighBoneRight;
     [SerializeField] private Transform m_rootPelvis;
 
 
@@ -12,12 +16,17 @@ public class FootPlacing : MonoBehaviour
     [SerializeField] private float m_yOffsetToAnkle = 0;
     private float m_raycastHeightOffset = 0.6f;
 
+    private float m_thighLenght = 0;
+    private float m_shinLenght = 0;
+
     private Quaternion m_initialFootRot;
 
 
     void Awake()
     {
         m_initialFootRot = m_footBoneLeft.rotation;
+        m_thighLenght = (m_shinBoneLeft.position - m_thighBoneLeft.position).magnitude;
+        m_shinLenght = (m_shinBoneLeft.position - m_footBoneLeft.position).magnitude;
     }
 
     // Update is called once per frame
@@ -49,13 +58,63 @@ public class FootPlacing : MonoBehaviour
 
         m_rootPelvis.position = new Vector3(m_rootPelvis.position.x, Mathf.Max(hitL.point.y, hitR.point.y) - Mathf.Abs(hitL.point.y - hitR.point.y), m_rootPelvis.position.z);
 
+
+
+
+
+
+
+
+        Vector3 leftKneeNormal = Vector3.Cross(m_shinBoneLeft.position - m_thighBoneLeft.position, m_shinBoneLeft.position - leftFootPos).normalized;
+        Vector3 leftThightUp = -Vector3.Cross(m_shinBoneLeft.position - m_thighBoneLeft.position, leftKneeNormal).normalized;
+        Vector3 leftShinUp = -Vector3.Cross(leftFootPos - m_shinBoneLeft.position, leftKneeNormal).normalized;
+        //Debug.DrawLine(m_shinBoneLeft.position - leftKneeNormal/2, m_shinBoneLeft.position + leftKneeNormal/2, Color.red);
+
+
+        float leftHipFootDist = (leftFootPos - m_thighBoneLeft.position).magnitude;
+        m_thighBoneLeft.rotation = Quaternion.LookRotation(leftFootPos - m_thighBoneLeft.position, leftThightUp) * Quaternion.LookRotation(Vector3.down);
+        m_thighBoneLeft.RotateAround(m_thighBoneLeft.position, leftKneeNormal, CalculateAngle(m_thighLenght, m_shinLenght, leftHipFootDist));
+        m_shinBoneLeft.rotation = Quaternion.LookRotation(leftFootPos - m_shinBoneLeft.position, leftShinUp) * Quaternion.LookRotation(Vector3.down);
+        //m_shinBoneLeft.RotateAround(m_shinBoneLeft.position, leftKneeNormal, 90 - CalculateAngle(m_shinLenght, m_thighLenght, leftHipFootDist));
+
+
+        Debug.DrawLine(m_thighBoneLeft.position, m_thighBoneLeft.position + Quaternion.LookRotation(leftFootPos - m_thighBoneLeft.position, Vector3.up) * Vector3.forward, Color.red);
+
+
+
+
+        Vector3 rightKneeNormal = Vector3.Cross(m_thighBoneRight.forward, m_shinBoneRight.forward);
+        rightKneeNormal = new Vector3(rightKneeNormal.x, 0, rightKneeNormal.z);
+
+        //m_thighBoneRight.rotation = Quaternion.LookRotation(m_footBoneRight.position - m_thighBoneRight.position, Vector3.up);
+
         m_footBoneLeft.position = leftFootPos;
-        m_footBoneLeft.rotation = leftFootRot;
         m_footBoneRight.position = rightFootPos;
+
+        m_footBoneLeft.rotation = leftFootRot;
         m_footBoneRight.rotation = rightFootRot;
 
 
+    }
 
+
+    private float CalculateAngle( float boneLenght, float otherBoneLenght, float hipFootDist)
+    {
+        // h^2 = a^2 - (((a^2 - b^2 + c^2)^2) / 4c^2)
+        //float triangleHeight = Mathf.Sqrt(      Mathf.Pow(boneLenght, 2) -  (Mathf.Pow(  (Mathf.Pow(boneLenght, 2) - Mathf.Pow(otherBoneLenght, 2) + Mathf.Pow(hipFootDist, 2)) / 2 * hipFootDist,    2))          );
+        
+        float semiPerimeter = (boneLenght + otherBoneLenght + hipFootDist)/2;
+        float area = Mathf.Sqrt( semiPerimeter * (semiPerimeter - boneLenght) * (semiPerimeter - otherBoneLenght) * (semiPerimeter - hipFootDist));
+        float triangleHeight = area * 2 * (1/hipFootDist);
+        //return 20;
+
+        //Debug.Log(triangleHeight);
+        Debug.Log(area);
+
+        Debug.Log(Mathf.Asin(triangleHeight / boneLenght) * Mathf.Rad2Deg);
+        return Mathf.Asin(triangleHeight / boneLenght) * Mathf.Rad2Deg;
 
     }
+
+
 }
