@@ -65,10 +65,10 @@ public class FootPlacing : MonoBehaviour
 
 
 
-        Vector3 leftKneeNormal = Vector3.Cross(m_shinBoneLeft.position - m_thighBoneLeft.position, m_shinBoneLeft.position - leftFootPos).normalized;
+        Vector3 leftKneeNormal = Vector3.Cross(m_shinBoneLeft.position - m_thighBoneLeft.position, m_shinBoneLeft.position - m_footBoneLeft.position).normalized;
         Vector3 leftThightUp = -Vector3.Cross(m_shinBoneLeft.position - m_thighBoneLeft.position, leftKneeNormal).normalized;
-        Vector3 leftShinUp = -Vector3.Cross(leftFootPos - m_shinBoneLeft.position, leftKneeNormal).normalized;
-        //Debug.DrawLine(m_shinBoneLeft.position - leftKneeNormal/2, m_shinBoneLeft.position + leftKneeNormal/2, Color.red);
+        Vector3 leftShinUp = -Vector3.Cross(m_footBoneLeft.position - m_shinBoneLeft.position, leftKneeNormal).normalized;
+        Debug.DrawLine(m_shinBoneLeft.position - leftKneeNormal/2, m_shinBoneLeft.position + leftKneeNormal/2, Color.red);
 
 
         float leftHipFootDist = (leftFootPos - m_thighBoneLeft.position).magnitude;
@@ -81,14 +81,15 @@ public class FootPlacing : MonoBehaviour
         //Debug.DrawLine(m_thighBoneLeft.position, m_thighBoneLeft.position + (m_footBoneLeft.position - m_thighBoneLeft.position).normalized * leftHipFootDist, Color.green);
         //Debug.DrawLine(m_shinBoneLeft.position, m_shinBoneLeft.position + (m_footBoneLeft.position - m_shinBoneLeft.position).normalized * m_shinLenght, Color.blue);
         //Debug.DrawLine(m_thighBoneLeft.position, m_thighBoneLeft.position + (m_shinBoneLeft.position - m_thighBoneLeft.position).normalized * m_thighLenght, Color.red);
+        
         //Debug.DrawLine(m_thighBoneLeft.position, m_thighBoneLeft.position + Quaternion.LookRotation(leftFootPos - m_thighBoneLeft.position, Vector3.up) * Vector3.forward, Color.red);
 
 
 
 
-        Vector3 rightKneeNormal = Vector3.Cross(m_shinBoneRight.position - m_thighBoneRight.position, m_shinBoneRight.position - rightFootPos).normalized;
+        Vector3 rightKneeNormal = Vector3.Cross(m_shinBoneRight.position - m_thighBoneRight.position, m_shinBoneRight.position - m_footBoneRight.position).normalized;
         Vector3 rightThightUp = -Vector3.Cross(m_shinBoneRight.position - m_thighBoneRight.position, rightKneeNormal).normalized;
-        Vector3 rightShinUp = -Vector3.Cross(rightFootPos - m_shinBoneRight.position, rightKneeNormal).normalized;
+        Vector3 rightShinUp = -Vector3.Cross(m_footBoneRight.position - m_shinBoneRight.position, rightKneeNormal).normalized;
 
         float rightHipFootDist = (rightFootPos - m_thighBoneRight.position).magnitude;
         m_thighBoneRight.rotation = Quaternion.LookRotation(rightFootPos - m_thighBoneRight.position, rightThightUp) * Quaternion.LookRotation(Vector3.down);
@@ -111,7 +112,7 @@ public class FootPlacing : MonoBehaviour
     private float CalculateAngle( float boneLenght, float otherBoneLenght, float hipFootDist)
     {
         float semiPerimeter = (boneLenght + otherBoneLenght + hipFootDist)/2;
-        if (semiPerimeter <= boneLenght || semiPerimeter <= otherBoneLenght || semiPerimeter <= hipFootDist) return 0; 
+        if (boneLenght + otherBoneLenght <= hipFootDist) return 0; 
 
         float area = Mathf.Sqrt( semiPerimeter * (semiPerimeter - boneLenght) * (semiPerimeter - otherBoneLenght) * (semiPerimeter - hipFootDist));
         float triangleHeight = area * 2 * (1/hipFootDist);
