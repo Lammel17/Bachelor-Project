@@ -6,6 +6,7 @@ using UnityEngine;
 public class FootPlacing : MonoBehaviour
 {
     [SerializeField] private Transform m_player;
+    private float m_skinWidth = 0;
     [Space] 
     [SerializeField] private Transform m_footBoneLeft;
     [SerializeField] private Transform m_shinBoneLeft;
@@ -44,6 +45,7 @@ public class FootPlacing : MonoBehaviour
 
     void Awake()
     {
+        m_skinWidth = m_player.GetComponent<CharacterController>().skinWidth;
         m_initialFootRot = m_footBoneLeft.rotation;
         m_thighLenght = (m_shinBoneLeft.position - m_thighBoneLeft.position).magnitude;
         m_shinLenght = (m_shinBoneLeft.position - m_footBoneLeft.position).magnitude;
@@ -53,8 +55,8 @@ public class FootPlacing : MonoBehaviour
     // Update is called once per frame
     void LateUpdate()
     {
-        m_leftAnkleHeight = Mathf.Abs(m_footBoneLeft.position.y - m_player.position.y);
-        m_rightAnkleHeight = Mathf.Abs(m_footBoneRight.position.y - m_player.position.y);
+        m_leftAnkleHeight = Mathf.Abs(m_footBoneLeft.position.y - (m_player.position.y - m_skinWidth));
+        m_rightAnkleHeight = Mathf.Abs(m_footBoneRight.position.y - (m_player.position.y - m_skinWidth));
 
         m_desiredLeftFootPos = m_footBoneLeft.position;
         m_desiredRightFootPos = m_footBoneRight.position;
@@ -62,6 +64,7 @@ public class FootPlacing : MonoBehaviour
         m_desiredRightFootRot = m_footBoneRight.rotation;
         m_hightDifferenceWeight = m_maxFeetHightDifference;
 
+        
 
         CalculateDesiredFootPosAndRotationOnGround();
 
@@ -111,7 +114,6 @@ public class FootPlacing : MonoBehaviour
         {
             m_weight = Mathf.Max(0, 2 - Mathf.Pow((Mathf.Abs(m_leftGroundHeight - m_rightGroundHeight) / m_maxFeetHightDifference),2));
             m_hightDifferenceWeight = m_maxFeetHightDifference * m_weight;
-            Debug.Log(m_weight);
 
             if (m_leftGroundHeight < m_rightGroundHeight)
             {
@@ -132,9 +134,8 @@ public class FootPlacing : MonoBehaviour
             Quaternion desiredGroundRotL = Quaternion.FromToRotation(Vector3.up, hitL.normal) * Quaternion.LookRotation(-new Vector3(m_footBoneLeft.forward.x, 0, m_footBoneLeft.forward.z), Vector3.up) * m_initialFootRot;
             Quaternion desiredGroundRotR = Quaternion.FromToRotation(Vector3.up, hitR.normal) * Quaternion.LookRotation(-new Vector3(m_footBoneRight.forward.x, 0, m_footBoneRight.forward.z), Vector3.up) * m_initialFootRot;
 
-            Debug.Log((m_leftAnkleHeight - m_baseOffsetGroundToAnkleY));
-            m_desiredLeftFootRot = Quaternion.Slerp(desiredGroundRotL, m_desiredLeftFootRot, Mathf.InverseLerp(0, m_footRotationSnappyness, (m_leftAnkleHeight - m_baseOffsetGroundToAnkleY) ));
-            m_desiredRightFootRot = Quaternion.Slerp(desiredGroundRotL, m_desiredRightFootRot, Mathf.InverseLerp(0, m_footRotationSnappyness, (m_rightAnkleHeight - m_baseOffsetGroundToAnkleY)));
+            m_desiredLeftFootRot = Quaternion.Slerp(desiredGroundRotL, m_desiredLeftFootRot/*this is before change*/, Mathf.InverseLerp(0, m_footRotationSnappyness, (m_leftAnkleHeight - m_baseOffsetGroundToAnkleY) ));
+            m_desiredRightFootRot = Quaternion.Slerp(desiredGroundRotR, m_desiredRightFootRot/*this is before change*/, Mathf.InverseLerp(0, m_footRotationSnappyness, (m_rightAnkleHeight - m_baseOffsetGroundToAnkleY)));
         }
 
 
