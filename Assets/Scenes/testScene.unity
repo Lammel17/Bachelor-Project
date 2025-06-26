@@ -2481,7 +2481,8 @@ MonoBehaviour:
   m_environmentLayer:
     serializedVersion: 2
     m_Bits: 64
-  m_yOffsetToAnkle: 0.11
+  m_baseOffsetGroundToAnkleY: 0.11
+  m_footRotationSnappyness: 0
   m_maxFeetHightDifference: 0.5
   m_weight: 1
 --- !u!1 &2016108117
