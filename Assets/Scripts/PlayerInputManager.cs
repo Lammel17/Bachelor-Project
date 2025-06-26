@@ -296,7 +296,7 @@ public class PlayerInputManager : MonoBehaviour
             case "South":
                 OnSouth(m_lastBuffedInput);
                 break;
-            case "East":
+            case "EastTap":
                 OnEastTap(m_lastBuffedInput);
                 break;
             case "West":
