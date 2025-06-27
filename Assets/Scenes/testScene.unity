@@ -884,8 +884,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 8.75, y: -0.67, z: 7.02}
-  m_LocalScale: {x: 2.2, y: 2.2, z: 2.2}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 21.23374, y: 2.2, z: 2.2}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1137112864}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2016,8 +2016,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 8.26, y: -0.86, z: 6.23}
-  m_LocalScale: {x: 2.2, y: 2.2, z: 2.2}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 5.8110805, y: 2.2, z: 2.2}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1137112864}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2406,9 +2406,9 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 1.6
-  m_Radius: 0.19
+  m_Radius: 0.3
   m_SlopeLimit: 45
-  m_StepOffset: 0.3
+  m_StepOffset: 0.35
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.0001
   m_Center: {x: 0, y: 0.8, z: 0}
@@ -2483,8 +2483,10 @@ MonoBehaviour:
     m_Bits: 64
   m_baseOffsetGroundToAnkleY: 0.115
   m_footRotationSnappyness: 0.01
-  m_maxFeetHightDifference: 0.5
-  m_weight: 1
+  m_maxGrundHightDifference: 1
+  m_minHipGroundDist: 0.2
+  m_weight: 0
+  m_footAdjustSpeed: 30
 --- !u!1 &2016108117
 GameObject:
   m_ObjectHideFlags: 0
