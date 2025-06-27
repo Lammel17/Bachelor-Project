@@ -22,8 +22,8 @@ public class FootPlacing : MonoBehaviour
     [SerializeField] private float m_baseOffsetGroundToAnkleY = 0;
     [SerializeField] private float m_footRotationSnappyness = 0;
     [SerializeField] private float m_maxFeetHightDifference = 1f;
+    [SerializeField] private float m_minHipGroundDist = 0.2f;
     private float m_raycastHeightOffset = 0.6f;
-    [SerializeField] [EditorAttributes.ReadOnly] [Range(0,1)] private float m_weight = 1f;
 
     private Vector3 m_desiredLeftFootPos;
     private Vector3 m_desiredRightFootPos;
@@ -64,13 +64,45 @@ public class FootPlacing : MonoBehaviour
         m_desiredRightFootRot = m_footBoneRight.rotation;
         m_hightDifferenceWeight = m_maxFeetHightDifference;
 
-        
+        float raycastLenght = 2.5f; //beware, if its too short, m_weight will not be smooth
+        bool hasGroundL = false;
+        bool hasGroundR = false;
+        RaycastHit hitL;
+        Vector3 raycastOriginL = new Vector3(m_footBoneLeft.position.x, transform.position.y + m_raycastHeightOffset, m_footBoneLeft.position.z);
+        Debug.DrawLine(raycastOriginL, raycastOriginL + Vector3.down * m_raycastHeightOffset * 2, Color.red);
+        m_leftGroundHeight = m_footBoneLeft.position.y - m_leftAnkleHeight;
+        if (Physics.Raycast(raycastOriginL, Vector3.down, out hitL, m_raycastHeightOffset * raycastLenght, m_environmentLayer))
+            hasGroundL = true;
 
-        CalculateDesiredFootPosAndRotationOnGround();
+        RaycastHit hitR;
+        Vector3 raycastOriginR = new Vector3(m_footBoneRight.position.x, transform.position.y + m_raycastHeightOffset, m_footBoneRight.position.z);
+        Debug.DrawLine(raycastOriginR, raycastOriginR + Vector3.down * m_raycastHeightOffset * 2, Color.red);
+        m_rightGroundHeight = m_footBoneRight.position.y - m_rightAnkleHeight;
+        if (Physics.Raycast(raycastOriginR, Vector3.down, out hitR, m_raycastHeightOffset * raycastLenght, m_environmentLayer))
+            hasGroundR = true;
 
-        CalculateHipHeight();
+        if (hasGroundL) m_leftGroundHeight = hitL.point.y;
+        else if (hasGroundR) { m_leftGroundHeight = hitR.point.y; hitL = hitR; }
+        if (hasGroundR) m_rightGroundHeight = hitR.point.y;
+        else if (hasGroundL) { m_rightGroundHeight = hitL.point.y; hitR = hitL; }
 
-        SetThightAndShinRotations();
+
+        if (!hasGroundL && !hasGroundR) return;
+
+        m_isHightDifferenceOfFeetIsTooBig = Mathf.Abs(m_leftGroundHeight - m_rightGroundHeight) > m_maxFeetHightDifference;
+        if (m_isHightDifferenceOfFeetIsTooBig)
+        {
+            float weightForHightDiffTooBig = Mathf.Max(0, 2 - Mathf.Pow((Mathf.Abs(m_leftGroundHeight - m_rightGroundHeight) / m_maxFeetHightDifference), 2));
+            m_hightDifferenceWeight = m_maxFeetHightDifference * weightForHightDiffTooBig;
+        }
+
+        float closestHipGroundDist = Mathf.Max(Mathf.Min(m_thighBoneLeft.position.y - m_leftGroundHeight, m_thighBoneRight.position.y - m_rightGroundHeight), m_minHipGroundDist);
+
+        CalculateAndSetHipHeight();
+
+        CalculateDesiredFootPosAndRotationOnGround(ref hitL, ref hitR, ref hasGroundL, ref hasGroundR);
+
+        CalculateAndSetThightAndShinRotations();
 
         SetFootPositionAndRotation();
 
@@ -82,48 +114,20 @@ public class FootPlacing : MonoBehaviour
 
 
 
-    private void CalculateDesiredFootPosAndRotationOnGround( )
+    private void CalculateDesiredFootPosAndRotationOnGround(ref RaycastHit hitL, ref RaycastHit hitR, ref bool hasGroundL, ref bool hasGroundR)
     {
-        float raycastLenght = 2.5f; //beware, if its too short, m_weight will not be smooth
-        bool hasGroundL = false;
-        bool hasGroundR = false;
-        RaycastHit hitL;
-        Vector3 raycastOriginL = new Vector3(m_footBoneLeft.position.x, transform.position.y + m_raycastHeightOffset, m_footBoneLeft.position.z);
-        Debug.DrawLine(raycastOriginL, raycastOriginL + Vector3.down * m_raycastHeightOffset * 2, Color.red);
-        m_leftGroundHeight = m_footBoneLeft.position.y - m_leftAnkleHeight;
-        if (Physics.Raycast(raycastOriginL, Vector3.down, out hitL, m_raycastHeightOffset * raycastLenght, m_environmentLayer))
-            hasGroundL = true;
-        
-        RaycastHit hitR;
-        Vector3 raycastOriginR = new Vector3(m_footBoneRight.position.x, transform.position.y + m_raycastHeightOffset, m_footBoneRight.position.z);
-        Debug.DrawLine(raycastOriginR, raycastOriginR + Vector3.down * m_raycastHeightOffset * 2, Color.red);
-        m_rightGroundHeight = m_footBoneRight.position.y - m_rightAnkleHeight;
-        if (Physics.Raycast(raycastOriginR, Vector3.down, out hitR, m_raycastHeightOffset * raycastLenght, m_environmentLayer))
-            hasGroundR = true;
-
-        if (!hasGroundL && !hasGroundR) return;
-
-        if (hasGroundL) m_leftGroundHeight = hitL.point.y;
-        else if (hasGroundR) { m_leftGroundHeight = hitR.point.y; hitL = hitR; }
-        if (hasGroundR) m_rightGroundHeight = hitR.point.y;
-        else if (hasGroundL) { m_rightGroundHeight = hitL.point.y; hitR = hitL; }
-
-        m_isHightDifferenceOfFeetIsTooBig = Mathf.Abs(m_leftGroundHeight - m_rightGroundHeight) > m_maxFeetHightDifference;
-
         if (m_isHightDifferenceOfFeetIsTooBig)
         {
-            m_weight = Mathf.Max(0, 2 - Mathf.Pow((Mathf.Abs(m_leftGroundHeight - m_rightGroundHeight) / m_maxFeetHightDifference),2));
-            m_hightDifferenceWeight = m_maxFeetHightDifference * m_weight;
 
             if (m_leftGroundHeight < m_rightGroundHeight)
             {
-                m_desiredLeftFootPos = new Vector3(m_footBoneLeft.position.x, m_rightGroundHeight - m_hightDifferenceWeight + m_leftAnkleHeight, m_footBoneLeft.position.z);
+                m_desiredLeftFootPos = new Vector3(m_footBoneLeft.position.x, (m_rightGroundHeight - m_hightDifferenceWeight) + m_leftAnkleHeight, m_footBoneLeft.position.z);
                 m_desiredRightFootPos = new Vector3(m_footBoneRight.position.x, m_rightGroundHeight + m_rightAnkleHeight, m_footBoneRight.position.z);
             }
             else
             {
                 m_desiredLeftFootPos = new Vector3(m_footBoneLeft.position.x, m_leftGroundHeight + m_leftAnkleHeight, m_footBoneLeft.position.z);
-                m_desiredRightFootPos = new Vector3(m_footBoneRight.position.x, m_leftGroundHeight - m_hightDifferenceWeight + m_rightAnkleHeight, m_footBoneRight.position.z);
+                m_desiredRightFootPos = new Vector3(m_footBoneRight.position.x, (m_leftGroundHeight - m_hightDifferenceWeight) + m_rightAnkleHeight, m_footBoneRight.position.z);
             }
         }
         else
@@ -144,7 +148,7 @@ public class FootPlacing : MonoBehaviour
 
 
 
-    private void CalculateHipHeight()
+    private void CalculateAndSetHipHeight()
     {
         if (m_isHightDifferenceOfFeetIsTooBig)
         {
@@ -159,7 +163,7 @@ public class FootPlacing : MonoBehaviour
 
 
 
-    private void SetThightAndShinRotations()
+    private void CalculateAndSetThightAndShinRotations()
     {
         Vector3 leftKneeNormal = Vector3.Cross(m_shinBoneLeft.position - m_thighBoneLeft.position, m_shinBoneLeft.position - m_footBoneLeft.position).normalized;
         Vector3 leftThightUp = -Vector3.Cross(m_shinBoneLeft.position - m_thighBoneLeft.position, leftKneeNormal).normalized;
