@@ -18,12 +18,24 @@ public class PlayerInputManager : MonoBehaviour
 
     private Vector2 m_leftStick = new Vector2();
     private Vector2 m_rightStick = new Vector2();
-    private bool m_isNorth = false;
+    private bool m_isShift = false;
 
     /*[SerializeField] */
     private float m_inputBufferTime = 0.5f;
 
-    private InputAction.CallbackContext m_lastBuffedInput = new();
+    public class LastBufferedInputCombi
+    {
+        public InputAction.CallbackContext lastBuffedInput;
+        public bool isNorth;
+
+        public LastBufferedInputCombi(InputAction.CallbackContext lastBuffedInput, bool isNorth    )
+        {
+            this.lastBuffedInput = lastBuffedInput;
+            this.isNorth = isNorth;
+        }
+    }
+    private LastBufferedInputCombi m_lastBufferedInputCombi;
+
     private Coroutine c_inputBufferCoroutine;
     private bool m_lastInputIsUnread = false;
 
@@ -277,36 +289,42 @@ public class PlayerInputManager : MonoBehaviour
         if (!m_lastInputIsUnread)
             return;
 
-        //Debug.Log("Recall");
+        bool buffedIsShift = m_lastBufferedInputCombi.isNorth;
 
-        switch (m_lastBuffedInput.action.name)
+        switch (m_lastBufferedInputCombi.lastBuffedInput.action.name)
         {
             case "L3":
-                OnL3(m_lastBuffedInput);
+                OnL3(m_lastBufferedInputCombi.lastBuffedInput);
                 break;
             case "R1":
-                OnR1(m_lastBuffedInput);
+                if (!buffedIsShift)     OnR1_only(m_lastBufferedInputCombi.lastBuffedInput, false);
+                else                    OnR1_Shift(m_lastBufferedInputCombi.lastBuffedInput, true);
                 break;
-            case "L2":
-                OnL2(m_lastBuffedInput);
+            case "L1":
+                if (buffedIsShift)      OnL1_North(m_lastBufferedInputCombi.lastBuffedInput, true);
                 break;
             case "R2":
-                OnR2(m_lastBuffedInput);
+                if (!buffedIsShift)     OnR2_only(m_lastBufferedInputCombi.lastBuffedInput, false);
+                else                    OnR2_Shift(m_lastBufferedInputCombi.lastBuffedInput, true);
+                break;
+            case "L2":
+                if (!buffedIsShift)     OnL2_only(m_lastBufferedInputCombi.lastBuffedInput, false);
+                else                    OnL2_Shift(m_lastBufferedInputCombi.lastBuffedInput, true);
                 break;
             case "South":
-                OnSouth(m_lastBuffedInput);
+                OnSouth(m_lastBufferedInputCombi.lastBuffedInput);
                 break;
             case "EastTap":
-                OnEastTap(m_lastBuffedInput);
+                OnEastTap(m_lastBufferedInputCombi.lastBuffedInput);
                 break;
             case "West":
-                OnWest(m_lastBuffedInput);
+                OnWest(m_lastBufferedInputCombi.lastBuffedInput);
                 break;
             case "Right":
-                OnRight(m_lastBuffedInput);
+                OnRight(m_lastBufferedInputCombi.lastBuffedInput);
                 break;
             case "Left":
-                OnLeft(m_lastBuffedInput);
+                OnLeft(m_lastBufferedInputCombi.lastBuffedInput);
                 break;
             default:
                 Debug.Log("Last Input Check must be wrong?");
@@ -314,7 +332,7 @@ public class PlayerInputManager : MonoBehaviour
         }
     }
 
-    private bool SetBuffer(InputAction.CallbackContext context, int priority)
+    private bool SetBuffer(InputAction.CallbackContext context, bool isShift, int priority)
     {
 
 
@@ -332,7 +350,7 @@ public class PlayerInputManager : MonoBehaviour
         else // maybe check with something with priority like dodge here
         {
             m_lastInputIsUnread = true;
-            m_lastBuffedInput = context;
+            m_lastBufferedInputCombi = new LastBufferedInputCombi(context, isShift);
             if (c_inputBufferCoroutine != null)
             {
                 StopCoroutine(c_inputBufferCoroutine);
@@ -442,7 +460,7 @@ public class PlayerInputManager : MonoBehaviour
     {
         int priority = 0;
 
-        if (SetBuffer(context, priority))
+        if (SetBuffer(context, m_isShift, priority))
             return;
 
         //if(context.performed)
@@ -460,69 +478,96 @@ public class PlayerInputManager : MonoBehaviour
     //ShoulderButtons
     private void OnL1(InputAction.CallbackContext context)
     {
-        if (context.performed)
+        if (m_isShift && context.performed) OnL1_North(context, true);
+        else if (!m_isShift)
         {
-            m_thePlayerMovement.TriggerShielding(true);
+            if (context.performed) m_thePlayerMovement.TriggerShielding(true);
+            if (context.canceled)  m_thePlayerMovement.TriggerShielding(false);
         }
-
-        if (context.canceled)
-        {
-            m_thePlayerMovement.TriggerShielding(false);
-        }
-
     }
+    private void OnL1_North(InputAction.CallbackContext context, bool isShift)
+    {
+        int priority = m_thePlayerMovement.GetInterruptabilityShieldLightSpecial();
+        if (SetBuffer(context, isShift, priority)) return;
+
+        m_thePlayerMovement.TriggerShieldSpecialLight();
+    }
+
+
 
     private void OnR1(InputAction.CallbackContext context)
     {
-        int priority = m_thePlayerMovement.GetInterruptabilityLight();
-
-        if (SetBuffer(context, priority))
-            return;
-
-        if (!m_isNorth)
-            m_thePlayerMovement.TriggerLightAttack();
-        else
-            m_thePlayerMovement.TriggerSpecialLightAttack();
-
+        if (m_isShift)  OnR1_Shift(context, true);
+        else            OnR1_only(context, false);
     }
+    private void OnR1_only(InputAction.CallbackContext context, bool isShift)
+    {
+        int priority = m_thePlayerMovement.GetInterruptabilityLight();
+        if (SetBuffer(context, isShift, priority)) return;
+
+        m_thePlayerMovement.TriggerLightAttack();
+    }
+    private void OnR1_Shift(InputAction.CallbackContext context, bool isNorth)
+    {
+        int priority = m_thePlayerMovement.GetInterruptabilityLightSpecial();
+        if (SetBuffer(context, isNorth, priority)) return;
+
+        m_thePlayerMovement.TriggerSpecialLightAttack();
+    }
+
+
 
     private void OnL2(InputAction.CallbackContext context)
     {
-        int priority = 2;
-
-
-        if (SetBuffer(context, priority))
-            return;
-
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L2");
+        if (m_isShift)  OnL2_Shift(context, true);
+        else            OnL2_only(context, false);
     }
+    private void OnL2_only(InputAction.CallbackContext context, bool isShift)
+    {
+        int priority = 2;
+        if (SetBuffer(context, isShift, priority)) return;
+
+        //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA L2");
+    }
+    private void OnL2_Shift(InputAction.CallbackContext context, bool isShift)
+    {
+        int priority = m_thePlayerMovement.GetInterruptabilityHeavySpecial(); 
+        if (SetBuffer(context, isShift, priority)) return;
+
+        m_thePlayerMovement.TriggerShieldSpecialHeavy();
+
+    }
+
+
 
     private void OnR2(InputAction.CallbackContext context)
     {
+        if (m_isShift)  OnR2_Shift(context, true);
+        else            OnR2_only(context, false);
+    }
+    private void OnR2_only(InputAction.CallbackContext context, bool isShift)
+    {
         int priority = m_thePlayerMovement.GetInterruptabilityHeavy();
+        if (SetBuffer(context, isShift, priority))  return;
 
-        if (SetBuffer(context, priority))
-            return;
+        m_thePlayerMovement.TriggerHeavyAttack();
+    }
+    private void OnR2_Shift(InputAction.CallbackContext context, bool isShift)
+    {
+        int priority = m_thePlayerMovement.GetInterruptabilityHeavy();
+        if (SetBuffer(context, isShift, priority)) return;
 
-        if (!m_isNorth)
-            m_thePlayerMovement.TriggerHeavyAttack();
-        else
-            m_thePlayerMovement.TriggerSpecialHeavyAttack();
-
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA R2");
+        m_thePlayerMovement.TriggerSpecialHeavyAttack();
     }
 
-    
-    
+
     //ActionButtons
     private void OnSouth(InputAction.CallbackContext context)
     {
 
         int priority = 0;
 
-        if (SetBuffer(context, priority))
+        if (SetBuffer(context, m_isShift, priority))
             return;
 
         //if (context.performed)
@@ -533,7 +578,7 @@ public class PlayerInputManager : MonoBehaviour
     {
         int priority = 3;
 
-        if (SetBuffer(context, priority))
+        if (SetBuffer(context, m_isShift, priority))
             return;
 
         m_thePlayerMovement.TriggerEvading();
@@ -559,7 +604,7 @@ public class PlayerInputManager : MonoBehaviour
     {
         int priority = 2;
 
-        if (SetBuffer(context, priority))
+        if (SetBuffer(context, m_isShift, priority))
             return;
 
         m_thePlayerMovement.TriggerItemUse();
@@ -579,12 +624,12 @@ public class PlayerInputManager : MonoBehaviour
     {
         if (context.performed)
         {
-            m_isNorth = true; 
+            m_isShift = true; 
         }
 
         if (context.canceled)
         {
-            m_isNorth = false;
+            m_isShift = false;
         }
     }
 
@@ -600,7 +645,7 @@ public class PlayerInputManager : MonoBehaviour
     {
         int priority = 0;
 
-        if (SetBuffer(context, priority))
+        if (SetBuffer(context, m_isShift, priority))
             return;
 
         //if (context.performed)
@@ -611,7 +656,7 @@ public class PlayerInputManager : MonoBehaviour
     {
         int priority = 0;
 
-        if (SetBuffer(context, priority))
+        if (SetBuffer(context, m_isShift, priority))
             return;
 
         //if (context.performed)

@@ -148,10 +148,10 @@ public class ChangeAnimation : MonoBehaviour
         CheckClipAndChange(newOverrideController, shieldMoveset.shieldIdle.AnimData, "EmptyShieldIdle");
         CheckClipAndChange(newOverrideController, shieldMoveset.shieldingUpperBody.AnimData, "EmptyShieldingUpperBody");
 
-        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecial1.AnimData, "EmptyShieldSpecial1");
-        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecial2.AnimData, "EmptyShieldSpecial2");
-        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecial3.AnimData, "EmptyShieldSpecial3");
-        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecial4.AnimData, "EmptyShieldSpecial4");
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecialLight1.AnimData, "EmptyShieldSpecial1");
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecialLight2.AnimData, "EmptyShieldSpecial2");
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecialHeavy1.AnimData, "EmptyShieldSpecial3");
+        CheckClipAndChange(newOverrideController, shieldMoveset.ShiledSpecialHeavy2.AnimData, "EmptyShieldSpecial4");
 
         CheckClipAndChange(newOverrideController, shieldMoveset.ShiledAlmostStanceBreak.AnimData, "EmptyShieldAlmostStanceBreak");
         CheckClipAndChange(newOverrideController, shieldMoveset.ShiledStanceBreak.AnimData, "EmptyShieldStanceBreak");

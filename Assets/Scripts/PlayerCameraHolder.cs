@@ -159,6 +159,7 @@ public class PlayerCameraHolder : MonoBehaviour
         }
         else 
         {
+            return;/////////////////////////////////////////////////Just for test
             float m_desiredDirForceFactor = 0.25f;
             Vector3 camRestDir = s_camHolderRestDirection;
             //here, abhängig nur vom seitwärts laufen, weil beim seitswärts laufen die kamera gedreht wird

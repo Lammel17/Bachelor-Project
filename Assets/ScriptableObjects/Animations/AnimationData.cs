@@ -25,7 +25,7 @@ public class AnimationData : ScriptableObject
     public AnimationInterruptableType ChangedInterruptability = AnimationInterruptableType.Easily_Interruptable;
     [Space]
     [Space]
-    [Header("CorrectSpineRotations")]
+    [Header("CorrectSpineRotations for Non Base Layer Animations")]
     public bool useLookAtData = false;
     public LookAtForwardData lookAtData;
 

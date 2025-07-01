@@ -534,7 +534,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ff74c251c2e297e47be091b310ce6e54, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.08
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ff74c251c2e297e47be091b310ce6e54, type: 3}
       propertyPath: m_LocalPosition.z
@@ -883,7 +883,7 @@ Transform:
   m_GameObject: {fileID: 571792998}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.75, y: -0.67, z: 7.02}
+  m_LocalPosition: {x: 8.75, y: -0.7, z: 7.02}
   m_LocalScale: {x: 21.23374, y: 2.2, z: 2.2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2365,6 +2365,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testMoveDirection: {fileID: 1268966254}
   testTurningDirection: {fileID: 2016108117}
+  m_chraracter: {fileID: 422825766}
   m_animator: {fileID: 1060078877}
   m_characterMovesetData: {fileID: 11400000, guid: c207c47cd1da71f42a05d15f2e1819c1, type: 2}
   m_speedValues: {x: 2, y: 4, z: 6}
@@ -2406,9 +2407,9 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 1.6
-  m_Radius: 0.3
+  m_Radius: 0.2
   m_SlopeLimit: 45
-  m_StepOffset: 0.35
+  m_StepOffset: 0.25
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.0001
   m_Center: {x: 0, y: 0.8, z: 0}
@@ -2478,15 +2479,16 @@ MonoBehaviour:
   m_shinBoneRight: {fileID: 422825771}
   m_thighBoneRight: {fileID: 422825775}
   m_root: {fileID: 422825818}
+  m_raycastLenght: 2.5
   m_environmentLayer:
     serializedVersion: 2
     m_Bits: 64
   m_baseOffsetGroundToAnkleY: 0.115
   m_footRotationSnappyness: 0.01
-  m_maxGrundHightDifference: 1
-  m_minHipGroundDist: 0.2
+  m_minDistHipGround: {x: 0.3, y: 0.5}
   m_weight: 0
-  m_footAdjustSpeed: 30
+  m_footAdjustSpeed: 60
+  m_rootAdjustSpeed: 30
 --- !u!1 &2016108117
 GameObject:
   m_ObjectHideFlags: 0

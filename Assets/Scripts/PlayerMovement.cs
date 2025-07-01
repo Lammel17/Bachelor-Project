@@ -25,6 +25,7 @@ public class PlayerMovement : MonoBehaviour
 
 
     private CharacterController m_characterController;
+    [SerializeField] private GameObject m_chraracter;
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
     [SerializeField] private Animator m_animator;
@@ -183,8 +184,10 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
-        m_playerInputManager = PlayerInputManager.Instance;
         m_characterController = GetComponent<CharacterController>();
+        m_chraracter.transform.position = new Vector3(0, -m_characterController.skinWidth, 0);
+
+        m_playerInputManager = PlayerInputManager.Instance;
         m_playerCameraHolder = PlayerCameraHolder.Instance;
         if (TryGetComponent<LookAt>(out LookAt lookAt))
             m_lookAtScript = lookAt;
@@ -196,7 +199,7 @@ public class PlayerMovement : MonoBehaviour
         ChangeAnimation.InitializeAnimationOverrideController(m_animator, m_characterMovesetData);
 
         m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
-        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecial1, m_characterMovesetData.shield.ShiledSpecial3);
+        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
 
         m_currentBaseLayerAnimation = Idle_1;
         m_currentUpperBodyAnimation = new Vector2(Empty_UpperBody, 0);
@@ -527,6 +530,56 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+    public void TriggerShieldSpecialLight()
+    {
+        if (m_isActionLocked) return;
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
+
+        ShieldData.ShieldAction thisAction = m_nextPossibleShieldActions.specialShieldLight;
+        if (thisAction == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
+        if (thisAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
+
+        AnimationInterruptableType specialShieldLightActionInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
+        if ((int)m_currentInteruptability >= (int)specialShieldLightActionInterruptability) return;
+
+        ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
+
+        if (m_ActionCoroutine != null)
+            EndActionReset();
+
+        //SetNextPossibleAttacks(thisAction); //UIUIUIUIUII
+
+        m_currentInteruptability = specialShieldLightActionInterruptability;
+        //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
+
+        InitAction(thisAction.ActionkHash, thisAction.AnimData);
+    }
+
+    public void TriggerShieldSpecialHeavy()
+    {
+        if (m_isActionLocked) return;
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
+
+        ShieldData.ShieldAction thisAction = m_nextPossibleShieldActions.specialShieldHeavy;
+        if (thisAction == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
+        if (thisAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
+
+        AnimationInterruptableType specialShieldHeavyActionInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
+        if ((int)m_currentInteruptability >= (int)specialShieldHeavyActionInterruptability) return;
+
+        ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
+
+        if (m_ActionCoroutine != null)
+            EndActionReset();
+
+        //SetNextPossibleAttacks(thisAction); //UIUIUIUIUII
+
+        m_currentInteruptability = specialShieldHeavyActionInterruptability;
+        //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
+
+        InitAction(thisAction.ActionkHash, thisAction.AnimData);
+    }
+
     public void TriggerItemUse()
     {
         if (m_isActionLocked) return;
@@ -722,7 +775,16 @@ public class PlayerMovement : MonoBehaviour
         if (m_nextPossibleWeaponActions.specialHeavy.AnimData == null || m_nextPossibleWeaponActions.specialHeavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
         else return (int)m_nextPossibleWeaponActions.specialHeavy.AnimData.CustomInterruptability;
     }
-
+    public int GetInterruptabilityShieldLightSpecial()
+    {
+        if (m_nextPossibleShieldActions.specialShieldLight.AnimData == null || m_nextPossibleShieldActions.specialShieldLight.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
+        else return (int)m_nextPossibleShieldActions.specialShieldLight.AnimData.CustomInterruptability;
+    }
+    public int GetInterruptabilityShieldHeavySpecial()
+    {
+        if (m_nextPossibleShieldActions.specialShieldHeavy.AnimData == null || m_nextPossibleShieldActions.specialShieldHeavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
+        else return (int)m_nextPossibleShieldActions.specialShieldHeavy.AnimData.CustomInterruptability;
+    }
     #endregion
 
 
