@@ -334,8 +334,6 @@ public class PlayerInputManager : MonoBehaviour
 
     private bool SetBuffer(InputAction.CallbackContext context, bool isShift, int priority)
     {
-
-
         if (priority > (int)m_thePlayerMovement.CurrentInteruptability) ///////////check if Animation is currently interuptable
         {
             m_lastInputIsUnread = false;            //not sure if needed
@@ -344,7 +342,6 @@ public class PlayerInputManager : MonoBehaviour
                 StopCoroutine(c_inputBufferCoroutine);
                 c_inputBufferCoroutine = null;
             }
-
             return false;
         }
         else // maybe check with something with priority like dodge here

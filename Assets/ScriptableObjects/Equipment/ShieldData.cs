@@ -31,14 +31,14 @@ public class ShieldData : ScriptableObject
 
     public enum ShieldSpecialLight
     {
-        Special_Shield_Attack_1,
-        Special_Shield_Attack_2,
+        Shield_Special_Light_Action_1,
+        Shield_Special_Light_Action_2,
         end
     }
     public enum ShieldSpecialHeavy
     {
-        Special_Shield_Attack_3,
-        Special_Shield_Attack_4,
+        Shield_Special_Heavy_Action_1,
+        Shield_Special_Heavy_Action_2,
         end
     }
 

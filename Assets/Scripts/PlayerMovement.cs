@@ -118,10 +118,10 @@ public class PlayerMovement : MonoBehaviour
         public ShieldData.ShieldAction specialShieldLight;
         public ShieldData.ShieldAction specialShieldHeavy;
 
-        public NextPossibleShieldActions(ShieldData.SimpleShieldAction i, ShieldData.SimpleShieldAction s, ShieldData.ShieldAction s12, ShieldData.ShieldAction s34)
+        public NextPossibleShieldActions(/*ShieldData.SimpleShieldAction i, ShieldData.SimpleShieldAction s, */ShieldData.ShieldAction s12, ShieldData.ShieldAction s34)
         {
-            shieldIdle = i;
-            ShieldingUpperBody = s;
+            //shieldIdle = i;
+            //ShieldingUpperBody = s;
 
             specialShieldLight = s12;
             specialShieldHeavy = s34;
@@ -167,8 +167,8 @@ public class PlayerMovement : MonoBehaviour
                 return;
 
             m_isRunning = value;
-            if (m_isRunning) { SetNextPossibleAttacks(currentAction: Running); SetLookAtTarget(null); }
-            else if (!m_isRunning && !m_isAction) { SetNextPossibleAttacks(currentAction: Reset); } 
+            if (m_isRunning) { SetNextPossibleWeaponAttacks(currentAction: Running); SetLookAtTarget(null); }
+            else if (!m_isRunning && !m_isAction) { SetNextPossibleWeaponAttacks(currentAction: Reset); } 
             if (!m_isRunning && !m_isAction && m_target != null) { SetLookAtTarget(m_target); }
 
             Speed = m_inputStrenght;
@@ -185,7 +185,7 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         m_characterController = GetComponent<CharacterController>();
-        m_chraracter.transform.position = new Vector3(0, -m_characterController.skinWidth, 0);
+        m_chraracter.transform.position = new Vector3(0, -m_characterController.skinWidth - 0.01f, 0);
 
         m_playerInputManager = PlayerInputManager.Instance;
         m_playerCameraHolder = PlayerCameraHolder.Instance;
@@ -199,7 +199,7 @@ public class PlayerMovement : MonoBehaviour
         ChangeAnimation.InitializeAnimationOverrideController(m_animator, m_characterMovesetData);
 
         m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
-        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
+        m_nextPossibleShieldActions = new NextPossibleShieldActions(/*m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, */m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
 
         m_currentBaseLayerAnimation = Idle_1;
         m_currentUpperBodyAnimation = new Vector2(Empty_UpperBody, 0);
@@ -398,7 +398,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_ActionCoroutine != null)
             EndActionReset();
         
-        SetNextPossibleAttacks(currentAction: animHash);
+        SetNextPossibleWeaponAttacks(currentAction: animHash);
 
         m_currentInteruptability = evadeInterruptability;
 
@@ -424,7 +424,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        SetNextPossibleAttacks(thisAttack);
+        SetNextPossibleWeaponAttacks(thisAttack);
 
         m_currentInteruptability = lightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
@@ -449,7 +449,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        SetNextPossibleAttacks(thisAttack);
+        SetNextPossibleWeaponAttacks(thisAttack);
 
         m_currentInteruptability = specialLightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
@@ -474,7 +474,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        SetNextPossibleAttacks(thisAttack);
+        SetNextPossibleWeaponAttacks(thisAttack);
 
         m_currentInteruptability = heavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
@@ -499,7 +499,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        SetNextPossibleAttacks(thisAttack);
+        SetNextPossibleWeaponAttacks(thisAttack);
 
         m_currentInteruptability = specialHeavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
@@ -547,7 +547,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        //SetNextPossibleAttacks(thisAction); //UIUIUIUIUII
+        SetNextPossibleShieldActions(thisAction);
 
         m_currentInteruptability = specialShieldLightActionInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
@@ -572,7 +572,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        //SetNextPossibleAttacks(thisAction); //UIUIUIUIUII
+        SetNextPossibleShieldActions(thisAction);
 
         m_currentInteruptability = specialShieldHeavyActionInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
@@ -687,7 +687,7 @@ public class PlayerMovement : MonoBehaviour
         SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
     }
 
-    private void SetNextPossibleAttacks(WeaponData.WeaponAttack currentAttackData = null, int currentAction = 0)
+    private void SetNextPossibleWeaponAttacks(WeaponData.WeaponAttack currentAttackData = null, int currentAction = 0)
     {
         if (currentAction == Evade_Forward || currentAction == Evade_Left || currentAction == Evade_Right || currentAction == Evade_Backwards)
             m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.EvadeLightAttack, m_characterMovesetData.weapon.EvadeHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
@@ -752,8 +752,6 @@ public class PlayerMovement : MonoBehaviour
             //Debug.Log("Warning: Next Possible Special Heavy Attack in line has no AnimationData, so the next will be the first one again");
             return m_characterMovesetData.weapon.SpecialHeavyAttack1;
         }
-
-
     }
     public int GetInterruptabilityLight()
     {
@@ -774,6 +772,35 @@ public class PlayerMovement : MonoBehaviour
     {
         if (m_nextPossibleWeaponActions.specialHeavy.AnimData == null || m_nextPossibleWeaponActions.specialHeavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
         else return (int)m_nextPossibleWeaponActions.specialHeavy.AnimData.CustomInterruptability;
+    }
+    private void SetNextPossibleShieldActions(ShieldData.ShieldAction currentActionData = null, int currentAction = 0)
+    {
+        if (currentAction == Reset)
+            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
+
+        else if (currentActionData != null)
+            m_nextPossibleShieldActions = new NextPossibleShieldActions(GetNextShieldSpecialLight(currentActionData.nextSpecialLight), GetNextShieldSpecialHeavy(currentActionData.nextSpecialHeavy));
+
+        ShieldData.ShieldAction GetNextShieldSpecialLight(ShieldData.ShieldSpecialLight specialLight)
+        {
+            switch (specialLight)
+            {
+                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_1: if (m_characterMovesetData.shield.ShiledSpecialLight1.AnimData != null) return m_characterMovesetData.shield.ShiledSpecialLight1; break;
+                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_2: if (m_characterMovesetData.shield.ShiledSpecialLight2.AnimData != null) return m_characterMovesetData.shield.ShiledSpecialLight2; break;
+            }
+            //Debug.Log("Warning: Next Possible Special Light Attack in line has no AnimationData, so the next will be the first one again");
+            return m_characterMovesetData.shield.ShiledSpecialLight1;
+        }
+        ShieldData.ShieldAction GetNextShieldSpecialHeavy(ShieldData.ShieldSpecialHeavy specialHeavy)
+        {
+            switch (specialHeavy)
+            {
+                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_1: if (m_characterMovesetData.shield.ShiledSpecialHeavy1.AnimData != null) return m_characterMovesetData.shield.ShiledSpecialHeavy1; break;
+                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_2: if (m_characterMovesetData.shield.ShiledSpecialHeavy2.AnimData != null) return m_characterMovesetData.shield.ShiledSpecialHeavy2; break;
+            }
+            //Debug.Log("Warning: Next Possible Special Heavy Attack in line has no AnimationData, so the next will be the first one again");
+            return m_characterMovesetData.shield.ShiledSpecialHeavy1;
+        }
     }
     public int GetInterruptabilityShieldLightSpecial()
     {
@@ -1203,7 +1230,8 @@ public class PlayerMovement : MonoBehaviour
         //End of Action
         //bool isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isWalkingLocked;
         //if (isRunning) SetNextPossibleAttacks(currentAction: Running);
-        SetNextPossibleAttacks(currentAction: Reset);
+        SetNextPossibleWeaponAttacks(currentAction: Reset);
+        SetNextPossibleShieldActions(currentAction: Reset);
 
         EndActionReset();
 
