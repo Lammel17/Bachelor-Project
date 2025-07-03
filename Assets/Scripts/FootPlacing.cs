@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class FootPlacing : MonoBehaviour
 {
+    [Tooltip("turn foot rotation on and off, because this takes the most calculations")]
     [SerializeField] private bool m_applyFootRot = true;
     [Space]
     [SerializeField] private Transform m_player;
@@ -22,12 +23,17 @@ public class FootPlacing : MonoBehaviour
     [SerializeField] private Transform m_thighBoneRight;
     [SerializeField] private Transform m_root;
 
+
     [SerializeField] private float m_raycastLenght = 2.5f; //beware, if its too short, m_isHightDifferenceOfGroundsIsTooBig will be not correct
 
     [SerializeField] private LayerMask m_environmentLayer;
+    [Tooltip("this is the distance between the footBone origin (the ankle) and the ground when the foot is perfectly standing")]
     [SerializeField] private float m_baseOffsetGroundToAnkleY = 0;
-    [SerializeField] private float m_footRotationSnappyness = 0.01f;
-    //[SerializeField] private float m_maxGroundHightDifference = 0.5f;
+    [Tooltip("[Y Axis Dist of original ground to original Ankle heigh] Dist below x threshhold: considered to snap to ground normal. Dist above y threshhold: considered not snapped to ground normal. (best case: (0, 0.01f))")]
+    [SerializeField] private Vector2 m_minFootDistToOrigHight = new Vector2(0, 0.01f);
+    [Tooltip("[Angle in degree to World.up] Angle below x threshhold: considered to snap to ground normal. Angle above y threshhold: considered not snapped to ground normal. (best case: (1, 7f))")]
+    [SerializeField] private Vector2 m_minFootAngleToOrigAngle = new Vector2(1, 7f);
+    [Tooltip("[Y Axis Dist between the hip and the highest ground] Dist below x threshhold: considered as hip is too close to the new higher ground. Dist above y threshhold: considered as hip is far enough away of the higher ground. (best case: (0.3f, 0.5f))")]
     [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 1)] private Vector2 m_minDistHipGround = new Vector2(0.3f, 0.5f);
     private float m_raycastHeightOffset = 0.6f;
 
@@ -46,8 +52,6 @@ public class FootPlacing : MonoBehaviour
     float m_rightAnkleHeight = 0;
     private float m_thighLenght = 0;
     private float m_shinLenght = 0;
-    private float m_groundHightDifferenceWeighted = 0;
-    bool m_isHightDifferenceOfGroundsIsTooBig = false;
 
     private float m_leftGroundHeight = 0;
     private float m_rightGroundHeight = 0;
@@ -176,8 +180,8 @@ public class FootPlacing : MonoBehaviour
         Quaternion desiredGroundRotL = Quaternion.FromToRotation(Vector3.up, hasGroundL ?  hitL.normal : Vector3.up) * leftFootRotOfAnim;
         Quaternion desiredGroundRotR = Quaternion.FromToRotation(Vector3.up, hasGroundR ? hitR.normal : Vector3.up) * rightFootRotOfAnim;
 
-        float leftSlerpFactorByRotationOrDist =  Mathf.Max(Mathf.InverseLerp(0, m_footRotationSnappyness, (m_leftAnkleHeight  - m_baseOffsetGroundToAnkleY)),       Mathf.InverseLerp(1, 7, Vector3.Angle(Vector3.up, m_leftFootUp.up)));
-        float rightSlerpFactorByRotationOrDist = Mathf.Max(Mathf.InverseLerp(0, m_footRotationSnappyness, (m_rightAnkleHeight - m_baseOffsetGroundToAnkleY)),       Mathf.InverseLerp(1, 7, Vector3.Angle(Vector3.up, m_rightFootUp.up)));
+        float leftSlerpFactorByRotationOrDist =  Mathf.Max(Mathf.InverseLerp(m_minFootDistToOrigHight.x, m_minFootDistToOrigHight.y, (m_leftAnkleHeight  - m_baseOffsetGroundToAnkleY)),       Mathf.InverseLerp(m_minFootAngleToOrigAngle.x, m_minFootAngleToOrigAngle.y, Vector3.Angle(Vector3.up, m_leftFootUp.up)));
+        float rightSlerpFactorByRotationOrDist = Mathf.Max(Mathf.InverseLerp(m_minFootDistToOrigHight.x, m_minFootDistToOrigHight.y, (m_rightAnkleHeight - m_baseOffsetGroundToAnkleY)),       Mathf.InverseLerp(m_minFootAngleToOrigAngle.x, m_minFootAngleToOrigAngle.y, Vector3.Angle(Vector3.up, m_rightFootUp.up)));
         //Debug.Log(Vector3.Angle(Vector3.up, test1.up));
  
         m_desiredLeftFootRot = Quaternion.Slerp(desiredGroundRotL, m_footBoneLeft.rotation , leftSlerpFactorByRotationOrDist);
