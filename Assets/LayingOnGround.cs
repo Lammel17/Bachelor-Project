@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class LayingOnGround : MonoBehaviour
 {
+
     [SerializeField] private Transform m_root;
     [SerializeField] private Transform m_centerBone;
 
@@ -11,6 +12,10 @@ public class LayingOnGround : MonoBehaviour
     [SerializeField] private Vector2 m_minDistToGround = new Vector2(0.2f, 0.5f);
     [SerializeField] private float m_raycastLenght = 0.8f;
     [SerializeField] private LayerMask m_environmentLayer;
+    [Space]
+
+    [SerializeField] private bool m_affectFootPlacing = false;
+    [SerializeField] private FootPlacing m_footPlacing;
 
     private Vector3 m_averageNormal = Vector3.zero;
 
@@ -26,8 +31,14 @@ public class LayingOnGround : MonoBehaviour
     {
         if ((((m_chest.position.y + m_pelvis.position.y) / 2) - m_root.position.y) > m_minDistToGround.y) 
         { 
-            if (m_root.rotation != this.transform.rotation) 
-                m_root.rotation = this.transform.rotation; 
+            if (m_root.rotation != this.transform.rotation)
+            {
+                m_root.rotation = this.transform.rotation;
+                if (m_affectFootPlacing)
+                    m_footPlacing.SetWeight(1);
+
+            }
+
             return; 
         }
 
@@ -200,7 +211,12 @@ public class LayingOnGround : MonoBehaviour
 
         test.rotation = desiredRootRot;
 
-        desiredRootRot = Quaternion.Slerp(desiredRootRot, this.transform.rotation, Mathf.InverseLerp(m_minDistToGround.x, m_minDistToGround.y, ((m_chest.position.y + m_pelvis.position.y) / 2) - m_root.position.y));
+        float weight = Mathf.InverseLerp(m_minDistToGround.x, m_minDistToGround.y, ((m_chest.position.y + m_pelvis.position.y) / 2) - m_root.position.y);
+        
+        if(m_affectFootPlacing) 
+            m_footPlacing.SetWeight(weight);
+
+        desiredRootRot = Quaternion.Slerp(desiredRootRot, this.transform.rotation, weight);
         //Debug.Log(Mathf.InverseLerp(m_minDistToGround.x, m_minDistToGround.y, ((m_chest.position.y + m_pelvis.position.y) / 2) - m_root.position.y));
 
         m_root.rotation = desiredRootRot;

@@ -2798,7 +2798,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1756236756}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69cb4e293c69f3149ad2dde62895a885, type: 3}
   m_Name: 
@@ -2822,7 +2822,7 @@ MonoBehaviour:
   m_minFootDistToOrigHight: {x: 0, y: 0.01}
   m_minFootAngleToOrigAngle: {x: 1, y: 7}
   m_minDistHipGround: {x: 0.3, y: 0.5}
-  m_weight: 0
+  m_weight: 1
   m_footAdjustSpeed: 60
   m_footRotAdjustSpeed: 30
   m_rootAdjustSpeed: 30
@@ -2842,11 +2842,13 @@ MonoBehaviour:
   m_centerBone: {fileID: 422825816}
   m_pelvis: {fileID: 422825817}
   m_chest: {fileID: 422825809}
-  m_minDistToGround: {x: 0.2, y: 0.5}
-  m_raycastLenght: 0.55
+  m_minDistToGround: {x: 0.3, y: 0.6}
+  m_raycastLenght: 0.7
   m_environmentLayer:
     serializedVersion: 2
     m_Bits: 64
+  m_affectFootPlacing: 1
+  m_footPlacing: {fileID: 1756236765}
   test: {fileID: 97982201}
 --- !u!1 &2016108117
 GameObject:

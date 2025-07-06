@@ -185,7 +185,7 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         m_characterController = GetComponent<CharacterController>();
-        m_chraracter.transform.position = new Vector3(0, -m_characterController.skinWidth - 0.01f, 0);
+        m_chraracter.transform.position = new Vector3(0, -m_characterController.skinWidth, 0);
 
         m_playerInputManager = PlayerInputManager.Instance;
         m_playerCameraHolder = PlayerCameraHolder.Instance;
