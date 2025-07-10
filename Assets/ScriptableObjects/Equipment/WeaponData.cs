@@ -48,8 +48,8 @@ public class WeaponData : ScriptableObject
     {
         public AnimationData AnimData;
         [NonSerialized] public int AttackHash;
-        public ActionDamageData DamageAndCostData = new ActionDamageData(1, 1, 1, 1);
-        public float EnergyCost = 20;
+        public ActionDamageData actionDamageData = new ActionDamageData(1, 1, 1, 1);
+        public int EnergyCost = 20;
         public float SpecialEnergyCost = 0;
         public PhysicalDamageType PhysicalType;
         [Space]

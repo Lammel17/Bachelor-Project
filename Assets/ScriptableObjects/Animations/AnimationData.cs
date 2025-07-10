@@ -24,6 +24,9 @@ public class AnimationData : ScriptableObject
     public float InterruptabilityChangeBeforeEndTime = 0;
     public AnimationInterruptableType ChangedInterruptability = AnimationInterruptableType.Easily_Interruptable;
     [Space]
+    [Header("ActionCosts Relative Pay Time ")]
+    [Range(0,1)] public float CostsPayTime = 0;
+    [Space]
     [Space]
     [Header("CorrectSpineRotations for Non Base Layer Animations")]
     public bool useLookAtData = false;

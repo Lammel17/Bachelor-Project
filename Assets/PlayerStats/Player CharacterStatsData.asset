@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49a3853ce068a9344b02292b57bc8d29, type: 3}
+  m_Name: Player CharacterStatsData
+  m_EditorClassIdentifier: 
+  Description: 
+  HealthPoints: {x: 100, y: 100}
+  EnergyPoints: {x: 300, y: 300}
+  SpecialEnergyPoints: {x: 100, y: 100}
+  PoisePoints: {x: 100, y: 100}
+  PhysicalSliceNegation: {x: 100, y: 100}
+  PhysicalBluntNegation: {x: 100, y: 100}
+  PhysicalPierceNegation: {x: 100, y: 100}
+  ThermicNegation: {x: 100, y: 100}
+  ElectricNegation: {x: 100, y: 100}
+  MetaphysicNegation: {x: 100, y: 100}
+  ThermicBuildUp: {x: 100, y: 0, z: -100}
+  ElectricBuildUp: {x: 100, y: 0, z: -100}
+  MetaphysicBuildUp: {x: 100, y: 0, z: -100}
+  ContaminationBuildUp: {x: 100, y: 100}

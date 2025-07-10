@@ -13,9 +13,11 @@ using Unity.Hierarchy;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 //using UnityEditor.Experimental.GraphView;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(CharacterStatus))]
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -24,7 +26,8 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-    private CharacterController m_characterController;
+    [SerializeField] private CharacterController m_characterController;
+    [SerializeField] private CharacterStatus m_characterStatus;
     [SerializeField] private GameObject m_chraracter;
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
@@ -91,6 +94,7 @@ public class PlayerMovement : MonoBehaviour
 
 
     private Coroutine m_actionChangesInterruptabilityCoroutine;
+    private Coroutine m_actionPayCostCouroutine;
     private Coroutine m_ActionCoroutine = null;
 
     private NextPossibleWeaponActions m_nextPossibleWeaponActions = null;
@@ -141,7 +145,7 @@ public class PlayerMovement : MonoBehaviour
         set 
         { 
             if          (value == 0)        { m_speed = 0;                  m_turningStrenght = m_turningStrenghtBaseValues.x; }
-            else if     (m_isRunning)   { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
+            else if     (m_isRunning)       { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
             else if     (value == 0.5f)     { m_speed = m_speedValues.x;    m_turningStrenght = m_turningStrenghtBaseValues.x; }
             else /*if   (value == 1) */     { m_speed = m_speedValues.y;    m_turningStrenght = m_turningStrenghtBaseValues.y; }
         } 
@@ -172,6 +176,9 @@ public class PlayerMovement : MonoBehaviour
             if (!m_isRunning && !m_isAction && m_target != null) { SetLookAtTarget(m_target); }
 
             Speed = m_inputStrenght;
+
+            if (m_isRunning) m_characterStatus.PauseEnergyRegenerationByAction();
+            else m_characterStatus.ContinueEnergyRegenerationInTime();
         } 
     }
     public bool IsHoldShielding { get => m_isHoldShielding; set { m_isHoldShielding = value; } }
@@ -184,7 +191,9 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
-        m_characterController = GetComponent<CharacterController>();
+        if (m_characterController == null) m_characterController = GetComponent<CharacterController>();
+        if (m_characterStatus == null) m_characterStatus = GetComponent<CharacterStatus>();
+
         m_chraracter.transform.position = new Vector3(0, -m_characterController.skinWidth, 0);
 
         m_playerInputManager = PlayerInputManager.Instance;
@@ -263,7 +272,8 @@ public class PlayerMovement : MonoBehaviour
         m_isStandingStill = ((m_isWalkingLocked == false && m_inputStrenght == 0) || m_isWalkingLocked == true);
 
         //Running
-        IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked);
+        IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked) && m_characterStatus.CheckIfCanConsumeConstantEnergy();
+        if (m_isRunning) m_characterStatus.ConsumeEnergyPoints(30 * Time.deltaTime);
 
         //FreelyMoving
         bool prevFreelyMoving = m_isFreelyMoving;
@@ -393,6 +403,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
+        if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
@@ -402,7 +414,7 @@ public class PlayerMovement : MonoBehaviour
 
         m_currentInteruptability = evadeInterruptability;
 
-        InitAction(animHash, animData);
+        InitAction(animHash, animData, 20);
 
         }
 
@@ -419,6 +431,8 @@ public class PlayerMovement : MonoBehaviour
         AnimationInterruptableType lightAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)lightAttackInterruptability) return;
 
+        if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
@@ -429,7 +443,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = lightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAttack.AttackHash, thisAttack.AnimData);
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost);
     }
 
     public void TriggerSpecialLightAttack()
@@ -444,6 +458,8 @@ public class PlayerMovement : MonoBehaviour
         AnimationInterruptableType specialLightAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)specialLightAttackInterruptability) return;
 
+        if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
@@ -454,7 +470,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = specialLightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAttack.AttackHash, thisAttack.AnimData);
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost);
     }
 
     public void TriggerHeavyAttack()
@@ -469,6 +485,8 @@ public class PlayerMovement : MonoBehaviour
         AnimationInterruptableType heavyAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)heavyAttackInterruptability) return;
 
+        if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
@@ -479,7 +497,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = heavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAttack.AttackHash, thisAttack.AnimData);
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost);
 
     }
     public void TriggerSpecialHeavyAttack()
@@ -494,6 +512,8 @@ public class PlayerMovement : MonoBehaviour
         AnimationInterruptableType specialHeavyAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)specialHeavyAttackInterruptability) return;
 
+        if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
@@ -504,7 +524,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = specialHeavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAttack.AttackHash, thisAttack.AnimData);
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost);
 
     }
 
@@ -542,6 +562,8 @@ public class PlayerMovement : MonoBehaviour
         AnimationInterruptableType specialShieldLightActionInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)specialShieldLightActionInterruptability) return;
 
+        if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
@@ -552,7 +574,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = specialShieldLightActionInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAction.ActionkHash, thisAction.AnimData);
+        InitAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost);
     }
 
     public void TriggerShieldSpecialHeavy()
@@ -567,6 +589,8 @@ public class PlayerMovement : MonoBehaviour
         AnimationInterruptableType specialShieldHeavyActionInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)specialShieldHeavyActionInterruptability) return;
 
+        if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
@@ -577,7 +601,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = specialShieldHeavyActionInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAction.ActionkHash, thisAction.AnimData);
+        InitAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost);
     }
 
     public void TriggerItemUse()
@@ -615,7 +639,7 @@ public class PlayerMovement : MonoBehaviour
 
     #region SET ACTIONS
 
-    private void InitAction(int animationHash, AnimationData animData)
+    private void InitAction(int animationHash, AnimationData animData, int staminaCost = 0)
     {
         m_isAction = true;
         IsRunning = false;
@@ -635,17 +659,22 @@ public class PlayerMovement : MonoBehaviour
 
         float animationDuration = animData.animationClip.length;
 
+        m_characterStatus.PauseEnergyRegenerationByAction();
+        if (staminaCost != 0)
+        {
+            Action payActionCostsAction = () => { m_characterStatus.ConsumeEnergyPoints(staminaCost); m_actionPayCostCouroutine = null; };
+            m_actionPayCostCouroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.CostsPayTime, payActionCostsAction));
+        }
+
         Action changeInteruptabilityAction = () =>
         {
+            m_characterStatus.ContinueEnergyRegenerationInTime();
             m_currentInteruptability = animData.ChangedInterruptability;
             m_actionChangesInterruptabilityCoroutine = null;
 
             if (m_playerInputManager.CheckRecallLatestBufferedInput())
                 EndActionReset();
-            //else if (m_isHoldShielding)
-            //    EndActionReset();
         };
-        
         //this is if a action is earlier interruptable than the lenght of the animation
         m_actionChangesInterruptabilityCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn - animData.InterruptabilityChangeBeforeEndTime, changeInteruptabilityAction));
 
@@ -1258,6 +1287,7 @@ public class PlayerMovement : MonoBehaviour
         //IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked);  //this is funny, many stab attacks haha
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         m_isTurning = false;
+        m_characterStatus.ContinueEnergyRegenerationInTime();
 
         SetLookAtForward(false);
         if (m_isHoldShielding) IsShielding = true;
@@ -1272,6 +1302,11 @@ public class PlayerMovement : MonoBehaviour
         {
             StopCoroutine(m_actionChangesInterruptabilityCoroutine);
             m_actionChangesInterruptabilityCoroutine = null;
+        }
+        if (m_actionPayCostCouroutine != null)
+        {
+            StopCoroutine(m_actionPayCostCouroutine);
+            m_actionPayCostCouroutine = null;
         }
 
         //Set Values
