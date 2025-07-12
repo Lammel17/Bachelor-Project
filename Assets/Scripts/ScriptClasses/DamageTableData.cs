@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [System.Serializable]
-public class DamageTableData
+public class DamageTableData //this is the table is for weapons which contains the data of its damage from min to max weapon level
 {
     public Vector2 Poise = new Vector2(0, 0);
     public Vector2 PhysicalSlice = new Vector2(0, 0);

@@ -57,7 +57,7 @@ public class ShieldData : ScriptableObject
         public AnimationData AnimData;
 
         [NonSerialized] public int ActionkHash;
-        public ActionDamageData DamageData = new ActionDamageData(1, 1, 1, 1);
+        public DamageMultiplikatorData DamageData = new DamageMultiplikatorData(1, 1, 1, 1, 1, 1, 1);
         public int EnergyCost = 20;
         public float SpecialEnergyCost = 0;
         public ShieldSpecialLight nextSpecialLight;

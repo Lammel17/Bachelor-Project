@@ -12,8 +12,10 @@ public class CharacterStatus : MonoBehaviour
 
     [SerializeField] private float m_energyRecoverySpeed = 1f;
     [SerializeField] private float m_energyRecoveryPause = 1f;
+    [Space]
+    [SerializeField] private float m_specialEnergyRecoverySpeed = 1f;
+
     private bool m_isPauseEnergyRecoveryDueAction = false;
-    private bool m_isPauseEnergyRecoveryDueDelay = false;
     private bool m_isPauseEnergyRecoveryDueEmpty = false;
     private bool m_isEnergyExhausted = false;
 
@@ -41,6 +43,37 @@ public class CharacterStatus : MonoBehaviour
 
     private void Update()
     {
+        SetEnergyThisFrame();
+        SetSpecialEnergyThisFrame();
+
+        m_hp = m_characterStatsData.HealthPoints.x / m_characterStatsData.HealthPoints.y;
+        m_ep = m_characterStatsData.EnergyPoints.x / m_characterStatsData.EnergyPoints.y;
+        m_sep = m_characterStatsData.SpecialEnergyPoints.x / m_characterStatsData.SpecialEnergyPoints.y;
+        m_poise = m_characterStatsData.PoisePoints.x / m_characterStatsData.PoisePoints.y;
+    }
+
+    #region SPECIAL ENERGY
+
+    public bool CheckIfCanConsumeSpecialEnergy(int cost)
+    {
+        if (m_characterStatsData.SpecialEnergyPoints.x >= cost)
+            return true;
+        else
+            return false;
+    }
+
+    private void SetSpecialEnergyThisFrame()
+    {
+        if (m_characterStatsData.EnergyPoints.x == m_characterStatsData.EnergyPoints.y)
+            m_characterStatsData.SpecialEnergyPoints.x = Mathf.Min( m_characterStatsData.SpecialEnergyPoints.x + m_specialEnergyRecoverySpeed * Time.deltaTime, m_characterStatsData.SpecialEnergyPoints.y);
+    }
+
+    #endregion
+
+
+    #region ENERGY POINTS
+    private void SetEnergyThisFrame()
+    {
         if (m_thisFrameEnergyWasConsumed)
         {
             m_thisFrameEnergyWasConsumed = false;
@@ -49,7 +82,7 @@ public class CharacterStatus : MonoBehaviour
         }
         else if (!m_isPauseEnergyRecoveryDueAction && !m_isPauseEnergyRecoveryDueEmpty)
             m_characterStatsData.EnergyPoints.x = Mathf.Min(m_characterStatsData.EnergyPoints.x + m_energyRecoverySpeed * Time.deltaTime, m_characterStatsData.EnergyPoints.y);
-        
+
 
         if (m_characterStatsData.EnergyPoints.x == 0 && !m_isEnergyExhausted)
         {
@@ -57,18 +90,10 @@ public class CharacterStatus : MonoBehaviour
             m_isPauseEnergyRecoveryDueEmpty = true;
 
             //if currently is action, the coroutine will be called at the end of the action anyways
-            if (!m_isPauseEnergyRecoveryDueAction) 
+            if (!m_isPauseEnergyRecoveryDueAction)
                 ContinueEnergyRegenerationInTime();
         }
-        
-
-        m_hp = m_characterStatsData.HealthPoints.x / m_characterStatsData.HealthPoints.y;
-        m_ep = m_characterStatsData.EnergyPoints.x / m_characterStatsData.EnergyPoints.y;
-        m_sep = m_characterStatsData.SpecialEnergyPoints.x / m_characterStatsData.SpecialEnergyPoints.y;
-        m_poise = m_characterStatsData.PoisePoints.x / m_characterStatsData.PoisePoints.y;
     }
-
-
 
     public void ConsumeEnergyPoints(float actionCost)
     {
@@ -124,29 +149,47 @@ public class CharacterStatus : MonoBehaviour
         else
             return false;
     }
-    public bool CheckIfCanConsumeSpecialEnergy(int cost)
+
+    #endregion
+
+
+    #region HEALTH POINTS
+    public void LooseFixedHealthPoints(int loosePoints)
     {
-        if (m_characterStatsData.SpecialEnergyPoints.x >= cost)
-            return true;
-        else 
-            return false;
+        m_characterStatsData.HealthPoints.x = Mathf.Max(m_characterStatsData.HealthPoints.x - loosePoints, 0);
+
     }
 
+    public void GainFixedHealthPoints(int gainPoints)
+    {
+        m_characterStatsData.HealthPoints.x = Mathf.Min(m_characterStatsData.HealthPoints.x + gainPoints, m_characterStatsData.HealthPoints.y);
 
-    //public void LooseFixedHealthPoints(int loosePoints)
+    }
+
+    //public void GainOverTimeHealthPoints(int gainPoints)
     //{
-    //    m_characterStatsData.HealthPoints.x = Mathf.Max(m_characterStatsData.HealthPoints.x - loosePoints, 0);
+    //    m_characterStatsData.HealthPoints.x = Mathf.Min(m_characterStatsData.HealthPoints.x + gainPoints, m_characterStatsData.HealthPoints.y);
+
+    //    StartCoroutine()
 
     //}
 
-    //public void TakeDamageOnHealthPoints(int damageData)
-    //{
+    public void TakeDamageOnHealthPoints(DamageData damageData)
+    {
 
-    //    m_characterStatsData.HealthPoints.x = Mathf.Max(m_characterStatsData.HealthPoints.x , 0);
+        float damage =
+            damageData.PhysicalSliceDamage * (1 - m_characterStatsData.PhysicalSliceNegation / 100)
+            + damageData.PhysicalBluntDamage * (1 - m_characterStatsData.PhysicalBluntNegation / 100)
+            + damageData.PhysicalPierceDamage * (1 - m_characterStatsData.PhysicalPierceNegation / 100)
+            + damageData.ThermicDamage * (1 - m_characterStatsData.ThermicNegation / 100)
+            + damageData.ElectricDamage * (1 - m_characterStatsData.ElectricNegation / 100)
+            + damageData.MetaphysicDamage * (1 - m_characterStatsData.MetaphysicNegation / 100);
 
-    //}
+        m_characterStatsData.HealthPoints.x = Mathf.Max(m_characterStatsData.HealthPoints.x - damage, 0);
 
+    }
 
+    #endregion
 
 
 
