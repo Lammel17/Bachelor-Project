@@ -15,9 +15,9 @@ public class HurtBoxManager : MonoBehaviour
     }
 
     public void Start()
-    { //this might cause issues if there are alot of chars with many hurtboxes
+    { 
 
-        foreach (HurtBoxCollection collection in m_hurtBoxCollection)
+        foreach (HurtBoxCollection collection in m_hurtBoxCollection)//this might cause issues if there are alot of chars with many hurtboxes
         {
             foreach (HurtBox hurtbox in collection.hurtBoxes)
             {
@@ -33,14 +33,16 @@ public class HurtBoxManager : MonoBehaviour
             return;
 
         DamageData damage = new DamageData(
-            (int)(damageData.PoiseDamage * damageMultiplikator.PoiseDamageFactor),
             (int)(damageData.PhysicalSliceDamage * damageMultiplikator.PhysicalFactor * damageMultiplikator.OverallMultiplicator),
             (int)(damageData.PhysicalBluntDamage * damageMultiplikator.PhysicalFactor * damageMultiplikator.OverallMultiplicator),
             (int)(damageData.PhysicalPierceDamage * damageMultiplikator.PhysicalFactor * damageMultiplikator.OverallMultiplicator),
-            (int)(damageData.ThermicDamage * damageMultiplikator.ThermicFactor * damageMultiplikator.OverallMultiplicator),
-            (int)(damageData.ElectricDamage * damageMultiplikator.ElectricFactor * damageMultiplikator.OverallMultiplicator),
-            (int)(damageData.MetaphysicDamage * damageMultiplikator.MetaphysicFactor * damageMultiplikator.OverallMultiplicator),
-            (int)(damageData.ContaminationBuildUpDamage * damageMultiplikator.AilmentsFactor));
+            new Vector2Int((int)(damageData.ThermicDamageAndBuildUp.x * damageMultiplikator.ThermicFactor * damageMultiplikator.OverallMultiplicator), damageData.ThermicDamageAndBuildUp.y),
+            new Vector2Int((int)(damageData.ElectricDamageAndBuildUp.x * damageMultiplikator.ElectricFactor * damageMultiplikator.OverallMultiplicator), damageData.ElectricDamageAndBuildUp.y),
+            new Vector2Int((int)(damageData.MetaphysicDamageAndBuildUp.x * damageMultiplikator.MetaphysicFactor * damageMultiplikator.OverallMultiplicator), damageData.MetaphysicDamageAndBuildUp.y),
+            (int)(damageData.ContaminationBuildUpDamage * damageMultiplikator.AilmentsFactor),
+            (int)(damageData.PoiseDamage * damageMultiplikator.PoiseDamageFactor));
+
+        m_characterStatus.TakeDamage(damage);
     }
 
 

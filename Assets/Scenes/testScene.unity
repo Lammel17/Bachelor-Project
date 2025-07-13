@@ -2839,10 +2839,10 @@ GameObject:
   - component: {fileID: 1756236762}
   - component: {fileID: 1756236763}
   - component: {fileID: 1756236767}
+  - component: {fileID: 1756236768}
   - component: {fileID: 1756236764}
   - component: {fileID: 1756236765}
   - component: {fileID: 1756236766}
-  - component: {fileID: 1756236768}
   m_Layer: 0
   m_Name: TestPlayer
   m_TagString: Untagged
@@ -3056,12 +3056,18 @@ MonoBehaviour:
   m_energyRecoverySpeed: 100
   m_energyRecoveryPause: 1
   m_specialEnergyRecoverySpeed: 1
-  m_minRecoveredEnergy: 40
-  m_minRecoveredEnergyConstant: 80
+  m_PoiseRecoverySpeed: 1
+  m_buildUpsRecoverySpeed: 1
+  m_minRecoveredEnergyForAction: 40
+  m_minRecoveredEnergyConstantForAction: 90
   m_hp: 1
   m_ep: 1
   m_sep: 1
   m_poise: 1
+  m_thermic: 1
+  m_electric: 1
+  m_metaphysic: 1
+  m_contamination: 1
 --- !u!114 &1756236768
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3074,7 +3080,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ae1fd889a39c364cb93463435ed874e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_characterStatus: {fileID: 0}
+  m_triggerLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  m_characterStatus: {fileID: 1756236767}
   m_hurtBoxCollection: []
 --- !u!1 &2016108117
 GameObject:

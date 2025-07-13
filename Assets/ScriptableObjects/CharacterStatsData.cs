@@ -7,9 +7,9 @@ public class CharacterStatsData : ScriptableObject
     public string Description = "";
 
     [Header("(Current, Max)")]
-    public Vector2 HealthPoints = new Vector2(100, 100);
-    public Vector2 EnergyPoints = new Vector2(100, 100);
-    public Vector2 SpecialEnergyPoints = new Vector2(100, 100);
+    public Vector2Int HealthPoints = new Vector2Int(500, 500);
+    public Vector2Int EnergyPoints = new Vector2Int(500, 500);
+    public Vector2Int SpecialEnergyPoints = new Vector2Int(500, 500);
     public Vector2 PoisePoints = new Vector2(100, 100);
     [Space]
     public int PhysicalSliceNegation = 0;
@@ -19,9 +19,9 @@ public class CharacterStatsData : ScriptableObject
     public int ElectricNegation = 0;
     public int MetaphysicNegation = 0;
     [Space]
-    public Vector3 ThermicBuildUp = new Vector3(100, 0, -100);
-    public Vector3 ElectricBuildUp = new Vector3(100, 0, -100);
-    public Vector3 MetaphysicBuildUp = new Vector3(100, 0, -100);
+    public Vector3 ThermicBuildUp = new Vector3(0, 100, -100);
+    public Vector3 ElectricBuildUp = new Vector3(0, 100, -100);
+    public Vector3 MetaphysicBuildUp = new Vector3(0, 100, -100);
     [Space]
-    public Vector2 ContaminationBuildUp = new Vector2(100, 100);
+    public Vector2 ContaminationBuildUp = new Vector2(0, 100);
 }

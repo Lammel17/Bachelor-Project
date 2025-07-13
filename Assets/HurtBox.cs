@@ -6,7 +6,8 @@ public class HurtBox : MonoBehaviour
     private LayerMask m_triggerLayer;
     private DamageMultiplikatorData m_damageMultiplikator = new DamageMultiplikatorData(1,1,1,1,1,1,1);
 
-    public void SetValues(LayerMask triggerLayer, HurtBoxManager hurtBoxManager, DamageMultiplikatorData damageMultiplikator)
+    //this might cause issues if there are alot of chars with many hurtboxes
+    public void SetValues(LayerMask triggerLayer, HurtBoxManager hurtBoxManager, DamageMultiplikatorData damageMultiplikator) 
     {
         m_triggerLayer = triggerLayer;
         m_hurtboxManager = hurtBoxManager;

@@ -273,7 +273,7 @@ public class PlayerMovement : MonoBehaviour
 
         //Running
         IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked) && m_characterStatus.CheckIfCanConsumeConstantEnergy();
-        if (m_isRunning) m_characterStatus.ConsumeEnergyPoints(30 * Time.deltaTime);
+        if (m_isRunning) m_characterStatus.ExpendEnergyPoints(30 * Time.deltaTime);
 
         //FreelyMoving
         bool prevFreelyMoving = m_isFreelyMoving;
@@ -662,7 +662,7 @@ public class PlayerMovement : MonoBehaviour
         m_characterStatus.PauseEnergyRegenerationByAction();
         if (staminaCost != 0)
         {
-            Action payActionCostsAction = () => { m_characterStatus.ConsumeEnergyPoints(staminaCost); m_actionPayCostCouroutine = null; };
+            Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_actionPayCostCouroutine = null; };
             m_actionPayCostCouroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.CostsPayTime, payActionCostsAction));
         }
 
