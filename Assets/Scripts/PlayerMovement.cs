@@ -13,8 +13,7 @@ using Unity.Hierarchy;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
-//using UnityEditor.Experimental.GraphView;
+
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(CharacterStatus))]
@@ -83,7 +82,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isShielding = false;
 
     [SerializeField][EditorAttributes.ReadOnly] private int m_currentBaseLayerAnimation;
-    //[SerializeField][EditorAttributes.ReadOnly] private int m_currentUpperBodyAnimation;
     [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_currentUpperBodyAnimation;
 
     //Previous Frame Values
@@ -122,10 +120,10 @@ public class PlayerMovement : MonoBehaviour
         public ShieldData.ShieldAction specialShieldLight;
         public ShieldData.ShieldAction specialShieldHeavy;
 
-        public NextPossibleShieldActions(/*ShieldData.SimpleShieldAction i, ShieldData.SimpleShieldAction s, */ShieldData.ShieldAction s12, ShieldData.ShieldAction s34)
+        public NextPossibleShieldActions(ShieldData.SimpleShieldAction i, ShieldData.SimpleShieldAction s, ShieldData.ShieldAction s12, ShieldData.ShieldAction s34)
         {
-            //shieldIdle = i;
-            //ShieldingUpperBody = s;
+            shieldIdle = i;
+            ShieldingUpperBody = s;
 
             specialShieldLight = s12;
             specialShieldHeavy = s34;
@@ -182,7 +180,15 @@ public class PlayerMovement : MonoBehaviour
         } 
     }
     public bool IsHoldShielding { get => m_isHoldShielding; set { m_isHoldShielding = value; } }
-    public bool IsShielding { get => m_isShielding; set { m_isShielding = value; SetLookAtForward(m_isShielding, m_isShielding ? m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData : null); } }
+    public bool IsShielding 
+    { 
+        get => m_isShielding; 
+        set 
+        { 
+            m_isShielding = value; 
+            SetLookAtForward(m_isShielding, m_isShielding ? m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData : null); 
+        } 
+    }
     public Vector3 PreviousMove { get => m_prevMove; }
     public AnimationInterruptableType CurrentInteruptability { get => m_currentInteruptability;  }
 
@@ -208,7 +214,7 @@ public class PlayerMovement : MonoBehaviour
         ChangeAnimation.InitializeAnimationOverrideController(m_animator, m_characterMovesetData);
 
         m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
-        m_nextPossibleShieldActions = new NextPossibleShieldActions(/*m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, */m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
+        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
 
         m_currentBaseLayerAnimation = Idle_1;
         m_currentUpperBodyAnimation = new Vector2(Empty_UpperBody, 0);
@@ -686,7 +692,7 @@ public class PlayerMovement : MonoBehaviour
         m_isAction = true;
         m_isActionUpperBody = true;
         IsRunning = false;
-        IsShielding = false;
+
         if (animData.useLookAtData)
             SetLookAtForward(true, animData.lookAtData);
 
@@ -805,10 +811,10 @@ public class PlayerMovement : MonoBehaviour
     private void SetNextPossibleShieldActions(ShieldData.ShieldAction currentActionData = null, int currentAction = 0)
     {
         if (currentAction == Reset)
-            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
+            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
 
         else if (currentActionData != null)
-            m_nextPossibleShieldActions = new NextPossibleShieldActions(GetNextShieldSpecialLight(currentActionData.nextSpecialLight), GetNextShieldSpecialHeavy(currentActionData.nextSpecialHeavy));
+            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, GetNextShieldSpecialLight(currentActionData.nextSpecialLight), GetNextShieldSpecialHeavy(currentActionData.nextSpecialHeavy));
 
         ShieldData.ShieldAction GetNextShieldSpecialLight(ShieldData.ShieldSpecialLight specialLight)
         {

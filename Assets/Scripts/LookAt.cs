@@ -11,8 +11,8 @@ public class LookAt : MonoBehaviour
 
     [SerializeField] private bool m_isActive = true;
     [Space]
-    [SerializeField] private bool m_isActiveTarget = false;
-    [SerializeField] private bool m_isActiveForwardCorrection = false;
+    [SerializeField] [EditorAttributes.ReadOnly] private bool m_isActiveTarget = false;
+    [SerializeField] [EditorAttributes.ReadOnly] private bool m_isActiveForwardCorrection = false;
     [Space]
     [SerializeField] private float m_applyRemoveSpeed = 1;
 
