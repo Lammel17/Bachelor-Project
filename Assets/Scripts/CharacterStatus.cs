@@ -52,6 +52,15 @@ public class CharacterStatus : MonoBehaviour
             m_characterStatsData = new CharacterStatsData();
             m_infinteStamina = true;
         }
+
+        m_characterStatsData.HealthPoints.x = m_characterStatsData.HealthPoints.y;
+        m_characterStatsData.EnergyPoints.x = m_characterStatsData.EnergyPoints.y;
+        m_characterStatsData.SpecialEnergyPoints.x = m_characterStatsData.SpecialEnergyPoints.y;
+        m_characterStatsData.PoisePoints.x = m_characterStatsData.PoisePoints.y;
+        m_characterStatsData.ThermicBuildUp.x = 0;
+        m_characterStatsData.ElectricBuildUp.x = 0;
+        m_characterStatsData.MetaphysicBuildUp.x = 0;
+        m_characterStatsData.ContaminationBuildUp.x = 0;
     }
 
 
@@ -65,9 +74,9 @@ public class CharacterStatus : MonoBehaviour
         RecoverPoise();
         RecoverBuildUps();
 
-        m_hp = m_characterStatsData.HealthPoints.x / m_characterStatsData.HealthPoints.y;
-        m_ep = m_characterStatsData.EnergyPoints.x / m_characterStatsData.EnergyPoints.y;
-        m_sep = m_characterStatsData.SpecialEnergyPoints.x / m_characterStatsData.SpecialEnergyPoints.y;
+        m_hp = (float)m_characterStatsData.HealthPoints.x / (float)m_characterStatsData.HealthPoints.y;
+        m_ep = (float)m_characterStatsData.EnergyPoints.x / (float)m_characterStatsData.EnergyPoints.y;
+        m_sep = (float)m_characterStatsData.SpecialEnergyPoints.x / (float)m_characterStatsData.SpecialEnergyPoints.y;
         m_poise = m_characterStatsData.PoisePoints.x / m_characterStatsData.PoisePoints.y;
 
         m_thermic = m_characterStatsData.ThermicBuildUp.x >= 0 ? m_characterStatsData.ThermicBuildUp.x / m_characterStatsData.ThermicBuildUp.y : m_characterStatsData.ThermicBuildUp.x / m_characterStatsData.ThermicBuildUp.z;
@@ -201,7 +210,7 @@ public class CharacterStatus : MonoBehaviour
         {
             m_energyGainOfFrame += m_energyRecoverySpeed * Time.deltaTime;
             m_characterStatsData.EnergyPoints.x = Mathf.Min(m_characterStatsData.EnergyPoints.x + (int)m_energyGainOfFrame, m_characterStatsData.EnergyPoints.y);
-            m_energyGainOfFrame -= (int)m_energyCostsOfFrame;
+            m_energyGainOfFrame -= (int)m_energyGainOfFrame;
         }
 
 

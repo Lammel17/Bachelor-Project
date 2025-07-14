@@ -1,7 +1,9 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class HurtBox : MonoBehaviour
 {
+    [SerializeField] private Collider m_hurtBoxCollider;
     private HurtBoxManager m_hurtboxManager;
     private LayerMask m_triggerLayer;
     private DamageMultiplikatorData m_damageMultiplikator = new DamageMultiplikatorData(1,1,1,1,1,1,1);
@@ -16,6 +18,20 @@ public class HurtBox : MonoBehaviour
         return;
     }
 
+    public void ActivateHurtBox(DamageData damageData)
+    {
+        if (m_hurtBoxCollider == null)
+            m_hurtBoxCollider.GetComponent<Collider>();
+        m_hurtBoxCollider.enabled = true;
+    }
+    public void DeactivateHurtBox()
+    {
+        if (m_hurtBoxCollider == null)
+            m_hurtBoxCollider.GetComponent<Collider>();
+        m_hurtBoxCollider.enabled = false;
+    }
+
+
     private void OnTriggerEnter(Collider other)
     {
         if (m_hurtboxManager == null)
@@ -25,7 +41,11 @@ public class HurtBox : MonoBehaviour
 
         if(other.TryGetComponent<HitBox>(out HitBox hit))
         {
-            DamageData damageData = hit.GetDamageData();
+
+            if (!hit.CheckIfCanBeHit(m_hurtboxManager))
+                return;
+
+            DamageData damageData = hit.HurtBoxWasHit(m_hurtboxManager);
             m_hurtboxManager.TriggerCollision(m_damageMultiplikator, damageData);
         }
         

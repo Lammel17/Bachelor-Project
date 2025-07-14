@@ -13,17 +13,17 @@ MonoBehaviour:
   m_Name: TestPlayer CharacterStatsData
   m_EditorClassIdentifier: 
   Description: 
-  HealthPoints: {x: 100, y: 100}
+  HealthPoints: {x: 400, y: 500}
   EnergyPoints: {x: 300, y: 300}
   SpecialEnergyPoints: {x: 100, y: 100}
   PoisePoints: {x: 100, y: 100}
-  PhysicalSliceNegation: {x: 100, y: 100}
-  PhysicalBluntNegation: {x: 100, y: 100}
-  PhysicalPierceNegation: {x: 100, y: 100}
-  ThermicNegation: {x: 100, y: 100}
-  ElectricNegation: {x: 100, y: 100}
-  MetaphysicNegation: {x: 100, y: 100}
-  ThermicBuildUp: {x: 100, y: 0, z: -100}
-  ElectricBuildUp: {x: 100, y: 0, z: -100}
-  MetaphysicBuildUp: {x: 100, y: 0, z: -100}
-  ContaminationBuildUp: {x: 100, y: 100}
+  PhysicalSliceNegation: 0
+  PhysicalBluntNegation: 0
+  PhysicalPierceNegation: 0
+  ThermicNegation: 0
+  ElectricNegation: 0
+  MetaphysicNegation: 0
+  ThermicBuildUp: {x: 0, y: 100, z: -100}
+  ElectricBuildUp: {x: 0, y: 100, z: -100}
+  MetaphysicBuildUp: {x: 0, y: 100, z: -100}
+  ContaminationBuildUp: {x: 0, y: 100}
