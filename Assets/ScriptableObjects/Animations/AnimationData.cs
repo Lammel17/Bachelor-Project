@@ -7,7 +7,7 @@ public class AnimationData : ScriptableObject
     public string ActionDescription = "";
 
     [Space]
-    [Header("Animation Data")]
+    [Header("-> Animation Data")]
     public AnimationClip animationClip = null;
     public AnimationMovementData AnimationMovementData;
     public BodyParts bodyParts = BodyParts.WholeBody;
@@ -17,20 +17,24 @@ public class AnimationData : ScriptableObject
     [Tooltip("how long before the end of animation should the crossfade begin ")]
     public float crossfadeBeginn = 0.2f;
 
-    [Header("Interruptability")]
+    [Header("-> Interruptability")]
     public AnimationInterruptableType CustomInterruptability = AnimationInterruptableType.SetByButton;
     [Space]
     [Tooltip("If 0, its ignored")]
     public float InterruptabilityChangeBeforeEndTime = 0;
     public AnimationInterruptableType ChangedInterruptability = AnimationInterruptableType.Easily_Interruptable;
     [Space]
-    [Header("ActionCosts Relative Pay Time ")]
+    [Header("-> ActionCosts Pay in Relative Time ")]
     [Range(0,1)] public float CostsPayTime = 0;
     [Space]
+    [Header("-> Pause midAir in Relative Time ")]
+    public bool IsPausingMidAir = false;
+    [Range(0, 1)] public float PauseMidAirTime = 0;
     [Space]
-    [Header("CorrectSpineRotations for Non Base Layer Animations")]
+    [Space]
+    [Header("-> CorrectSpineRotations for Non Base Layer Animations")]
     public bool useLookAtData = false;
-    public LookAtForwardData lookAtData;
+    public LookAtData lookAtData;
 
     //[Header("Invincibility")]
     //public Invincibility invincibilitySettings;

@@ -42,6 +42,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float m_moveAcceleration = 20f;
     [SerializeField] private Vector3 m_turningStrenghtBaseValues = new Vector3(15, 15, 10); //slow, walk, running
     [SerializeField] private float m_maxTurningSpeedBaseValue = 50f;
+    [SerializeField] private int m_evadeCosts = 30;
     //private const int m_runningMoveStrenght = 2;
     private Vector3 m_nowMoveDir = Vector3.forward;
     private float m_gravity = -9.81f;
@@ -80,7 +81,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionLocked = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldShielding = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isShielding = false;
-
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isGrounded = true;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isMidAirPause = false;
+    [Space]
     [SerializeField][EditorAttributes.ReadOnly] private int m_currentBaseLayerAnimation;
     [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_currentUpperBodyAnimation;
 
@@ -93,6 +96,7 @@ public class PlayerMovement : MonoBehaviour
 
     private Coroutine m_actionChangesInterruptabilityCoroutine;
     private Coroutine m_actionPayCostCouroutine;
+    private Coroutine m_actionPauseCoroutine;
     private Coroutine m_ActionCoroutine = null;
 
     private NextPossibleWeaponActions m_nextPossibleWeaponActions = null;
@@ -148,6 +152,22 @@ public class PlayerMovement : MonoBehaviour
             else /*if   (value == 1) */     { m_speed = m_speedValues.y;    m_turningStrenght = m_turningStrenghtBaseValues.y; }
         } 
     } 
+    public bool IsGrounded 
+    { 
+        get => m_isGrounded; 
+        set 
+        {
+            if (value == m_isGrounded)
+                return;
+
+            m_isGrounded = value; 
+            if (m_isMidAirPause && m_isGrounded)
+            {
+                m_isMidAirPause = false;
+                m_animator.speed = 1;
+            }
+        } 
+    }
     public Quaternion CameraYAxisRotation { get => m_cameraYAxisRotationInWS; set => m_cameraYAxisRotationInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
     public Transform Target 
     { 
@@ -271,6 +291,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
+        IsGrounded = m_characterController.isGrounded;
+
         m_controllerVelocity = m_characterController.velocity;
 
         //StandingStill
@@ -389,6 +411,22 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    void TriggerSwapWeapon()
+    {
+        //if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+
+        //AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
+        //if ((int)m_currentInteruptability >= (int)turningInterruptability) return;
+
+        //AnimationData animData = null;
+
+
+    }
+
+
+
+
+
 
     public void TriggerEvading()
     {
@@ -420,7 +458,7 @@ public class PlayerMovement : MonoBehaviour
 
         m_currentInteruptability = evadeInterruptability;
 
-        InitAction(animHash, animData, 20);
+        InitAction(animHash, animData, m_evadeCosts);
 
         }
 
@@ -438,6 +476,7 @@ public class PlayerMovement : MonoBehaviour
         if ((int)m_currentInteruptability >= (int)lightAttackInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAttack.SpecialEnergyCost)) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
@@ -449,7 +488,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = lightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost);
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
     }
 
     public void TriggerSpecialLightAttack()
@@ -465,6 +504,7 @@ public class PlayerMovement : MonoBehaviour
         if ((int)m_currentInteruptability >= (int)specialLightAttackInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAttack.SpecialEnergyCost)) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
@@ -476,7 +516,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = specialLightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost);
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
     }
 
     public void TriggerHeavyAttack()
@@ -492,6 +532,7 @@ public class PlayerMovement : MonoBehaviour
         if ((int)m_currentInteruptability >= (int)heavyAttackInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAttack.SpecialEnergyCost)) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
@@ -503,7 +544,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = heavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost);
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
 
     }
     public void TriggerSpecialHeavyAttack()
@@ -519,6 +560,7 @@ public class PlayerMovement : MonoBehaviour
         if ((int)m_currentInteruptability >= (int)specialHeavyAttackInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAttack.SpecialEnergyCost)) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
@@ -530,7 +572,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = specialHeavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost);
+        InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
 
     }
 
@@ -569,6 +611,7 @@ public class PlayerMovement : MonoBehaviour
         if ((int)m_currentInteruptability >= (int)specialShieldLightActionInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAction.SpecialEnergyCost)) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
@@ -580,7 +623,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = specialShieldLightActionInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost);
+        InitAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
     }
 
     public void TriggerShieldSpecialHeavy()
@@ -596,6 +639,8 @@ public class PlayerMovement : MonoBehaviour
         if ((int)m_currentInteruptability >= (int)specialShieldHeavyActionInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAction.SpecialEnergyCost)) return;
+
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
@@ -607,7 +652,7 @@ public class PlayerMovement : MonoBehaviour
         m_currentInteruptability = specialShieldHeavyActionInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        InitAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost);
+        InitAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
     }
 
     public void TriggerItemUse()
@@ -623,6 +668,9 @@ public class PlayerMovement : MonoBehaviour
         AnimationInterruptableType itemUseInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
 
         if ((int)m_currentInteruptability >= (int)itemUseInterruptability) return;
+
+        //if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
+        //if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAction.EnergyCost)) return;
 
         if (m_ActionCoroutine != null && (!m_isTurning || thisAction.AnimData.bodyParts == AnimationData.BodyParts.WholeBody))
             EndActionReset();
@@ -645,7 +693,7 @@ public class PlayerMovement : MonoBehaviour
 
     #region SET ACTIONS
 
-    private void InitAction(int animationHash, AnimationData animData, int staminaCost = 0)
+    private void InitAction(int animationHash, AnimationData animData, int staminaCost = 0, int specialEnergyCost = 0)
     {
         m_isAction = true;
         IsRunning = false;
@@ -666,10 +714,21 @@ public class PlayerMovement : MonoBehaviour
         float animationDuration = animData.animationClip.length;
 
         m_characterStatus.PauseEnergyRegenerationByAction();
+
         if (staminaCost != 0)
         {
-            Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_actionPayCostCouroutine = null; };
+            Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_characterStatus.ExpendSpecialEnergyPoints(specialEnergyCost); m_actionPayCostCouroutine = null; };
             m_actionPayCostCouroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.CostsPayTime, payActionCostsAction));
+        }
+        if (animData.IsPausingMidAir)
+        {
+            Action pauseMidAir = () => 
+            { 
+                if (m_isGrounded) return;
+                Contin m_actionChangesInterruptabilityCoroutine
+                m_isMidAirPause = true; m_animator.speed = 0; 
+            };
+            m_actionPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseMidAirTime, pauseMidAir));
         }
 
         Action changeInteruptabilityAction = () =>
@@ -863,7 +922,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_lookAtScript != null)
             m_lookAtScript.SetTarget(transform);
     }
-    private void SetLookAtForward(bool active, LookAtForwardData forwardData = null)
+    private void SetLookAtForward(bool active, LookAtData forwardData = null)
     {
         if (m_lookAtScript == null)
             return;
@@ -1313,6 +1372,11 @@ public class PlayerMovement : MonoBehaviour
         {
             StopCoroutine(m_actionPayCostCouroutine);
             m_actionPayCostCouroutine = null;
+        }
+        if (m_isMidAirPause)
+        {
+            m_isMidAirPause = false;
+            m_animator.speed = 1;
         }
 
         //Set Values

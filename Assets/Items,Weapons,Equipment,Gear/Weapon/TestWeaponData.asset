@@ -15,7 +15,6 @@ MonoBehaviour:
   Description: 
   BasePhysicalType: 1
   DamageTabel:
-    Poise: {x: 0, y: 0}
     PhysicalSlice: {x: 0, y: 0}
     PhysicalBlunt: {x: 0, y: 0}
     PhysicalPierce: {x: 0, y: 0}
@@ -23,6 +22,7 @@ MonoBehaviour:
     Electrical: {x: 0, y: 0}
     Metaphysical: {x: 0, y: 0}
     CorrosionBuildUp: {x: 0, y: 0}
+    Poise: {x: 0, y: 0}
     UpgradeCurve:
       serializedVersion: 2
       m_Curve:
@@ -49,13 +49,16 @@ MonoBehaviour:
       m_RotationOrder: 4
   LightAttack1:
     AnimData: {fileID: 11400000, guid: 4b3775208a25e694fb167e07f4f93660, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
-    SpecialEnergyCost: 0
+    SpecialEnergyCost: 20
     PhysicalType: 0
     nextLight: 1
     nextHeavy: 0
@@ -63,10 +66,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   LightAttack2:
     AnimData: {fileID: 11400000, guid: 8a74efbede48d4e4799623a298941f36, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -77,10 +83,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   LightAttack3:
     AnimData: {fileID: 0}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -91,10 +100,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   LightAttack4:
     AnimData: {fileID: 0}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -105,10 +117,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   LightAttack5:
     AnimData: {fileID: 0}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -119,10 +134,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   LightAttack6:
     AnimData: {fileID: 0}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -133,10 +151,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   SprintLightAttack:
     AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -147,10 +168,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   EvadeLightAttack:
     AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -161,10 +185,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   SpecialLightAttack1:
     AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -175,10 +202,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   SpecialLightAttack2:
     AnimData: {fileID: 0}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -189,10 +219,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   HeavyAttack1:
     AnimData: {fileID: 11400000, guid: 21c32426275a76846be5728270f4c3f4, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -203,10 +236,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   HeavyAttack2:
     AnimData: {fileID: 11400000, guid: 6efba914182ac4245a0db792963347a2, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -217,10 +253,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   HeavyAttack3:
     AnimData: {fileID: 0}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -231,10 +270,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   HeavyAttack4:
     AnimData: {fileID: 0}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -245,10 +287,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   SprintHeavyAttack:
     AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -259,10 +304,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   EvadeHeavyAttack:
     AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -273,10 +321,13 @@ MonoBehaviour:
     nextSpecialHeavy: 0
   SpecialHeavyAttack1:
     AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -287,10 +338,13 @@ MonoBehaviour:
     nextSpecialHeavy: 1
   SpecialHeavyAttack2:
     AnimData: {fileID: 0}
-    DamageAndCostData:
+    actionDamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -302,10 +356,13 @@ MonoBehaviour:
   alternateAttacks:
     LightAttack1:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -316,10 +373,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     LightAttack2:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -330,10 +390,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     LightAttack3:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -344,10 +407,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     LightAttack4:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -358,10 +424,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     LightAttack5:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -372,10 +441,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     LightAttack6:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -386,10 +458,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     SprintLightAttack:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -400,10 +475,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     EvadeLightAttack:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -414,10 +492,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     SpecialLightAttack1:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -428,10 +509,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     SpecialLightAttack2:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -442,10 +526,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     HeavyAttack1:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -456,10 +543,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     HeavyAttack2:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -470,10 +560,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     HeavyAttack3:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -484,10 +577,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     HeavyAttack4:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -498,10 +594,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     SprintHeavyAttack:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -512,10 +611,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     EvadeHeavyAttack:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -526,10 +628,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     SpecialHeavyAttack1:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
@@ -540,10 +645,13 @@ MonoBehaviour:
       nextSpecialHeavy: 0
     SpeciaHeavyAttack2:
       AnimData: {fileID: 0}
-      DamageAndCostData:
+      actionDamageData:
+        OverallMultiplicator: 0
         PhysicalFactor: 0
-        ElementalFactor: 0
-        AlimentFactor: 0
+        ThermicFactor: 0
+        ElectricFactor: 0
+        MetaphysicFactor: 0
+        AilmentsFactor: 0
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0

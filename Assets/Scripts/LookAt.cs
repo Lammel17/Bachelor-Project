@@ -4,45 +4,37 @@ using UnityEngine;
 
 public class LookAt : MonoBehaviour
 {
+    [SerializeField] private bool m_isActive = true;
+    [SerializeField] [EditorAttributes.ReadOnly] private bool m_isActiveForwardCorrection = false;
+    [SerializeField] [EditorAttributes.ReadOnly] private bool m_isActiveTarget = false;
+    [SerializeField] private float m_applyRemoveSpeed = 1;
+    [Space]
+
+    [Header("Spinal Bone Collection")]
+    [Tooltip("Order: from Root to ends")]
+    [SerializeField] private Bones[] m_bones;
+    private LookAtData m_forwardData;
+
+    [Header("LookAt Target")]
     [SerializeField] private Transform m_target;
     private Vector3 m_fallbackTargetPos;
-
-    //[SerializeField] private WeightedElement[] m_weightedElement;
-
-    [SerializeField] private bool m_isActive = true;
-    [Space]
-    [SerializeField] [EditorAttributes.ReadOnly] private bool m_isActiveTarget = false;
-    [SerializeField] [EditorAttributes.ReadOnly] private bool m_isActiveForwardCorrection = false;
-    [Space]
-    [SerializeField] private float m_applyRemoveSpeed = 1;
-
-    [Header("/////////////////////////////////////////////////////////////////")]
-
-    [Header("Order: from Root to ends")]
     [SerializeField] [Range(-180, 180)] private float offset = 0;
+    [Tooltip("Order: from Root to ends")]
     [SerializeField] private LookAtElement[] m_targetLookAt;
-    [Space]
-    [Header("/////////////////////////////////////////////////////////////////")]
-    [Header("Order: from Root to ends")]
-    [SerializeField] private Bones[] m_bones;
-    private LookAtForwardData m_forwardData;
-    //private bool m_applyAddRot = true;
-    //private Vector3 m_addRotEuler = Vector3.zero; //////////////////// later add this to the shield and take it from there
-    //private ForwardElement[] m_forwardCorrection;
 
 
 
     [System.Serializable]
     public class Bones
     {
-        public LookAtForwardData.SpineParts Bone;
+        public SpineParts Bone;
         public Transform BoneRef;
     }
 
     [System.Serializable]
     public class LookAtElement 
     {
-        public Transform Element;
+        public SpineParts Element;
         [Range(-1, 1)] public float Weight = 0;
         [GD.MinMaxSlider.MinMaxSlider(-180, 180)] public Vector2 ConstrainsAngleYAxis = new Vector2(0,0); // if 0,0, them it will be used always
         public bool Ignore = false;
@@ -52,19 +44,16 @@ public class LookAt : MonoBehaviour
         [NonSerialized] public Quaternion LastRot = Quaternion.identity;
     }
 
-    //[System.Serializable]
-    //public class ForwardElement
-    //{
-    //    public Transform Element;
-    //    [Tooltip("This has no effect on the first element in list")]
-    //    public bool IsUsingOrigRot = true;
-    //    [Range(0, 1)] public float Weight = 0;
-    //    public IgnoreAxis IgnoreAxis = IgnoreAxis.None;
-    //    public bool Ignore = false;
-    //    [NonSerialized] public float LastApplyance = 0;
-    //    [NonSerialized] public Quaternion originalRot = Quaternion.identity;
-
-    //}
+    public enum SpineParts
+    {
+        hip = 0,
+        lowerCore,
+        upperCore,
+        chest,
+        lowerNeck,
+        upperNeck,
+        head
+    }
 
     public enum IgnoreAxis
     {
@@ -100,12 +89,12 @@ public class LookAt : MonoBehaviour
     }
 
 
-    public void SetForwardActive(LookAtForwardData data)
+    public void SetForwardActive(LookAtData data)
     {
         if (data == null)
             return;
 
-        foreach (LookAtForwardData.ForwardElement we in data.m_forwardCorrections)
+        foreach (LookAtData.ForwardElement we in data.m_forwardCorrections)
         {
             if (we.bone == null)
                 we.bone = m_bones[(int)we.Element].BoneRef;
@@ -146,8 +135,9 @@ public class LookAt : MonoBehaviour
             {
                 if (we.Ignore) continue;
                 if (m_target != null) m_fallbackTargetPos = m_target.position;
+                Transform bone = m_bones[(int)we.Element].BoneRef;
 
-                Vector3 boneForward = we.Element.forward;
+                Vector3 boneForward = bone.forward;
                 Vector3 ToTarget = m_fallbackTargetPos - transform.position;
 
                 float angleToTarget = Vector3.SignedAngle(new Vector3(boneForward.x, 0, boneForward.z), new Vector3(ToTarget.x, 0, ToTarget.z), Vector3.up);
@@ -179,9 +169,9 @@ public class LookAt : MonoBehaviour
                 float weightedAngle = Mathf.Lerp(0, usedAngle, Mathf.Abs(we.Weight)); //weight is not changed in runtime
                 float angle = Mathf.Lerp(0, weightedAngle, applyance); //applyance is if targeting switches on or off
 
-                constraintAnglesAdded += angle; 
+                constraintAnglesAdded += angle;
 
-                we.Element.Rotate(new Vector3(0, angle + offset, 0), Space.World);
+                bone.Rotate(new Vector3(0, angle + offset, 0), Space.World);
 
             }
         }
@@ -191,13 +181,13 @@ public class LookAt : MonoBehaviour
 
         if (m_isActiveForwardCorrection)
         {
-            foreach (LookAtForwardData.ForwardElement we in m_forwardData.m_forwardCorrections)
+            foreach (LookAtData.ForwardElement we in m_forwardData.m_forwardCorrections)
             {
                 if (we.Ignore) { continue; }
                 we.originalRot = Quaternion.Inverse(transform.rotation) * we.bone.rotation;
             }
 
-            foreach (LookAtForwardData.ForwardElement we in m_forwardData.m_forwardCorrections)
+            foreach (LookAtData.ForwardElement we in m_forwardData.m_forwardCorrections)
             {
                 if (we.Ignore) { continue; }
 

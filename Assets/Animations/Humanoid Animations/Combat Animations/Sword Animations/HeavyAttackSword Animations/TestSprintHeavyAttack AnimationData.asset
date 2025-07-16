@@ -22,6 +22,9 @@ MonoBehaviour:
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0.2
   ChangedInterruptability: 1
+  CostsPayTime: 0
+  IsPausingMidAir: 1
+  PauseMidAirTime: 0.292
   useLookAtData: 0
   lookAtData:
     m_applyAddRot: 0

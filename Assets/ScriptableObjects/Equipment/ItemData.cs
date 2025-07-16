@@ -16,5 +16,6 @@ public class ItemData : ScriptableObject
     {
         public AnimationData AnimData;
         [NonSerialized] public int ActionkHash;
+        public int EnergyCost;
     }
 }

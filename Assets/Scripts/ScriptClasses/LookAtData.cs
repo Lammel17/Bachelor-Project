@@ -3,7 +3,7 @@ using UnityEngine;
 using static LookAt;
 
 [System.Serializable]
-public class LookAtForwardData
+public class LookAtData
 {
     [SerializeField] public bool m_applyAddRot = true;
     [SerializeField] public Vector3 m_addRotEuler = Vector3.zero;
@@ -26,14 +26,4 @@ public class LookAtForwardData
 
     }
 
-    public enum SpineParts
-    {
-        hip = 0,
-        lowerCore,
-        upperCore,
-        chest,
-        lowerNeck,
-        upperNeck,
-        head
-    }
 }

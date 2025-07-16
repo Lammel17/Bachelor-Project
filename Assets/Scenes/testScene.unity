@@ -2502,7 +2502,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6906138895346458571, guid: 9fe0c6d37d1b3294f9a5c4af0c5aa93c, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -30.000183
+      value: -30.000122
       objectReference: {fileID: 0}
     - target: {fileID: 6906138895503271302, guid: 9fe0c6d37d1b3294f9a5c4af0c5aa93c, type: 3}
       propertyPath: m_IsActive
@@ -3475,25 +3475,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d1fcd624096e489469bbf872cf02b31f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_target: {fileID: 0}
   m_isActive: 1
-  m_isActiveTarget: 0
   m_isActiveForwardCorrection: 0
+  m_isActiveTarget: 0
   m_applyRemoveSpeed: 15
-  offset: 0
-  m_targetLookAt:
-  - Element: {fileID: 422825816}
-    Weight: 0.203
-    ConstrainsAngleYAxis: {x: -90, y: 90}
-    Ignore: 0
-  - Element: {fileID: 422825814}
-    Weight: 0.59
-    ConstrainsAngleYAxis: {x: -90, y: 90}
-    Ignore: 0
-  - Element: {fileID: 422825807}
-    Weight: 1
-    ConstrainsAngleYAxis: {x: -90, y: 90}
-    Ignore: 0
   m_bones:
   - Bone: 0
     BoneRef: {fileID: 422825817}
@@ -3509,6 +3494,21 @@ MonoBehaviour:
     BoneRef: {fileID: 422825808}
   - Bone: 6
     BoneRef: {fileID: 422825807}
+  m_target: {fileID: 0}
+  offset: 0
+  m_targetLookAt:
+  - Element: 0
+    Weight: 0.203
+    ConstrainsAngleYAxis: {x: -90, y: 90}
+    Ignore: 0
+  - Element: 3
+    Weight: 0.59
+    ConstrainsAngleYAxis: {x: -90, y: 90}
+    Ignore: 0
+  - Element: 6
+    Weight: 1
+    ConstrainsAngleYAxis: {x: -90, y: 90}
+    Ignore: 0
 --- !u!114 &1756236765
 MonoBehaviour:
   m_ObjectHideFlags: 0

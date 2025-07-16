@@ -50,7 +50,7 @@ public class WeaponData : ScriptableObject
         [NonSerialized] public int AttackHash;
         public DamageMultiplikatorData actionDamageData = new DamageMultiplikatorData(1, 1, 1, 1, 1, 1, 1);
         public int EnergyCost = 20;
-        public float SpecialEnergyCost = 0;
+        public int SpecialEnergyCost = 0;
         public PhysicalDamageType PhysicalType;
         [Space]
         public LightAttack nextLight;
