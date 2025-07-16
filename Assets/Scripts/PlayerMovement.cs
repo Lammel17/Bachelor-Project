@@ -725,7 +725,7 @@ public class PlayerMovement : MonoBehaviour
             Action pauseMidAir = () => 
             { 
                 if (m_isGrounded) return;
-                Contin m_actionChangesInterruptabilityCoroutine
+                //Contin m_actionChangesInterruptabilityCoroutine
                 m_isMidAirPause = true; m_animator.speed = 0; 
             };
             m_actionPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseMidAirTime, pauseMidAir));
