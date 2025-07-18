@@ -45,7 +45,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private int m_evadeCosts = 30;
     //private const int m_runningMoveStrenght = 2;
     private Vector3 m_nowMoveDir = Vector3.forward;
-    private float m_gravity = -9.81f;
+    [SerializeField] private float c_gravity = -9.81f;
+    [SerializeField][EditorAttributes.ReadOnly] private float m_gravity = -9.81f;
     private float m_velocityThroughGravity;
     private Vector3 m_controllerVelocity;
 
@@ -59,6 +60,7 @@ public class PlayerMovement : MonoBehaviour
     private float m_turningStrenght;
     private float m_maxTurningSpeed;
     private float m_speed = 0; //slow, walk, running
+    private float m_animationSpeed = 1; //slow, walk, running
 
     //Values Depending on Camera
     private Quaternion m_cameraYAxisRotationInWS = Quaternion.identity;
@@ -97,6 +99,7 @@ public class PlayerMovement : MonoBehaviour
     private Coroutine m_actionChangesInterruptabilityCoroutine;
     private Coroutine m_actionPayCostCouroutine;
     private Coroutine m_actionPauseCoroutine;
+    private Coroutine m_gravityPauseCoroutine;
     private Coroutine m_ActionCoroutine = null;
 
     private NextPossibleWeaponActions m_nextPossibleWeaponActions = null;
@@ -164,7 +167,8 @@ public class PlayerMovement : MonoBehaviour
             if (m_isMidAirPause && m_isGrounded)
             {
                 m_isMidAirPause = false;
-                m_animator.speed = 1;
+                m_animationSpeed = 1;
+                m_animator.speed = m_animationSpeed;
             }
         } 
     }
@@ -238,6 +242,8 @@ public class PlayerMovement : MonoBehaviour
 
         m_currentBaseLayerAnimation = Idle_1;
         m_currentUpperBodyAnimation = new Vector2(Empty_UpperBody, 0);
+
+        m_gravity = c_gravity;
 
     }
 
@@ -720,13 +726,32 @@ public class PlayerMovement : MonoBehaviour
             Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_characterStatus.ExpendSpecialEnergyPoints(specialEnergyCost); m_actionPayCostCouroutine = null; };
             m_actionPayCostCouroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.CostsPayTime, payActionCostsAction));
         }
+        if (animData.IsPausingGravity && animData.PauseGravityTime != Vector2.zero)
+        {
+            Action noGravity = () =>
+            {
+                m_gravity = 0;
+                m_gravityPauseCoroutine = null;
+
+                Action yesGravity = () => 
+                {
+                    m_gravity = c_gravity;
+                    m_gravityPauseCoroutine = null;
+                };
+                m_gravityPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseGravityTime.y, yesGravity));
+            };
+            m_gravityPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseGravityTime.x, noGravity));
+        }
         if (animData.IsPausingMidAir)
         {
             Action pauseMidAir = () => 
             { 
                 if (m_isGrounded) return;
                 //Contin m_actionChangesInterruptabilityCoroutine
-                m_isMidAirPause = true; m_animator.speed = 0; 
+                m_isMidAirPause = true;
+                m_animationSpeed = 0;
+                m_animator.speed = m_animationSpeed;
+                m_actionPauseCoroutine = null;
             };
             m_actionPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseMidAirTime, pauseMidAir));
         }
@@ -1009,7 +1034,9 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, m_nowMoveDir * nowSpeed, Time.deltaTime * nowMoveAcceleration);
 
-        if (m_characterController.isGrounded && m_velocityThroughGravity < 0)
+        if (m_gravity == 0)
+            m_velocityThroughGravity = 0;
+        else if (m_characterController.isGrounded && m_velocityThroughGravity < 0)
             m_velocityThroughGravity = -2f; // small downward force to keep grounded
         m_velocityThroughGravity += m_gravity * Time.deltaTime;
         Vector3 gravity = new Vector3(0, m_velocityThroughGravity, 0);
@@ -1238,12 +1265,15 @@ public class PlayerMovement : MonoBehaviour
         m_ActionCoroutine = StartCoroutine(PerformAction(processedData));
 
     }
-        
+
+
+    private float m_actionTimeTillNextChange = 0f;
     private IEnumerator PerformAction(ProcessedAnimationMovementData processedData)
     {
         float elapsedTime = 0;
         float startTime = Time.time;
         float timeToWait = processedData.timeSteps;
+        float delayByMidAir = 0;
 
         float duration = processedData.animationDuration; //what about blendtrees, do they affect it?
 
@@ -1274,50 +1304,57 @@ public class PlayerMovement : MonoBehaviour
 
         while (elapsedTime <= duration - processedData.crossfadeStartBeforeEndTime)
         {
-            float timeTillEnd = ((duration - processedData.crossfadeStartBeforeEndTime) - elapsedTime);
-            float waitForTime = timeTillEnd; 
-            float relativeElapsedTime = elapsedTime / duration;
 
-            //STARTEND VALUES
-            foreach (var rangeData in processedData.rangeValuesList)
+            if (m_actionTimeTillNextChange <= 0)
             {
-                
-                float activeFactor = relativeElapsedTime >= rangeData.startEnd.x && relativeElapsedTime < rangeData.startEnd.y ? 1 : 0;
-                float valueInRange = rangeData.value * activeFactor;
+                float timeTillEnd = ((duration - processedData.crossfadeStartBeforeEndTime) - elapsedTime);
+                float waitForTime = timeTillEnd;
+                float relativeElapsedTime = elapsedTime / duration;
 
-                //this calculates how long to wait for the next necessary canculation
-                float waitForTimeByRangeValues = timeTillEnd;
-                if(relativeElapsedTime < rangeData.startEnd.x)                waitForTimeByRangeValues = (rangeData.startEnd.x * duration) - elapsedTime; //wait till range start
-                else if (relativeElapsedTime < rangeData.startEnd.y)          waitForTimeByRangeValues = (rangeData.startEnd.y * duration) - elapsedTime; //wait till range end
-                                                                        waitForTime = Math.Min(waitForTime, waitForTimeByRangeValues);
-                SetValueByName(rangeData.name, valueInRange);
+                //STARTEND VALUES
+                foreach (var rangeData in processedData.rangeValuesList)
+                {
+
+                    float activeFactor = relativeElapsedTime >= rangeData.startEnd.x && relativeElapsedTime < rangeData.startEnd.y ? 1 : 0;
+                    float valueInRange = rangeData.value * activeFactor;
+
+                    //this calculates how long to wait for the next necessary canculation
+                    float waitForTimeByRangeValues = timeTillEnd;
+                    if (relativeElapsedTime < rangeData.startEnd.x) waitForTimeByRangeValues = (rangeData.startEnd.x * duration) - elapsedTime; //wait till range start
+                    else if (relativeElapsedTime < rangeData.startEnd.y) waitForTimeByRangeValues = (rangeData.startEnd.y * duration) - elapsedTime; //wait till range end
+                    waitForTime = Math.Min(waitForTime, waitForTimeByRangeValues);
+                    SetValueByName(rangeData.name, valueInRange);
+                }
+
+                //CURVE VALUES
+                foreach (var curveData in processedData.curveValuesList)
+                {
+                    AnimationCurve curve = curveData.curve;
+
+                    float activeFactor = relativeElapsedTime > curveData.startEnd.x && relativeElapsedTime < curveData.startEnd.y ? 1 : 0;
+                    float curveValue = curveData.value * curve.Evaluate(Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeElapsedTime)) * activeFactor;
+
+                    //this calculates how long to wait for the next necessary canculation
+                    float waitForTimeByCurveValues = timeToWait;
+                    if (relativeElapsedTime < curveData.startEnd.x) waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.x * duration) - elapsedTime); //wait till range start or timeToWait
+                    else if (relativeElapsedTime < curveData.startEnd.y) waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.y * duration) - elapsedTime); //wait till range end or timeToWait                                                                        //wait till timeToWait
+                    waitForTime = Mathf.Min(waitForTime, waitForTimeByCurveValues);
+
+
+                    SetValueByName(curveData.name, curveValue);
+                }
+
+                m_actionTimeTillNextChange = waitForTime;
             }
 
-            //CURVE VALUES
-            foreach (var curveData in processedData.curveValuesList)
-            {
-                AnimationCurve curve = curveData.curve;
+            yield return null;
 
-                float activeFactor = relativeElapsedTime > curveData.startEnd.x && relativeElapsedTime < curveData.startEnd.y ? 1 : 0;
-                float curveValue = curveData.value * curve.Evaluate(Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeElapsedTime)) * activeFactor;
+            delayByMidAir += Time.deltaTime * (1 - m_animationSpeed);
+            elapsedTime = Time.time - (startTime + delayByMidAir); // time must be added after the first wait
 
-                //this calculates how long to wait for the next necessary canculation
-                float waitForTimeByCurveValues = timeToWait;
-                if (relativeElapsedTime < curveData.startEnd.x)               waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.x * duration) - elapsedTime); //wait till range start or timeToWait
-                else if (relativeElapsedTime < curveData.startEnd.y)          waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.y * duration) - elapsedTime); //wait till range end or timeToWait                                                                        //wait till timeToWait
-                                                                        waitForTime = Mathf.Min(waitForTime, waitForTimeByCurveValues);                                                                                                   
-
-
-                SetValueByName(curveData.name, curveValue);
-            }
-
-            //End of Frame
-            if (elapsedTime > duration - 0.001f)
-                yield return null;
-            else
-                yield return new WaitForSeconds(waitForTime);
-
-            elapsedTime = Time.time - startTime; // time must be added after the first wait
+            m_actionTimeTillNextChange -= Time.deltaTime * m_animationSpeed;
+            //Debug.Log(m_animationSpeed);
+            //Debug.Log(elapsedTime);
         }
 
 
@@ -1376,7 +1413,19 @@ public class PlayerMovement : MonoBehaviour
         if (m_isMidAirPause)
         {
             m_isMidAirPause = false;
-            m_animator.speed = 1;
+            m_animationSpeed = 1;
+            m_animator.speed = m_animationSpeed;
+        }
+        if (m_actionPauseCoroutine != null)
+        {
+            StopCoroutine(m_actionPauseCoroutine);
+            m_actionPauseCoroutine = null;
+        }
+        if (m_gravityPauseCoroutine != null)
+        {
+            StopCoroutine(m_gravityPauseCoroutine);
+            m_gravity = c_gravity;
+            m_gravityPauseCoroutine = null;
         }
 
         //Set Values

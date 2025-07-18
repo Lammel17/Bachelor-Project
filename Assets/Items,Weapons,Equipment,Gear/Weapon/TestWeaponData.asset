@@ -58,7 +58,7 @@ MonoBehaviour:
       AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
-    SpecialEnergyCost: 20
+    SpecialEnergyCost: 0
     PhysicalType: 0
     nextLight: 1
     nextHeavy: 0

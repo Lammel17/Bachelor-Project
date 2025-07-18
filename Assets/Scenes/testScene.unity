@@ -3422,6 +3422,9 @@ MonoBehaviour:
   m_moveAcceleration: 20
   m_turningStrenghtBaseValues: {x: 15, y: 15, z: 10}
   m_maxTurningSpeedBaseValue: 10
+  m_evadeCosts: 30
+  c_gravity: -20
+  m_gravity: -20.21
   m_facingDirectionType: 0
   m_isAdditionalRotationForbidden: 0
   m_isStandingStill: 0
@@ -3436,6 +3439,8 @@ MonoBehaviour:
   m_isActionLocked: 0
   m_isHoldShielding: 0
   m_isShielding: 0
+  m_isGrounded: 1
+  m_isMidAirPause: 0
   m_currentBaseLayerAnimation: 0
   m_currentUpperBodyAnimation: {x: 0, y: 0}
 --- !u!143 &1756236763

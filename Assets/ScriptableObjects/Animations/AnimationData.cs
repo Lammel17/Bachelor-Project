@@ -1,3 +1,5 @@
+using EditorAttributes;
+using GD.MinMaxSlider;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "AnimationData", menuName = "Scriptable Objects/AnimationData")]
@@ -27,9 +29,13 @@ public class AnimationData : ScriptableObject
     [Header("-> ActionCosts Pay in Relative Time ")]
     [Range(0,1)] public float CostsPayTime = 0;
     [Space]
-    [Header("-> Pause midAir in Relative Time ")]
+    [Header("-> Pause Anim when is not Grounded in Relative Time ")]
     public bool IsPausingMidAir = false;
     [Range(0, 1)] public float PauseMidAirTime = 0;
+    [Space]
+    [Header("-> Pause Gravity in Relative Time ")]
+    public bool IsPausingGravity = false;
+    [GD.MinMaxSlider.MinMaxSlider(0,1)] public Vector2 PauseGravityTime = new Vector2(0,0);
     [Space]
     [Space]
     [Header("-> CorrectSpineRotations for Non Base Layer Animations")]

@@ -24,7 +24,9 @@ MonoBehaviour:
   ChangedInterruptability: 1
   CostsPayTime: 0
   IsPausingMidAir: 1
-  PauseMidAirTime: 0.292
+  PauseMidAirTime: 0.399
+  IsPausingGravity: 1
+  PauseGravityTime: {x: 0.04, y: 0.23352939}
   useLookAtData: 0
   lookAtData:
     m_applyAddRot: 0
