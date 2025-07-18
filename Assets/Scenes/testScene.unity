@@ -2361,7 +2361,7 @@ GameObject:
   - component: {fileID: 1307756034}
   - component: {fileID: 1307756033}
   m_Layer: 0
-  m_Name: Cube (2)
+  m_Name: footUpHelperR
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2978,7 +2978,7 @@ GameObject:
   - component: {fileID: 1454971723}
   - component: {fileID: 1454971722}
   m_Layer: 0
-  m_Name: Cube (1)
+  m_Name: footUpHelperL
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3423,7 +3423,7 @@ MonoBehaviour:
   m_turningStrenghtBaseValues: {x: 15, y: 15, z: 10}
   m_maxTurningSpeedBaseValue: 10
   m_evadeCosts: 30
-  c_gravity: -20
+  c_gravity: -15
   m_gravity: -20.21
   m_facingDirectionType: 0
   m_isAdditionalRotationForbidden: 0
@@ -3527,28 +3527,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_applyFootRot: 1
+  m_applyHipHeight: 1
   m_player: {fileID: 1756236761}
-  m_leftFootUp: {fileID: 1454971721}
-  m_rightFootUp: {fileID: 1307756032}
+  m_leftFootUpHelper: {fileID: 1454971721}
+  m_rightFootUpHelper: {fileID: 1307756032}
   m_footBoneLeft: {fileID: 422825777}
   m_shinBoneLeft: {fileID: 422825780}
   m_thighBoneLeft: {fileID: 422825784}
   m_footBoneRight: {fileID: 422825768}
   m_shinBoneRight: {fileID: 422825771}
   m_thighBoneRight: {fileID: 422825775}
-  m_root: {fileID: 422825818}
+  m_rootBone: {fileID: 422825818}
   m_raycastLenght: 2.5
   m_environmentLayer:
     serializedVersion: 2
     m_Bits: 64
-  m_baseOffsetGroundToAnkleY: 0.115
-  m_minFootDistToOrigHight: {x: 0, y: 0.01}
+  m_minFootDistToOrigHight: {x: 0, y: 0.05}
   m_minFootAngleToOrigAngle: {x: 1, y: 7}
+  m_leftFootIsGroundedWeight: 1
+  m_rightFootIsGroundedWeight: 1
+  m_baseOffsetGroundToAnkleY: 0.115
   m_minDistHipGround: {x: 0.3, y: 0.5}
-  m_weight: 1
-  m_footAdjustSpeed: 60
-  m_footRotAdjustSpeed: 30
-  m_rootAdjustSpeed: 30
+  m_overallWeight: 1
+  m_weightByLayingOnGround: 1
+  m_footHeightAdjustSpeed: 60
+  m_footRotationAdjustSpeed: 30
+  m_rootHeightAdjustSpeed: 30
+  m_testWeight: 1
 --- !u!114 &1756236766
 MonoBehaviour:
   m_ObjectHideFlags: 0

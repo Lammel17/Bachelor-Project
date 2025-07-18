@@ -18,10 +18,15 @@ MonoBehaviour:
   bodyParts: 0
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
-  crossfadeBeginn: 0.2
+  crossfadeBeginn: 0.4
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0
   ChangedInterruptability: 1
+  CostsPayTime: 0
+  IsPausingMidAir: 0
+  PauseMidAirTime: 0
+  IsPausingGravity: 0
+  PauseGravityTime: {x: 0, y: 0}
   useLookAtData: 0
   lookAtData:
     m_applyAddRot: 1

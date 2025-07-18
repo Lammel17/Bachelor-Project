@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Test1_MovesetData
   m_EditorClassIdentifier: 
   Description: 
+  emptyFallbackAnimation: {fileID: 11400000, guid: bec7d88e0a0ec7c47ae0187d53ca0549, type: 2}
   idle: {fileID: 11400000, guid: bd873a9b7c9548248b3a1c0524ec5853, type: 2}
   idle1: []
   turningLeft: {fileID: 11400000, guid: f9c2c11629752c347aba8503c086def6, type: 2}

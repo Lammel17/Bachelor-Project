@@ -27,7 +27,7 @@ MonoBehaviour:
       valueType: 1
       value: 6
       valueSettings:
-        startEnd: {x: 0, y: 0.165393}
+        startEnd: {x: 0, y: 0.18713374}
         curveValue:
           serializedVersion: 2
           m_Curve: []

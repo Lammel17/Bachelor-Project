@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Description: 
   DamageNegationTable:
-    Poise: {x: 0, y: 0}
     PhysicalSlice: {x: 0, y: 0}
     PhysicalBlunt: {x: 0, y: 0}
     PhysicalPierce: {x: 0, y: 0}
@@ -22,6 +21,7 @@ MonoBehaviour:
     Electrical: {x: 0, y: 0}
     Metaphysical: {x: 0, y: 0}
     CorrosionBuildUp: {x: 0, y: 0}
+    Poise: {x: 0, y: 0}
     UpgradeCurve:
       serializedVersion: 2
       m_Curve:
@@ -53,9 +53,12 @@ MonoBehaviour:
   m_STILL_UNKNOWN:
     AnimData: {fileID: 0}
     DamageData:
+      OverallMultiplicator: 0
       PhysicalFactor: 0
-      ElementalFactor: 0
-      AlimentFactor: 0
+      ThermicFactor: 0
+      ElectricFactor: 0
+      MetaphysicFactor: 0
+      AilmentsFactor: 0
       PoiseDamageFactor: 0
     EnergyCost: 0
     SpecialEnergyCost: 0
@@ -66,7 +69,6 @@ MonoBehaviour:
   ShiledStanceBreak:
     AnimData: {fileID: 0}
   DamageTable:
-    Poise: {x: 0, y: 0}
     PhysicalSlice: {x: 0, y: 0}
     PhysicalBlunt: {x: 0, y: 0}
     PhysicalPierce: {x: 0, y: 0}
@@ -74,6 +76,7 @@ MonoBehaviour:
     Electrical: {x: 0, y: 0}
     Metaphysical: {x: 0, y: 0}
     CorrosionBuildUp: {x: 0, y: 0}
+    Poise: {x: 0, y: 0}
     UpgradeCurve:
       serializedVersion: 2
       m_Curve:
@@ -101,9 +104,12 @@ MonoBehaviour:
   ShiledSpecialLight1:
     AnimData: {fileID: 11400000, guid: 15468534330c4b849a762c806238ec5a, type: 2}
     DamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -112,20 +118,26 @@ MonoBehaviour:
   ShiledSpecialLight2:
     AnimData: {fileID: 0}
     DamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
     nextSpecialLight: 2
     nextSpecialHeavy: 2
   ShiledSpecialHeavy1:
-    AnimData: {fileID: 11400000, guid: d2e715b8e4554f44c88a39b065d259fd, type: 2}
+    AnimData: {fileID: 11400000, guid: 94acd3ba0655c554092673878dd1a7b0, type: 2}
     DamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
@@ -134,9 +146,12 @@ MonoBehaviour:
   ShiledSpecialHeavy2:
     AnimData: {fileID: 0}
     DamageData:
+      OverallMultiplicator: 1
       PhysicalFactor: 1
-      ElementalFactor: 1
-      AlimentFactor: 1
+      ThermicFactor: 1
+      ElectricFactor: 1
+      MetaphysicFactor: 1
+      AilmentsFactor: 1
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0

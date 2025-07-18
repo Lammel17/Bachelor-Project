@@ -7,6 +7,7 @@ public class CharacterMovesetData : ScriptableObject
 
 
     public string Description = "";
+    public AnimationData emptyFallbackAnimation;
     [Header("AnimationData Files")]
     public AnimationData idle;
     public AnimationData[] idle1;

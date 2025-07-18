@@ -28,6 +28,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private CharacterController m_characterController;
     [SerializeField] private CharacterStatus m_characterStatus;
     [SerializeField] private GameObject m_chraracter;
+    private FootPlacing m_footPlacing;
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
     [SerializeField] private Animator m_animator;
@@ -172,6 +173,22 @@ public class PlayerMovement : MonoBehaviour
             }
         } 
     }
+    public float Gravity 
+    { 
+        get => m_gravity; 
+        set 
+        { 
+            if (m_gravity == value) 
+                return;
+
+            if (m_footPlacing != null && m_gravity != 0 && value == 0) 
+                m_footPlacing.SetWeightActive(false); 
+            else if (m_footPlacing != null && m_gravity == 0 && value != 0)
+                m_footPlacing.SetWeightActive(true);
+
+            m_gravity = value; 
+        } 
+    }
     public Quaternion CameraYAxisRotation { get => m_cameraYAxisRotationInWS; set => m_cameraYAxisRotationInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
     public Transform Target 
     { 
@@ -223,6 +240,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (m_characterController == null) m_characterController = GetComponent<CharacterController>();
         if (m_characterStatus == null) m_characterStatus = GetComponent<CharacterStatus>();
+        
 
         m_chraracter.transform.position = new Vector3(0, -m_characterController.skinWidth, 0);
 
@@ -230,6 +248,8 @@ public class PlayerMovement : MonoBehaviour
         m_playerCameraHolder = PlayerCameraHolder.Instance;
         if (TryGetComponent<LookAt>(out LookAt lookAt))
             m_lookAtScript = lookAt;
+        if (TryGetComponent<FootPlacing>(out FootPlacing footPlace))
+            m_footPlacing = footPlace;
 
         m_turningStrenght = m_turningStrenghtBaseValues[1];
         m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
@@ -721,7 +741,7 @@ public class PlayerMovement : MonoBehaviour
 
         m_characterStatus.PauseEnergyRegenerationByAction();
 
-        if (staminaCost != 0)
+        if (staminaCost != 0) //curently the animData.CostsPayTime must be earlier than the animData.PauseMidAirTime to make sense
         {
             Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_characterStatus.ExpendSpecialEnergyPoints(specialEnergyCost); m_actionPayCostCouroutine = null; };
             m_actionPayCostCouroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.CostsPayTime, payActionCostsAction));
@@ -730,12 +750,13 @@ public class PlayerMovement : MonoBehaviour
         {
             Action noGravity = () =>
             {
-                m_gravity = 0;
+                Gravity = 0;
                 m_gravityPauseCoroutine = null;
+                m_footPlacing.SetWeightActive(false);
 
                 Action yesGravity = () => 
                 {
-                    m_gravity = c_gravity;
+                    Gravity = c_gravity;
                     m_gravityPauseCoroutine = null;
                 };
                 m_gravityPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseGravityTime.y, yesGravity));
@@ -756,19 +777,7 @@ public class PlayerMovement : MonoBehaviour
             m_actionPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseMidAirTime, pauseMidAir));
         }
 
-        Action changeInteruptabilityAction = () =>
-        {
-            m_characterStatus.ContinueEnergyRegenerationInTime();
-            m_currentInteruptability = animData.ChangedInterruptability;
-            m_actionChangesInterruptabilityCoroutine = null;
-
-            if (m_playerInputManager.CheckRecallLatestBufferedInput())
-                EndActionReset();
-        };
-        //this is if a action is earlier interruptable than the lenght of the animation
-        m_actionChangesInterruptabilityCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn - animData.InterruptabilityChangeBeforeEndTime, changeInteruptabilityAction));
-
-        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
+        SetActionValues(animData);
     }
 
     private void InitActionUpperBody(int animationHash, AnimationData animData, int layer)
@@ -787,23 +796,7 @@ public class PlayerMovement : MonoBehaviour
 
         SetValues(); //needed, because what if it jumps from one action directly into another
 
-        float animationDuration = animData.animationClip.length;
-
-        Action changeInteruptabilityAction = () =>
-        {
-            m_currentInteruptability = animData.ChangedInterruptability;
-            m_actionChangesInterruptabilityCoroutine = null;
-
-            if (m_playerInputManager.CheckRecallLatestBufferedInput())
-                EndActionReset();
-            //else if (m_isHoldShielding)
-            //    EndActionReset();
-        };
-
-        //this is if a action is earlier interruptable than the lenght of the animation
-        m_actionChangesInterruptabilityCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration - animData.crossfadeBeginn - animData.InterruptabilityChangeBeforeEndTime, changeInteruptabilityAction));
-
-        SetActionValues(animData.AnimationMovementData, animationDuration, animData.crossfadeOutTime, animData.crossfadeBeginn);
+        SetActionValues(animData);
     }
 
     private void SetNextPossibleWeaponAttacks(WeaponData.WeaponAttack currentAttackData = null, int currentAction = 0)
@@ -1098,8 +1091,13 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-    private void SetActionValues(AnimationMovementData animData, float animationDuration, float crossfadeOutTime, float crossfadeStartBeforeEndTime = 0.1f)
+    private void SetActionValues(AnimationData animData)
     {
+        AnimationMovementData animMoveData = animData.AnimationMovementData;
+        float animationDuration = animData.animationClip.length;
+        float crossfadeOutTime = animData.crossfadeOutTime;
+        float crossfadeStartBeforeEndTime = Mathf.Max(0, 1f, animData.crossfadeBeginn);
+
         if (m_ActionCoroutine != null)
         {
             StopCoroutine(m_ActionCoroutine);
@@ -1109,23 +1107,21 @@ public class PlayerMovement : MonoBehaviour
         List<ProcessedAnimationMovementData.DataCurves> CurveValuesList = new List<ProcessedAnimationMovementData.DataCurves>(); 
         List<ProcessedAnimationMovementData.DataStartEnd> RangeValuesList = new List<ProcessedAnimationMovementData.DataStartEnd>(); 
 
-        if (animData == null)
+        if (animMoveData == null)
         {
             Debug.Log("ANIMATION_DATA IS NULL");
-            ProcessedAnimationMovementData emptyProcessedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, 0, 0.01f, animationDuration, crossfadeOutTime, crossfadeStartBeforeEndTime); //This could be saved somewhere in future!
-            m_ActionCoroutine = StartCoroutine(PerformAction(emptyProcessedData));
-            return;
+            animMoveData = m_characterMovesetData.emptyFallbackAnimation.AnimationMovementData;
         }
 
 
-        int moveDirPredefinition = (int)animData.moveDirPredefinition;
-        int turningDirPredefinition = (int)animData.turningDirPredefinition;
-        float startMoveInfluence = animData.moveInfluence  == AnimationMovementData.InfluenceValuePredefinitions.NoInputInfluence ? 1 : 0;  
-        float startTurningInfluence = animData.turningInfluence == AnimationMovementData.InfluenceValuePredefinitions.NoInputInfluence ? 1 : 0;
+        int moveDirPredefinition = (int)animMoveData.moveDirPredefinition;
+        int turningDirPredefinition = (int)animMoveData.turningDirPredefinition;
+        float startMoveInfluence = animMoveData.moveInfluence  == AnimationMovementData.InfluenceValuePredefinitions.NoInputInfluence ? 1 : 0;  
+        float startTurningInfluence = animMoveData.turningInfluence == AnimationMovementData.InfluenceValuePredefinitions.NoInputInfluence ? 1 : 0;
 
-        m_actionTargetRelations = animData.targetRelations;
-        m_actionTurningRelations = animData.turningRelations;
-        m_isAdditionalRotationForbidden = animData.forbidAdditinalRotation;
+        m_actionTargetRelations = animMoveData.targetRelations;
+        m_actionTurningRelations = animMoveData.turningRelations;
+        m_isAdditionalRotationForbidden = animMoveData.forbidAdditinalRotation;
 
 
         //initial moveDir
@@ -1173,20 +1169,16 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-        foreach (var value in animData.variableValue)
+        foreach (var value in animMoveData.variableValue)
         {
             if (value.ignore)
                 continue;
             AnimationMovementData.Values.Settings valueData = value.settings;
             AnimationMovementData.Values.Settings.Influence influenceData = value.settings.customInfluenceOverInput;
-
             bool valueTypeIsConstant = valueData.valueType == AnimationMovementData.ValueType.ConstantValue;
             bool valueTypeIsStartEnd = valueData.valueType == AnimationMovementData.ValueType.StartEndValue;
-
             bool influenceValueTypeIsConstant = influenceData.influenceType == AnimationMovementData.InfluenceValueType.ConstantInfluence;
             bool influenceValueTypeIsStartEnd = influenceData.influenceType == AnimationMovementData.InfluenceValueType.StartEndInfluence;
-
-            //bool beginnsWithoutInfluence = (influenceValueTypeIsConstant && influenceData.influence == 0);
 
             switch (value.valueName)
             {
@@ -1260,7 +1252,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, (int)m_actionTurningRelations, animData.timeStepsForCurves, animationDuration, crossfadeOutTime, crossfadeStartBeforeEndTime); //This could be saved somewhere in future!
+        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, animData /*(int)m_actionTurningRelations, animMoveData.timeStepsForCurves, animationDuration, crossfadeOutTime, crossfadeStartBeforeEndTime*/); //This could be saved somewhere in future!
 
         m_ActionCoroutine = StartCoroutine(PerformAction(processedData));
 
@@ -1272,10 +1264,10 @@ public class PlayerMovement : MonoBehaviour
     {
         float elapsedTime = 0;
         float startTime = Time.time;
-        float timeToWait = processedData.timeSteps;
+        float timeSteps = processedData.animationData.AnimationMovementData == null ? 0.05f : processedData.animationData.AnimationMovementData.timeStepsForCurves;
         float delayByMidAir = 0;
 
-        float duration = processedData.animationDuration; //what about blendtrees, do they affect it?
+        float duration = processedData.animationData.animationClip.length; //what about blendtrees, do they affect it?
 
         void SetValueByName(ProcessedAnimationMovementData.ValueName name, float newValue)
         {
@@ -1302,19 +1294,32 @@ public class PlayerMovement : MonoBehaviour
         }
 
 
-        while (elapsedTime <= duration - processedData.crossfadeStartBeforeEndTime)
+        while (elapsedTime <= duration - processedData.animationData.crossfadeBeginn)
         {
 
             if (m_actionTimeTillNextChange <= 0)
             {
-                float timeTillEnd = ((duration - processedData.crossfadeStartBeforeEndTime) - elapsedTime);
-                float waitForTime = timeTillEnd;
+                float timeTillEnd = ((duration - processedData.animationData.crossfadeBeginn) - elapsedTime);
+                float waitTime = timeTillEnd;
                 float relativeElapsedTime = elapsedTime / duration;
+
+                //this is if a action is earlier interruptable than the lenght of the animation
+                float timetillChangeInteruptability = timeTillEnd - processedData.animationData.crossfadeBeginn;
+                if (timetillChangeInteruptability <= 0 && m_currentInteruptability != processedData.animationData.ChangedInterruptability)
+                {
+                    m_characterStatus.ContinueEnergyRegenerationInTime();
+                    m_currentInteruptability = processedData.animationData.ChangedInterruptability;
+                    m_actionChangesInterruptabilityCoroutine = null;
+                    if (m_playerInputManager.CheckRecallLatestBufferedInput())
+                        EndActionReset();
+                }
+                if (timetillChangeInteruptability > 0)
+                    waitTime = timetillChangeInteruptability;
+
 
                 //STARTEND VALUES
                 foreach (var rangeData in processedData.rangeValuesList)
                 {
-
                     float activeFactor = relativeElapsedTime >= rangeData.startEnd.x && relativeElapsedTime < rangeData.startEnd.y ? 1 : 0;
                     float valueInRange = rangeData.value * activeFactor;
 
@@ -1322,29 +1327,27 @@ public class PlayerMovement : MonoBehaviour
                     float waitForTimeByRangeValues = timeTillEnd;
                     if (relativeElapsedTime < rangeData.startEnd.x) waitForTimeByRangeValues = (rangeData.startEnd.x * duration) - elapsedTime; //wait till range start
                     else if (relativeElapsedTime < rangeData.startEnd.y) waitForTimeByRangeValues = (rangeData.startEnd.y * duration) - elapsedTime; //wait till range end
-                    waitForTime = Math.Min(waitForTime, waitForTimeByRangeValues);
+
+                    waitTime = Math.Min(waitTime, waitForTimeByRangeValues);
                     SetValueByName(rangeData.name, valueInRange);
                 }
 
                 //CURVE VALUES
                 foreach (var curveData in processedData.curveValuesList)
                 {
-                    AnimationCurve curve = curveData.curve;
-
                     float activeFactor = relativeElapsedTime > curveData.startEnd.x && relativeElapsedTime < curveData.startEnd.y ? 1 : 0;
-                    float curveValue = curveData.value * curve.Evaluate(Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeElapsedTime)) * activeFactor;
+                    float curveValue = curveData.value * curveData.curve.Evaluate(Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeElapsedTime)) * activeFactor;
 
                     //this calculates how long to wait for the next necessary canculation
-                    float waitForTimeByCurveValues = timeToWait;
+                    float waitForTimeByCurveValues = timeSteps;
                     if (relativeElapsedTime < curveData.startEnd.x) waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.x * duration) - elapsedTime); //wait till range start or timeToWait
                     else if (relativeElapsedTime < curveData.startEnd.y) waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.y * duration) - elapsedTime); //wait till range end or timeToWait                                                                        //wait till timeToWait
-                    waitForTime = Mathf.Min(waitForTime, waitForTimeByCurveValues);
-
-
+                    
+                    waitTime = Mathf.Min(waitTime, waitForTimeByCurveValues);
                     SetValueByName(curveData.name, curveValue);
                 }
 
-                m_actionTimeTillNextChange = waitForTime;
+                m_actionTimeTillNextChange = waitTime;
             }
 
             yield return null;
@@ -1356,7 +1359,6 @@ public class PlayerMovement : MonoBehaviour
             //Debug.Log(m_animationSpeed);
             //Debug.Log(elapsedTime);
         }
-
 
         //End of Action
         //bool isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isWalkingLocked;
@@ -1424,7 +1426,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_gravityPauseCoroutine != null)
         {
             StopCoroutine(m_gravityPauseCoroutine);
-            m_gravity = c_gravity;
+            Gravity = c_gravity;
             m_gravityPauseCoroutine = null;
         }
 

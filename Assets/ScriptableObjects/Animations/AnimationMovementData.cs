@@ -30,7 +30,7 @@ public class AnimationMovementData : ScriptableObject
     [SerializeField] public bool forbidAdditinalRotation = false;
     [Space]
     [Header("Animation Parameters for Movement and Rotation")]
-    [SerializeField] public Values[] variableValue;
+    [SerializeField] public Values[] variableValue = new Values[0];
 
     public float timeStepsForCurves = 0.05f;
 

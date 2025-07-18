@@ -35,7 +35,7 @@ public class LayingOnGround : MonoBehaviour
             {
                 m_root.rotation = this.transform.rotation;
                 if (m_affectFootPlacing)
-                    m_footPlacing.SetWeight(1);
+                    m_footPlacing.SetWeightByLayingOnGround(1);
 
             }
 
@@ -214,7 +214,7 @@ public class LayingOnGround : MonoBehaviour
         float weight = Mathf.InverseLerp(m_minDistToGround.x, m_minDistToGround.y, ((m_chest.position.y + m_pelvis.position.y) / 2) - m_root.position.y);
         
         if(m_affectFootPlacing) 
-            m_footPlacing.SetWeight(weight);
+            m_footPlacing.SetWeightByLayingOnGround(weight);
 
         desiredRootRot = Quaternion.Slerp(desiredRootRot, this.transform.rotation, weight);
         //Debug.Log(Mathf.InverseLerp(m_minDistToGround.x, m_minDistToGround.y, ((m_chest.position.y + m_pelvis.position.y) / 2) - m_root.position.y));

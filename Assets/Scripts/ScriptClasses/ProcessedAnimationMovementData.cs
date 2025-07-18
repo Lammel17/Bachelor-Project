@@ -6,23 +6,25 @@ public class ProcessedAnimationMovementData
 
     public List<DataStartEnd> rangeValuesList;
     public List<DataCurves> curveValuesList;
-    public int turningRelations;
-    public float timeSteps;
-    public float animationDuration;
+    public AnimationData animationData; 
+    //public int turningRelations;
+    //public float timeSteps;
+    //public float animationDuration;
 
-    //public float crossfadeInTime = 0.2f;
-    public float crossfadeOutTime = 0.2f;
-    public float crossfadeStartBeforeEndTime = 0.2f;
+    ////public float crossfadeInTime = 0.2f;
+    //public float crossfadeOutTime = 0.2f;
+    //public float crossfadeStartBeforeEndTime = 0.2f;
 
-    public ProcessedAnimationMovementData(List<DataStartEnd> StartEndValueList, List<DataCurves> CureveValueList, int TurningRelations, float TimeSteps, float AnimDuration, float CrossfadeOutTime, float CrossfadeOutBeforeEnd)
+    public ProcessedAnimationMovementData(List<DataStartEnd> StartEndValueList, List<DataCurves> CureveValueList, AnimationData animData/*int TurningRelations, float TimeSteps, float AnimDuration, float CrossfadeOutTime, float CrossfadeOutBeforeEnd*/)
     {
         rangeValuesList = StartEndValueList;
         curveValuesList = CureveValueList;
-        turningRelations = TurningRelations;
-        timeSteps = TimeSteps;
-        animationDuration = Mathf.Max(AnimDuration, 0);
-        crossfadeOutTime = Mathf.Max(CrossfadeOutTime, 0);
-        crossfadeStartBeforeEndTime = Mathf.Max(CrossfadeOutBeforeEnd, 0);
+        animationData = animData;
+        //turningRelations = TurningRelations;
+        //timeSteps = TimeSteps;
+        //animationDuration = Mathf.Max(AnimDuration, 0);
+        //crossfadeOutTime = Mathf.Max(CrossfadeOutTime, 0);
+        //crossfadeStartBeforeEndTime = Mathf.Max(CrossfadeOutBeforeEnd, 0);
     }
 
     public class DataCurves
