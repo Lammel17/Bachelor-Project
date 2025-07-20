@@ -12,7 +12,9 @@ public class DamageData //this script is for the data that is created and send t
     public int ContaminationBuildUpDamage = 0;
     public int PoiseDamage = 0;
 
-    public DamageData(int physicalSlice, int physicalBlunt, int physicalPierce, Vector2Int thermic, Vector2Int electric, Vector2Int metaphysic, int contamination, int poise )
+    public Vector3 Direction = new Vector3(0, 0, 0);
+
+    public DamageData(int physicalSlice, int physicalBlunt, int physicalPierce, Vector2Int thermic, Vector2Int electric, Vector2Int metaphysic, int contamination, int poise , Vector3 direction)
     {
         PhysicalSliceDamage = physicalSlice;
         PhysicalBluntDamage = physicalBlunt;
@@ -22,5 +24,6 @@ public class DamageData //this script is for the data that is created and send t
         MetaphysicDamageAndBuildUp = metaphysic;
         ContaminationBuildUpDamage = contamination;
         PoiseDamage = poise;
+        Direction = direction;
     }
 }

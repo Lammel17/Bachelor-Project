@@ -40,9 +40,10 @@ public class HurtBoxManager : MonoBehaviour
             new Vector2Int((int)(damageData.ElectricDamageAndBuildUp.x * damageMultiplikator.ElectricFactor * damageMultiplikator.OverallMultiplicator), damageData.ElectricDamageAndBuildUp.y),
             new Vector2Int((int)(damageData.MetaphysicDamageAndBuildUp.x * damageMultiplikator.MetaphysicFactor * damageMultiplikator.OverallMultiplicator), damageData.MetaphysicDamageAndBuildUp.y),
             (int)(damageData.ContaminationBuildUpDamage * damageMultiplikator.AilmentsFactor),
-            (int)(damageData.PoiseDamage * damageMultiplikator.PoiseDamageFactor));
+            (int)(damageData.PoiseDamage * damageMultiplikator.PoiseDamageFactor),
+            damageData.Direction);
 
-        m_characterStatus.TakeDamage(damage);
+        m_characterStatus.TakeDamageData(damage);
     }
 
 

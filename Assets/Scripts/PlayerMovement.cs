@@ -437,6 +437,11 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    public void TriggerDamage()
+    {
+        SetDamageAnimation(Get_Hit, 3, 0);
+    }
+
     void TriggerSwapWeapon()
     {
         //if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
@@ -448,10 +453,6 @@ public class PlayerMovement : MonoBehaviour
 
 
     }
-
-
-
-
 
 
     public void TriggerEvading()
@@ -487,7 +488,6 @@ public class PlayerMovement : MonoBehaviour
         InitAction(animHash, animData, m_evadeCosts);
 
         }
-
 
     public void TriggerLightAttack()
     {
@@ -573,6 +573,7 @@ public class PlayerMovement : MonoBehaviour
         InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
 
     }
+    
     public void TriggerSpecialHeavyAttack()
     {
         if (m_isActionLocked) return;
@@ -744,7 +745,7 @@ public class PlayerMovement : MonoBehaviour
         if (staminaCost != 0) //curently the animData.CostsPayTime must be earlier than the animData.PauseMidAirTime to make sense
         {
             Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_characterStatus.ExpendSpecialEnergyPoints(specialEnergyCost); m_actionPayCostCouroutine = null; };
-            m_actionPayCostCouroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.CostsPayTime, payActionCostsAction));
+            m_actionPayCostCouroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.MainActionMomentTime, payActionCostsAction));
         }
         if (animData.IsPausingGravity && animData.PauseGravityTime != Vector2.zero)
         {
@@ -1479,8 +1480,10 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-    //readonly int Shielding_TorsoStabilizing = Animator.StringToHash("Shielding_TorsoStabilizing");
-    //readonly int Empty_TorsoStabilizer      = Animator.StringToHash("Empty_TorsoStabilizer");
+
+
+    readonly int Get_Hit                    = Animator.StringToHash("Get_Hit");
+    
     readonly int Shielding_UpperBody        = Animator.StringToHash("Shielding_UpperBody");
     readonly int Use_Item_UpperBody         = Animator.StringToHash("Use_Item_UpperBody");
     readonly int Empty_UpperBody            = Animator.StringToHash("Empty_UpperBody");
@@ -1631,6 +1634,11 @@ public class PlayerMovement : MonoBehaviour
         m_nextUpperBodyCrossfadeOutTime = m_baseCrossFadeDuration;
 
 
+    }
+
+    private void SetDamageAnimation(int upperBodyAnimation, int layer, float crossFadeDuration = 0f)
+    {
+        m_animator.CrossFadeInFixedTime(upperBodyAnimation, crossFadeDuration, layer);
     }
 
     #endregion

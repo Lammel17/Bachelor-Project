@@ -5,18 +5,19 @@ public class simpleHitBoxManager : MonoBehaviour
 {
 
     [SerializeField] private HitBox m_hitBox;
-    private DamageData m_damageData = new DamageData(0,0,0, new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), 0, 0);
+    private DamageData m_damageData = new DamageData(0,0,0, new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), 0, 0, Vector3.zero);
 
     [SerializeField] private int m_physicalSliceDamage = 0;
     [SerializeField] private Vector2Int m_thermicDamage = new Vector2Int(0,0);
     [SerializeField] private int m_contaminationBuildUp = 0;
     [SerializeField] private int m_poiseDamage = 0;
 
+    [SerializeField] private float m_timeIntervall = 2;
     [SerializeField] private bool m_refresh = false;
 
     void Start()
     {
-        m_damageData = new DamageData(m_physicalSliceDamage, 0, 0, m_thermicDamage, new Vector2Int(0, 0), new Vector2Int(0, 0), m_contaminationBuildUp, m_poiseDamage);
+        m_damageData = new DamageData(m_physicalSliceDamage, 0, 0, m_thermicDamage, new Vector2Int(0, 0), new Vector2Int(0, 0), m_contaminationBuildUp, m_poiseDamage, transform.forward);
 
         Repeat(true);
     }
@@ -25,7 +26,7 @@ public class simpleHitBoxManager : MonoBehaviour
     {
         if (m_refresh)
         {
-            m_damageData = new DamageData(m_physicalSliceDamage, 0, 0, m_thermicDamage, new Vector2Int(0, 0), new Vector2Int(0, 0), m_contaminationBuildUp, m_poiseDamage);
+            m_damageData = new DamageData(m_physicalSliceDamage, 0, 0, m_thermicDamage, new Vector2Int(0, 0), new Vector2Int(0, 0), m_contaminationBuildUp, m_poiseDamage, transform.forward);
             m_refresh = false;
         }
     }
@@ -38,6 +39,6 @@ public class simpleHitBoxManager : MonoBehaviour
             else m_hitBox.DeactivateHitBox();
         }
 
-        StartCoroutine(UtilityFunctions.Wait(2, () => { Repeat(!activate); }));
+        StartCoroutine(UtilityFunctions.Wait(m_timeIntervall, () => { Repeat(!activate); }));
     }
 }

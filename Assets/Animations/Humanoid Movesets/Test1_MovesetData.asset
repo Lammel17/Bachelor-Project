@@ -36,3 +36,4 @@ MonoBehaviour:
   weapon: {fileID: 11400000, guid: 4590ae21db6dc2e42892fb2d3d42c3a1, type: 2}
   shield: {fileID: 11400000, guid: 69262b0ec61ffe04ba9698ab9eadf0d5, type: 2}
   item: {fileID: 11400000, guid: e7c000e0417ffef4caf0ed7a1ee2bda1, type: 2}
+  getHit: {fileID: 7400000, guid: f2ea298c2e6c0cc49995719f4a1ba0be, type: 2}

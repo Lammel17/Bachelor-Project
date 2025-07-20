@@ -42,6 +42,8 @@ public class CharacterMovesetData : ScriptableObject
     [Space]
     //public ItemData healing;
     public ItemData item;
+    [Space]
+    public AnimationClip getHit;
 
 
 

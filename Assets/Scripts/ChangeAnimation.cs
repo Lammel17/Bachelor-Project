@@ -82,6 +82,9 @@ public class ChangeAnimation : MonoBehaviour
         ChangeItemAnimations(newOverrideController, moveset.item);
         //ChangeItemAnimations(newOverrideController, moveset.healing);
 
+        //Damage
+        if (moveset.getHit != null) newOverrideController["EmptyGetHit"] = moveset.getHit;
+        else Debug.Log($"ERROR: no animation clip in AnimationData found in {"EmptyGetHit"}");
 
 
         // Apply the override to the Animator

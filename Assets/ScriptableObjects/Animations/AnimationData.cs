@@ -26,8 +26,9 @@ public class AnimationData : ScriptableObject
     public float InterruptabilityChangeBeforeEndTime = 0;
     public AnimationInterruptableType ChangedInterruptability = AnimationInterruptableType.Easily_Interruptable;
     [Space]
-    [Header("-> ActionCosts Pay in Relative Time ")]
-    [Range(0,1)] public float CostsPayTime = 0;
+    [Header("-> MainActionMoment in Relative Time ")]
+    [Tooltip("Used mostly for the moment the actionCosts are paid, or the weapon is swaped...")]
+    [Range(0,1)] public float MainActionMomentTime = 0;
     [Space]
     [Header("-> Pause Anim when is not Grounded in Relative Time ")]
     public bool IsPausingMidAir = false;
