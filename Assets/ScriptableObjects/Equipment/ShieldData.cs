@@ -7,6 +7,9 @@ public class ShieldData : ScriptableObject
 {
     public string Description = "";
 
+    public Sprite ShieldSprite;
+    public GameObject ShieldModel;
+    [Space]
     public DamageTableData DamageNegationTable;
 
 

@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private GameObject m_playerInputManagerObject;
 
-    [SerializeField] private PlayerMovement m_playerMovement;
+    [SerializeField] private CharacterActionAndMovementHandler m_characterActionAndMovement;
     [SerializeField] private PlayerCameraHolder m_playerCameraHolder;
 
 
@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
         {
             GameObject inputManObj = Instantiate(m_playerInputManagerObject);
             PlayerInputManager inputMan = inputManObj.GetComponent<PlayerInputManager>();
-            inputMan.SetPlayerAndCamera(m_playerMovement, m_playerCameraHolder);
+            inputMan.SetPlayerAndCamera(m_characterActionAndMovement, m_playerCameraHolder);
         }
 
 

@@ -8,6 +8,9 @@ public class WeaponData : ScriptableObject
 {
     public string Description = "";
 
+    public Sprite WeaponSprite;
+    public GameObject WeaponModel;
+    [Space]
     public PhysicalDamageType BasePhysicalType = PhysicalDamageType.Slice;
 
     public DamageTableData DamageTabel;

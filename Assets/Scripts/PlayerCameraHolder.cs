@@ -10,7 +10,7 @@ public class PlayerCameraHolder : MonoBehaviour
 {
     public static PlayerCameraHolder Instance { get; private set; }
     private PlayerInputManager m_playerInputManager;
-    [SerializeField] private PlayerMovement m_playerMovement;
+    [SerializeField] private CharacterActionAndMovementHandler m_playerMovement;
     [SerializeField] private GameObject m_camera;
     [SerializeField] private Transform m_playerTransform;
     [Space]

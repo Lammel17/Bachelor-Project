@@ -1,11 +1,11 @@
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(PlayerMovement))]
+[RequireComponent(typeof(CharacterActionAndMovementHandler))]
 public class CharacterStatus : MonoBehaviour
 {
     [SerializeField] private CharacterStatsData m_characterStatsData;
-    [SerializeField] private PlayerMovement m_playerMovement;
+    [SerializeField] private CharacterActionAndMovementHandler m_playerMovement;
     [SerializeField] private bool m_infinteStamina = false;
     [Space]
     [SerializeField] private float m_energyRecoverySpeed = 1f;
@@ -65,7 +65,7 @@ public class CharacterStatus : MonoBehaviour
             m_infinteStamina = true;
         }
 
-        m_playerMovement = GetComponent<PlayerMovement>();
+        m_playerMovement = GetComponent<CharacterActionAndMovementHandler>();
 
         m_characterStatsData.HealthPoints.x = m_characterStatsData.HealthPoints.y;
         m_characterStatsData.EnergyPoints.x = m_characterStatsData.EnergyPoints.y;

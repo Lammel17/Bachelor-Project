@@ -9,7 +9,7 @@ using Unity.IO.LowLevel.Unsafe;
 public class PlayerInputManager : MonoBehaviour
 {
     public static PlayerInputManager Instance;
-    private PlayerMovement m_thePlayerMovement = null;
+    private CharacterActionAndMovementHandler m_characterActionAndMovement = null;
     private PlayerCameraHolder m_thePlayerCameraHolder = null;
 
     [SerializeField] private InputActionAsset inputActions;
@@ -111,9 +111,9 @@ public class PlayerInputManager : MonoBehaviour
 
     }
 
-    public void SetPlayerAndCamera(PlayerMovement player, PlayerCameraHolder camera)
+    public void SetPlayerAndCamera(CharacterActionAndMovementHandler player, PlayerCameraHolder camera)
     {
-        m_thePlayerMovement = player;
+        m_characterActionAndMovement = player;
         m_thePlayerCameraHolder = camera;
 
         EnableOrDisableInputs(true);
@@ -229,7 +229,7 @@ public class PlayerInputManager : MonoBehaviour
         Options2ActionRef.performed     += OnOption2;
 
 
-        if (m_thePlayerCameraHolder != null && m_thePlayerMovement != null) 
+        if (m_thePlayerCameraHolder != null && m_characterActionAndMovement != null) 
             EnableOrDisableInputs(true);
         else
             EnableOrDisableInputs(false);
@@ -334,7 +334,7 @@ public class PlayerInputManager : MonoBehaviour
 
     private bool SetBuffer(InputAction.CallbackContext context, bool isShift, int priority)
     {
-        if (priority > (int)m_thePlayerMovement.CurrentInteruptability) ///////////check if Animation is currently interuptable
+        if (priority > (int)m_characterActionAndMovement.CurrentInteruptability) ///////////check if Animation is currently interuptable
         {
             m_lastInputIsUnread = false;            //not sure if needed
             if (c_inputBufferCoroutine != null)
@@ -434,10 +434,10 @@ public class PlayerInputManager : MonoBehaviour
 
         //Still! Stick value bounces when letting it go, thats sucks, problem for later?
         float magnitude = Snapping.Snap(Mathf.InverseLerp(0.2f, 1, m_extremeInputMagnitude) + 0.1f, 0.5f);
-        if (magnitude != m_thePlayerMovement.InputStrenght)
-            m_thePlayerMovement.InputStrenght = magnitude; //only gets set, when it differns from current magnitude
+        if (magnitude != m_characterActionAndMovement.InputStrenght)
+            m_characterActionAndMovement.InputStrenght = magnitude; //only gets set, when it differns from current magnitude
         if (magnitude > 0)
-            m_thePlayerMovement.InputDirection = new Vector3(input.x, 0, input.y);
+            m_characterActionAndMovement.InputDirection = new Vector3(input.x, 0, input.y);
 
         m_veryLastInput = m_lastInput;
         m_lastInput = m_leftStick;
@@ -478,16 +478,16 @@ public class PlayerInputManager : MonoBehaviour
         if (m_isShift && context.performed) OnL1_North(context, true);
         else if (!m_isShift)
         {
-            if (context.performed) m_thePlayerMovement.TriggerShielding(true);
-            if (context.canceled)  m_thePlayerMovement.TriggerShielding(false);
+            if (context.performed) m_characterActionAndMovement.TriggerShielding(true);
+            if (context.canceled)  m_characterActionAndMovement.TriggerShielding(false);
         }
     }
     private void OnL1_North(InputAction.CallbackContext context, bool isShift)
     {
-        int priority = m_thePlayerMovement.GetInterruptabilityShieldLightSpecial();
+        int priority = m_characterActionAndMovement.GetInterruptabilityShieldLightSpecial();
         if (SetBuffer(context, isShift, priority)) return;
 
-        m_thePlayerMovement.TriggerShieldSpecialLight();
+        m_characterActionAndMovement.TriggerShieldSpecialLight();
     }
 
 
@@ -499,17 +499,17 @@ public class PlayerInputManager : MonoBehaviour
     }
     private void OnR1_only(InputAction.CallbackContext context, bool isShift)
     {
-        int priority = m_thePlayerMovement.GetInterruptabilityLight();
+        int priority = m_characterActionAndMovement.GetInterruptabilityLight();
         if (SetBuffer(context, isShift, priority)) return;
 
-        m_thePlayerMovement.TriggerLightAttack();
+        m_characterActionAndMovement.TriggerLightAttack();
     }
     private void OnR1_Shift(InputAction.CallbackContext context, bool isNorth)
     {
-        int priority = m_thePlayerMovement.GetInterruptabilityLightSpecial();
+        int priority = m_characterActionAndMovement.GetInterruptabilityLightSpecial();
         if (SetBuffer(context, isNorth, priority)) return;
 
-        m_thePlayerMovement.TriggerSpecialLightAttack();
+        m_characterActionAndMovement.TriggerSpecialLightAttack();
     }
 
 
@@ -528,10 +528,10 @@ public class PlayerInputManager : MonoBehaviour
     }
     private void OnL2_Shift(InputAction.CallbackContext context, bool isShift)
     {
-        int priority = m_thePlayerMovement.GetInterruptabilityHeavySpecial(); 
+        int priority = m_characterActionAndMovement.GetInterruptabilityHeavySpecial(); 
         if (SetBuffer(context, isShift, priority)) return;
 
-        m_thePlayerMovement.TriggerShieldSpecialHeavy();
+        m_characterActionAndMovement.TriggerShieldSpecialHeavy();
 
     }
 
@@ -544,17 +544,17 @@ public class PlayerInputManager : MonoBehaviour
     }
     private void OnR2_only(InputAction.CallbackContext context, bool isShift)
     {
-        int priority = m_thePlayerMovement.GetInterruptabilityHeavy();
+        int priority = m_characterActionAndMovement.GetInterruptabilityHeavy();
         if (SetBuffer(context, isShift, priority))  return;
 
-        m_thePlayerMovement.TriggerHeavyAttack();
+        m_characterActionAndMovement.TriggerHeavyAttack();
     }
     private void OnR2_Shift(InputAction.CallbackContext context, bool isShift)
     {
-        int priority = m_thePlayerMovement.GetInterruptabilityHeavy();
+        int priority = m_characterActionAndMovement.GetInterruptabilityHeavy();
         if (SetBuffer(context, isShift, priority)) return;
 
-        m_thePlayerMovement.TriggerSpecialHeavyAttack();
+        m_characterActionAndMovement.TriggerSpecialHeavyAttack();
     }
 
 
@@ -578,7 +578,7 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context, m_isShift, priority))
             return;
 
-        m_thePlayerMovement.TriggerEvading();
+        m_characterActionAndMovement.TriggerEvading();
     }
 
     private void OnEastHold(InputAction.CallbackContext context)
@@ -587,12 +587,12 @@ public class PlayerInputManager : MonoBehaviour
         if (context.performed)
         {
             //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East perf hold down");
-            m_thePlayerMovement.IsHoldRunning = true;
+            m_characterActionAndMovement.IsHoldRunning = true;
         }
         if (context.canceled)
         {
             //Debug.Log($"AAAAAAAAAAAAAAAAAAAAA East hold up");
-            m_thePlayerMovement.IsHoldRunning = false;
+            m_characterActionAndMovement.IsHoldRunning = false;
             //Beware, this canceled gets called even if hold was not performed
         }
     }
@@ -604,7 +604,7 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context, m_isShift, priority))
             return;
 
-        m_thePlayerMovement.TriggerItemUse();
+        m_characterActionAndMovement.TriggerItemUse();
 
 
         //if (context.performed)

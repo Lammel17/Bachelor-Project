@@ -18,7 +18,7 @@ using Unity.VisualScripting;
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(CharacterStatus))]
 
-public class PlayerMovement : MonoBehaviour
+public class CharacterActionAndMovementHandler : MonoBehaviour
 {
     public GameObject testMoveDirection;
     public GameObject testTurningDirection;
@@ -27,7 +27,7 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] private CharacterController m_characterController;
     [SerializeField] private CharacterStatus m_characterStatus;
-    [SerializeField] private GameObject m_chraracter;
+    [SerializeField] private GameObject m_chraracterMesh;
     private FootPlacing m_footPlacing;
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
@@ -139,6 +139,8 @@ public class PlayerMovement : MonoBehaviour
     }
 
     #region PROPERTIES
+    public Animator Animator { get => m_animator; }
+    public CharacterMovesetData MovesetData { get => m_characterMovesetData; }
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
     public float InputStrenght //is already snapped by inputmanager
     { 
@@ -242,10 +244,11 @@ public class PlayerMovement : MonoBehaviour
         if (m_characterStatus == null) m_characterStatus = GetComponent<CharacterStatus>();
         
 
-        m_chraracter.transform.position = new Vector3(0, -m_characterController.skinWidth, 0);
+        m_chraracterMesh.transform.position = new Vector3(0, -m_characterController.skinWidth, 0);
 
         m_playerInputManager = PlayerInputManager.Instance;
         m_playerCameraHolder = PlayerCameraHolder.Instance;
+
         if (TryGetComponent<LookAt>(out LookAt lookAt))
             m_lookAtScript = lookAt;
         if (TryGetComponent<FootPlacing>(out FootPlacing footPlace))
@@ -254,11 +257,8 @@ public class PlayerMovement : MonoBehaviour
         m_turningStrenght = m_turningStrenghtBaseValues[1];
         m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
 
-        ChangeMoveset.SetInitializingEquippment(m_characterMovesetData);
-        ChangeAnimation.InitializeAnimationOverrideController(m_animator, m_characterMovesetData);
-
-        m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
-        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
+        SetNextPossibleWeaponActions();
+        SetNextPossibleShieldActions();
 
         m_currentBaseLayerAnimation = Idle_1;
         m_currentUpperBodyAnimation = new Vector2(Empty_UpperBody, 0);
@@ -268,6 +268,18 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
+    public void SetNextPossibleWeaponActions() 
+    {
+        if (m_characterMovesetData.weapon == null)
+            return;
+        m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
+    }
+    public void SetNextPossibleShieldActions()
+    {
+        if (m_characterMovesetData.shield == null)
+            return;
+        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
+    }
 
 
 

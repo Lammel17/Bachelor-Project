@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67a9b7b5320f06c4ea89eb6146119d40, type: 3}
-  m_Name: TestWeaponData
+  m_Name: DefaultEmptyWeaponData
   m_EditorClassIdentifier: 
   Description: 
   WeaponSprite: {fileID: 0}
   WeaponModel: {fileID: 6595257129907456321, guid: 139145fff2a259747a683acd1cebb1d8, type: 3}
-  BasePhysicalType: 1
+  BasePhysicalType: 2
   DamageTabel:
     PhysicalSlice: {x: 0, y: 0}
     PhysicalBlunt: {x: 0, y: 0}
@@ -67,7 +67,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   LightAttack2:
-    AnimData: {fileID: 11400000, guid: 8a74efbede48d4e4799623a298941f36, type: 2}
+    AnimData: {fileID: 0}
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -152,7 +152,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SprintLightAttack:
-    AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
+    AnimData: {fileID: 0}
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -169,7 +169,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   EvadeLightAttack:
-    AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
+    AnimData: {fileID: 0}
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -186,7 +186,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SpecialLightAttack1:
-    AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
+    AnimData: {fileID: 11400000, guid: 4b3775208a25e694fb167e07f4f93660, type: 2}
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -220,7 +220,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   HeavyAttack1:
-    AnimData: {fileID: 11400000, guid: 21c32426275a76846be5728270f4c3f4, type: 2}
+    AnimData: {fileID: 11400000, guid: 6efba914182ac4245a0db792963347a2, type: 2}
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -237,7 +237,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   HeavyAttack2:
-    AnimData: {fileID: 11400000, guid: 6efba914182ac4245a0db792963347a2, type: 2}
+    AnimData: {fileID: 0}
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -288,7 +288,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SprintHeavyAttack:
-    AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
+    AnimData: {fileID: 0}
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -305,7 +305,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   EvadeHeavyAttack:
-    AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
+    AnimData: {fileID: 0}
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -322,7 +322,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SpecialHeavyAttack1:
-    AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
+    AnimData: {fileID: 0}
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1

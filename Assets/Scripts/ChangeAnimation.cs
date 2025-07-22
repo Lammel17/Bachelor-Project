@@ -99,12 +99,10 @@ public class ChangeAnimation : MonoBehaviour
 
     public static void ChangeWeapon(Animator animator, WeaponData weaponMoveset)
     {
-        // Make a runtime instance to avoid modifying the shared asset
-        AnimatorOverrideController newOverrideController = new AnimatorOverrideController(animator.runtimeAnimatorController);
-
-        // Override specific clip
         if (animator == null || weaponMoveset == null)
             return;
+
+        AnimatorOverrideController newOverrideController = new AnimatorOverrideController(animator.runtimeAnimatorController);
 
         ChangeWeaponAnimations(newOverrideController, weaponMoveset);
 
@@ -143,6 +141,20 @@ public class ChangeAnimation : MonoBehaviour
 
     }
 
+    public static void ChangeShield(Animator animator, ShieldData shieldMoveset)
+    {
+        if (animator == null || shieldMoveset == null)
+            return;
+
+        AnimatorOverrideController newOverrideController = new AnimatorOverrideController(animator.runtimeAnimatorController);
+
+        ChangeShieldAnimations(newOverrideController, shieldMoveset);
+
+        // Apply the override to the Animator
+        animator.runtimeAnimatorController = newOverrideController;
+
+    }
+
     private static void ChangeShieldAnimations(AnimatorOverrideController newOverrideController, ShieldData shieldMoveset)
     {
         if (shieldMoveset == null)
@@ -159,6 +171,21 @@ public class ChangeAnimation : MonoBehaviour
         CheckClipAndChange(newOverrideController, shieldMoveset.ShiledAlmostStanceBreak.AnimData, "EmptyShieldAlmostStanceBreak");
         CheckClipAndChange(newOverrideController, shieldMoveset.ShiledStanceBreak.AnimData, "EmptyShieldStanceBreak");
 
+
+    }
+
+
+    public static void ChangeItem(Animator animator, ItemData itemMoveset)
+    {
+        if (animator == null || itemMoveset == null)
+            return;
+
+        AnimatorOverrideController newOverrideController = new AnimatorOverrideController(animator.runtimeAnimatorController);
+
+        ChangeItemAnimations(newOverrideController, itemMoveset);
+
+        // Apply the override to the Animator
+        animator.runtimeAnimatorController = newOverrideController;
 
     }
 
