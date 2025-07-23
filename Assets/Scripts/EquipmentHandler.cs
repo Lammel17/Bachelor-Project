@@ -2,11 +2,13 @@ using System;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterActionAndMovementHandler))]
+[RequireComponent(typeof(ChangeAnimation))]
 
 public class EquipmentHandler : MonoBehaviour
 {
     [NonSerialized] public static EquipmentHandler Instance;
 
+    private ChangeAnimation m_changeAnimation;
     private CharacterActionAndMovementHandler m_characterActionAndMovement;
     [SerializeField][EditorAttributes.ReadOnly] private PlayerEquipmentData m_playerEquipmentData = new PlayerEquipmentData();
     private CharacterMovesetData m_movesetData;
@@ -32,6 +34,7 @@ public class EquipmentHandler : MonoBehaviour
     {
         m_characterActionAndMovement = GetComponent<CharacterActionAndMovementHandler>();
         m_movesetData = m_characterActionAndMovement.MovesetData;
+        m_changeAnimation = GetComponent<ChangeAnimation>();
 
         if (m_clearActiveEquipmentMovesetAtStart)
         {
@@ -75,7 +78,7 @@ public class EquipmentHandler : MonoBehaviour
             case 6: if (m_playerEquipmentData.Item6 != null && m_playerEquipmentData.Item6.ItemData != null) m_movesetData.item = m_playerEquipmentData.Item6.ItemData; break;
         }
 
-        ChangeAnimation.InitializeAnimationOverrideController(m_animator, m_movesetData);
+        m_changeAnimation.InitializeAnimationOverrideController(m_movesetData);
 
         m_characterActionAndMovement.SetNextPossibleWeaponActions();
         m_characterActionAndMovement.SetNextPossibleShieldActions();
@@ -92,7 +95,7 @@ public class EquipmentHandler : MonoBehaviour
         else 
             m_movesetData.weapon = m_defaultEmptyWeapon.WeaponData;
 
-            ChangeAnimation.ChangeWeapon(m_animator, m_movesetData.weapon);
+        m_changeAnimation.ChangeWeapon(m_movesetData.weapon);
         m_characterActionAndMovement.SetNextPossibleWeaponActions();
     }
 
@@ -105,7 +108,7 @@ public class EquipmentHandler : MonoBehaviour
         else
             m_movesetData.shield = m_defaultEmptyShield.ShieldData;
 
-        ChangeAnimation.ChangeShield(m_animator, m_movesetData.shield);
+        m_changeAnimation.ChangeShield(m_movesetData.shield);
         m_characterActionAndMovement.SetNextPossibleShieldActions();
     }
 
@@ -130,7 +133,7 @@ public class EquipmentHandler : MonoBehaviour
             ItemData itemData = getItemData(m_playerEquipmentData, (int)m_playerEquipmentData.ActiveShieldSlot);
             if (itemData != null) { m_movesetData.item = itemData; break;}
         }
-        ChangeAnimation.ChangeItem(m_animator, m_movesetData.item);
+        m_changeAnimation.ChangeItem(m_movesetData.item);
     }
 
     //public void SetActiveItem(ItemInstanceData item, bool overrideAnimation = true, bool rotateSlot = true)

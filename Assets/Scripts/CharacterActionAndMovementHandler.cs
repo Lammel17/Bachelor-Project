@@ -462,7 +462,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if ((int)m_currentInteruptability >= (int)turningInterruptability) return;
 
         if (EquipmentHandler.Instance == null) return;
-        Debug.Log("EEEEEEEEEEE");
         EquipmentHandler.Instance.SwitchActiveWeapon();
 
 
