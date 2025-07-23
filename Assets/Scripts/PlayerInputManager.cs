@@ -562,7 +562,7 @@ public class PlayerInputManager : MonoBehaviour
     private void OnSouth(InputAction.CallbackContext context)
     {
 
-        int priority = 0;
+        int priority = 1;
 
         if (SetBuffer(context, m_isShift, priority))
             return;
@@ -640,18 +640,17 @@ public class PlayerInputManager : MonoBehaviour
 
     private void OnRight(InputAction.CallbackContext context)
     {
-        int priority = 0;
+        int priority = 1;
 
         if (SetBuffer(context, m_isShift, priority))
             return;
 
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Right");
+        m_characterActionAndMovement.TriggerSwapWeapon();
     }
 
     private void OnLeft(InputAction.CallbackContext context)
     {
-        int priority = 0;
+        int priority = 1;
 
         if (SetBuffer(context, m_isShift, priority))
             return;

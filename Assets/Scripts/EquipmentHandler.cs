@@ -1,9 +1,12 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterActionAndMovementHandler))]
 
 public class EquipmentHandler : MonoBehaviour
 {
+    [NonSerialized] public static EquipmentHandler Instance;
+
     private CharacterActionAndMovementHandler m_characterActionAndMovement;
     [SerializeField][EditorAttributes.ReadOnly] private PlayerEquipmentData m_playerEquipmentData = new PlayerEquipmentData();
     private CharacterMovesetData m_movesetData;
@@ -16,6 +19,14 @@ public class EquipmentHandler : MonoBehaviour
     [SerializeField] private PlayerEquipmentData m_cheatEquipmentData = null;
     private Animator m_animator;
 
+
+    private void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
 
     private void Start()
     {

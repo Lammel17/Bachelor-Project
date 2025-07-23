@@ -454,14 +454,16 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         SetDamageAnimation(Get_Hit, 3, 0);
     }
 
-    void TriggerSwapWeapon()
+    public void TriggerSwapWeapon()
     {
-        //if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
-        //AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
-        //if ((int)m_currentInteruptability >= (int)turningInterruptability) return;
+        AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
+        if ((int)m_currentInteruptability >= (int)turningInterruptability) return;
 
-        //AnimationData animData = null;
+        if (EquipmentHandler.Instance == null) return;
+        Debug.Log("EEEEEEEEEEE");
+        EquipmentHandler.Instance.SwitchActiveWeapon();
 
 
     }
