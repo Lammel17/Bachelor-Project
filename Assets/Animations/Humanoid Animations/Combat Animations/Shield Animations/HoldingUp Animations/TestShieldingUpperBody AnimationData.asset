@@ -27,7 +27,8 @@ MonoBehaviour:
   PauseMidAirTime: 0
   IsPausingGravity: 0
   PauseGravityTime: {x: 0, y: 0}
-  useLookAtData: 1
+  actionUsesLookAtTargetData: 0
+  useLookAtForwardData: 1
   lookAtData:
     m_applyAddRot: 1
     m_addRotEuler: {x: 0, y: 40, z: 0}

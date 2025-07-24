@@ -237,8 +237,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         get => m_isShielding; 
         set 
         { 
-            m_isShielding = value; 
-            SetLookAtForward(m_isShielding, m_isShielding ? m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData : null); 
+            m_isShielding = value;
+            if (m_isShielding)
+                SetLookAtForward(m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.useLookAtForwardData, m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData);
+            else
+                SetLookAtForward(false);
+            
         } 
     }
     public Vector3 PreviousMove { get => m_prevMove; }
