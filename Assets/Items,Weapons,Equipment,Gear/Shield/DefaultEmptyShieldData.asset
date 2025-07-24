@@ -159,3 +159,4 @@ MonoBehaviour:
     SpecialEnergyCost: 0
     nextSpecialLight: 2
     nextSpecialHeavy: 2
+  SwitchShield: {fileID: 11400000, guid: 9fb287eb10d99e94ba89ce61177e6750, type: 2}

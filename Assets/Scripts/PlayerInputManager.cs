@@ -655,8 +655,8 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context, m_isShift, priority))
             return;
 
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Left");
+        m_characterActionAndMovement.TriggerSwitchShield();
+
     }
 
     private void OnUp(InputAction.CallbackContext context)

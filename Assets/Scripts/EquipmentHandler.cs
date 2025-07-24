@@ -10,6 +10,8 @@ public class EquipmentHandler : MonoBehaviour
     [NonSerialized] public static EquipmentHandler Instance;
     [SerializeField] private Transform m_weaponPosition;
     private GameObject m_activeWeaponGameObjReference = null;
+    [SerializeField] private Transform m_shieldPosition;
+    private GameObject m_activeShieldGameObjReference = null;
     [Space]
 
     private Animator m_animator;
@@ -71,10 +73,10 @@ public class EquipmentHandler : MonoBehaviour
 
         ShieldInstanceData activeShield = (int)m_playerEquipmentData.ActiveShieldSlot == 1 ? m_playerEquipmentData.Shield1 : m_playerEquipmentData.Shield2;
         if (activeShield != null && activeShield.ShieldData != null)
-            m_movesetData.shield = activeShield.ShieldData;
-        else
-            m_movesetData.shield = m_defaultEmptyShield.ShieldData;
-
+              m_movesetData.shield = activeShield.ShieldData;
+        else  m_movesetData.shield = m_defaultEmptyShield.ShieldData;
+        if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
+            m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
 
 
         switch ((int)m_playerEquipmentData.ActiveItemSlot)
@@ -116,12 +118,16 @@ public class EquipmentHandler : MonoBehaviour
 
     public void SwitchActiveShield()
     {
+        if (m_activeShieldGameObjReference != null)
+            Destroy(m_activeShieldGameObjReference);
+
         m_playerEquipmentData.ActiveShieldSlot = (PlayerEquipmentData.Slot)(((int)m_playerEquipmentData.ActiveShieldSlot % 2) + 1);
         ShieldInstanceData activeShield = (int)m_playerEquipmentData.ActiveShieldSlot == 1 ? m_playerEquipmentData.Shield1 : m_playerEquipmentData.Shield2;
         if (activeShield != null && activeShield.ShieldData != null)
-            m_movesetData.shield = activeShield.ShieldData;
-        else
-            m_movesetData.shield = m_defaultEmptyShield.ShieldData;
+              m_movesetData.shield = activeShield.ShieldData;
+        else  m_movesetData.shield = m_defaultEmptyShield.ShieldData;
+        if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
+            m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
 
         m_changeAnimation.ChangeShield(m_movesetData.shield);
         m_characterActionAndMovement.SetNextPossibleShieldActions();

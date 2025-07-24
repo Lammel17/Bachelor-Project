@@ -41,7 +41,7 @@ public class WeaponData : ScriptableObject
     public WeaponAttack SpecialHeavyAttack1 =   new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_2, Animator.StringToHash("Special_Heavy_Attack_1"));
     public WeaponAttack SpecialHeavyAttack2 =   new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Special_Heavy_Attack_2"));
     [Space]
-    public AnimationData SwapWeapon;
+    public AnimationData SwitchWeapon;
 
     [Space]
     [Header("Alternate Attack")]

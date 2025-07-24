@@ -39,8 +39,13 @@ public class AnimationData : ScriptableObject
     [GD.MinMaxSlider.MinMaxSlider(0,1)] public Vector2 PauseGravityTime = new Vector2(0,0);
     [Space]
     [Space]
+    [Space]
+    [Space]
     [Header("-> CorrectSpineRotations for Non Base Layer Animations")]
-    public bool useLookAtData = false;
+    [Tooltip("For Action-Animations only! This makes the action use the Look At Target correction. Usually Actions do not do this, since it was made for walking while looking at target.")]
+    public bool actionUsesLookAtTargetData = false;
+    [Tooltip("Works only with Action-Animations! Corrects weird looking Upper Body Animations")]
+    public bool useLookAtForwardData = false;
     public LookAtData lookAtData;
 
     //[Header("Invincibility")]

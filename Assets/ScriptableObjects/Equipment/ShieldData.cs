@@ -29,6 +29,9 @@ public class ShieldData : ScriptableObject
     public ShieldAction ShiledSpecialHeavy1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_3"));
     public ShieldAction ShiledSpecialHeavy2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_4"));
 
+    [Space]
+    public AnimationData SwitchShield;
+
 
 
 

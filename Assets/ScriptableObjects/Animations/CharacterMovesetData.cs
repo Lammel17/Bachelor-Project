@@ -8,12 +8,11 @@ public class CharacterMovesetData : ScriptableObject
 
     public string Description = "";
     public AnimationData emptyFallbackAnimation;
-    [Header("AnimationData Files")]
+    [Header("Action Animations")]
+
+    [Header("Non-Action Animations")]
     public AnimationData idle;
     public AnimationData[] idle1;
-    [Space]
-    public AnimationData turningLeft;
-    public AnimationData turningRight;
     [Space]
     public AnimationData slowWalkingForward;
     public AnimationData slowWalkingLeft;
@@ -26,9 +25,13 @@ public class CharacterMovesetData : ScriptableObject
     public AnimationData walkingBackwards;
     [Space]
     public AnimationData running;
+    [Space]
+    [Header("Action Animations")]
+    [Space]
+    public AnimationData turningLeft;
+    public AnimationData turningRight;
     public AnimationData turningRunningLeft;
     public AnimationData turningRunningRight;
-    [Space]
     [Space]
     public AnimationData evadeForward;
     public AnimationData evadeLeft;

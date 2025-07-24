@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23e6ec3c2b118de46b7770dc1f3e46e9, type: 3}
-  m_Name: TestItemUse AnimationData
+  m_Name: TestSwitchShield AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: cd1a3de5b3505c746b986a8d521ba413, type: 2}
-  AnimationMovementData: {fileID: 11400000, guid: 3eac751c813730d4e98c725d2102a394, type: 2}
+  animationClip: {fileID: 7400000, guid: 33bd557ef8b4acc498726255ce0278c9, type: 2}
+  AnimationMovementData: {fileID: 11400000, guid: 6a1ea8ce925b6f24ea52a566a30e6c00, type: 2}
   bodyParts: 1
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
@@ -22,24 +22,28 @@ MonoBehaviour:
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0
   ChangedInterruptability: 1
-  MainActionMomentTime: 0
+  MainActionMomentTime: 0.35
   IsPausingMidAir: 0
   PauseMidAirTime: 0
   IsPausingGravity: 0
   PauseGravityTime: {x: 0, y: 0}
-  ignoreLookAtTargetData: 0
-  useLookAtForwardData: 1
+  useLookAtData: 1
   lookAtData:
-    m_applyAddRot: 0
+    m_applyAddRot: 1
     m_addRotEuler: {x: 0, y: 0, z: 0}
     m_forwardCorrections:
     - Element: 2
       IsUsingOrigRot: 1
       Weight: 1
-      IgnoreAxis: 4
+      IgnoreAxis: 0
+      Ignore: 0
+    - Element: 3
+      IsUsingOrigRot: 1
+      Weight: 0
+      IgnoreAxis: 0
       Ignore: 0
     - Element: 6
       IsUsingOrigRot: 1
-      Weight: 1
+      Weight: 0.72
       IgnoreAxis: 0
       Ignore: 0

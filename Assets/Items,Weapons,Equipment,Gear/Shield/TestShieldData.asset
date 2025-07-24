@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: TestShieldData
   m_EditorClassIdentifier: 
   Description: 
+  ShieldSprite: {fileID: 0}
+  ShieldModel: {fileID: 7409964803290368995, guid: 757f07c021f398044a41050ba919949d, type: 3}
   DamageNegationTable:
     PhysicalSlice: {x: 0, y: 0}
     PhysicalBlunt: {x: 0, y: 0}
@@ -157,3 +159,4 @@ MonoBehaviour:
     SpecialEnergyCost: 0
     nextSpecialLight: 2
     nextSpecialHeavy: 2
+  SwitchShield: {fileID: 11400000, guid: 9fb287eb10d99e94ba89ce61177e6750, type: 2}

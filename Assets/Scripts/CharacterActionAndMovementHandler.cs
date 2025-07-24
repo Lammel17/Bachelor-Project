@@ -96,6 +96,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private float m_prevPrevInputStrength = 0;
     bool m_isStandingPrev = true;
 
+    AnimationData m_currentActionAnimData;
+
 
     private Coroutine m_actionChangesInterruptabilityCoroutine;
     private Coroutine m_actionPayCostCouroutine;
@@ -195,7 +197,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public Transform Target 
     { 
         get { if (m_target != null) return m_target; else { Debug.Log("target gets called, but is empty"); return null; } } 
-        set { m_target = value; m_isLockOn = (m_target != null); if (!m_isAction) SetLookAtTarget(m_target); } 
+        set 
+        { 
+            m_target = value; 
+            m_isLockOn = (m_target != null); 
+            if (!m_isAction || (m_currentActionAnimData != null && m_currentActionAnimData.actionUsesLookAtTargetData)) 
+                SetLookAtTarget(m_target);
+
+        } 
     }
     public Vector3 TargetPos { get => Target.position; }
     public Vector3 PlayerToTargetXZVector 
@@ -461,7 +470,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
         if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
 
-        AnimationData switchAction = m_characterMovesetData.weapon.SwapWeapon;
+        AnimationData switchAction = m_characterMovesetData.weapon.SwitchWeapon;
         if (switchAction == null) { Debug.Log("MISSING ANIMATION DATA of SwitchWeapon"); return; }
 
         m_currentInteruptability = switchEquipmentInterruptability;
@@ -475,6 +484,31 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             InitActionUpperBody(Switch_Weapon, switchAction, 2, effect: switchEffect);
         else
             InitAction(Switch_Weapon, switchAction, effect: switchEffect);
+
+
+    }
+
+    public void TriggerSwitchShield()
+    {
+        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+
+        AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
+        if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
+
+        AnimationData switchAction = m_characterMovesetData.shield.SwitchShield;
+        if (switchAction == null) { Debug.Log("MISSING ANIMATION DATA of SwitchShield"); return; }
+
+        m_currentInteruptability = switchEquipmentInterruptability;
+
+        Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveShield(); };
+
+
+        if (switchAction.bodyParts == AnimationData.BodyParts.UpperBody)
+            InitActionUpperBody(Switch_Shield, switchAction, 1, effect: switchEffect);
+        else if (switchAction.bodyParts == AnimationData.BodyParts.Arms)
+            InitActionUpperBody(Switch_Shield, switchAction, 2, effect: switchEffect);
+        else
+            InitAction(Switch_Shield, switchAction, effect: switchEffect);
 
 
     }
@@ -756,7 +790,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             SetUpperBodyAnimation(Empty_UpperBody, 0, crossFadeDuration: 0.1f);
         }
 
-        SetLookAtTarget(null);
+        SetLookAtTarget(animData.actionUsesLookAtTargetData ? m_target : null);
 
         SetAnimation(animationHash, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
         m_nextCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
@@ -818,7 +852,9 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isActionUpperBody = true;
         IsRunning = false;
 
-        if (animData.useLookAtData)
+        SetLookAtTarget(animData.actionUsesLookAtTargetData ? m_target : null);
+
+        if (animData.useLookAtForwardData)
             SetLookAtForward(true, animData.lookAtData);
 
         //SetLookAtTarget(null); //????? Depends on animation and if AddTurning
@@ -1289,6 +1325,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             }
         }
 
+
+        m_currentActionAnimData = animData;
         ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, animData, effectList); //This could be saved somewhere in future!
 
         m_ActionCoroutine = StartCoroutine(PerformAction(processedData));
@@ -1450,7 +1488,9 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         m_isTurning = false;
         m_characterStatus.ContinueEnergyRegenerationInTime();
+        m_currentActionAnimData = null;
 
+        SetLookAtTarget(m_target);
         SetLookAtForward(false);
         if (m_isHoldShielding) IsShielding = true;
 

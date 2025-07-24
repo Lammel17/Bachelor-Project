@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23e6ec3c2b118de46b7770dc1f3e46e9, type: 3}
-  m_Name: TestSwapWeapon AnimationData
+  m_Name: TestSwitchWeapon AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: e0f48d9d73f8edb4a98edde130044f55, type: 2}
