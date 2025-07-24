@@ -156,6 +156,8 @@ public class ChangeAnimation : MonoBehaviour
         CheckClipAndChange(weaponMoveset.SpecialHeavyAttack1.AnimData, "EmptySpecialHeavyAttack1");
         CheckClipAndChange(weaponMoveset.SpecialHeavyAttack2.AnimData, "EmptySpecialHeavyAttack2");
 
+        //SwitchWeapon
+        CheckClipAndChange(weaponMoveset.SwapWeapon, "EmptySwitchWeapon");
     }
 
     public void ChangeShield(ShieldData shieldMoveset)
@@ -187,6 +189,9 @@ public class ChangeAnimation : MonoBehaviour
 
         CheckClipAndChange(shieldMoveset.ShiledAlmostStanceBreak.AnimData, "EmptyShieldAlmostStanceBreak");
         CheckClipAndChange(shieldMoveset.ShiledStanceBreak.AnimData, "EmptyShieldStanceBreak");
+
+        //SwitchShield
+        //CheckClipAndChange(shieldMoveset., "EmptySwitchWeapon");
 
 
     }

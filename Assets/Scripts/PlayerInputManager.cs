@@ -645,7 +645,7 @@ public class PlayerInputManager : MonoBehaviour
         if (SetBuffer(context, m_isShift, priority))
             return;
 
-        m_characterActionAndMovement.TriggerSwapWeapon();
+        m_characterActionAndMovement.TriggerSwitchWeapon();
     }
 
     private void OnLeft(InputAction.CallbackContext context)

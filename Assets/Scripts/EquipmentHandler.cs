@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterActionAndMovementHandler))]
@@ -7,7 +8,11 @@ using UnityEngine;
 public class EquipmentHandler : MonoBehaviour
 {
     [NonSerialized] public static EquipmentHandler Instance;
+    [SerializeField] private Transform m_weaponPosition;
+    private GameObject m_activeWeaponGameObjReference = null;
+    [Space]
 
+    private Animator m_animator;
     private ChangeAnimation m_changeAnimation;
     private CharacterActionAndMovementHandler m_characterActionAndMovement;
     [SerializeField][EditorAttributes.ReadOnly] private PlayerEquipmentData m_playerEquipmentData = new PlayerEquipmentData();
@@ -19,7 +24,6 @@ public class EquipmentHandler : MonoBehaviour
     [SerializeField] private bool m_clearActiveEquipmentMovesetAtStart = false;
     [SerializeField] private bool m_useCheatEquipment = false;
     [SerializeField] private PlayerEquipmentData m_cheatEquipmentData = null;
-    private Animator m_animator;
 
 
     private void Awake()
@@ -58,15 +62,20 @@ public class EquipmentHandler : MonoBehaviour
     {
         WeaponInstanceData activeWeapon = (int)m_playerEquipmentData.ActiveWeaponSlot == 1 ? m_playerEquipmentData.Weapon1 : m_playerEquipmentData.Weapon2;
         if (activeWeapon != null && activeWeapon.WeaponData != null)
-            m_movesetData.weapon = activeWeapon.WeaponData;
-        else 
-            m_movesetData.weapon = m_defaultEmptyWeapon.WeaponData;
+              m_movesetData.weapon = activeWeapon.WeaponData;
+        else  m_movesetData.weapon = m_defaultEmptyWeapon.WeaponData;
+        if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
+            m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
+
+
 
         ShieldInstanceData activeShield = (int)m_playerEquipmentData.ActiveShieldSlot == 1 ? m_playerEquipmentData.Shield1 : m_playerEquipmentData.Shield2;
         if (activeShield != null && activeShield.ShieldData != null)
             m_movesetData.shield = activeShield.ShieldData;
         else
             m_movesetData.shield = m_defaultEmptyShield.ShieldData;
+
+
 
         switch ((int)m_playerEquipmentData.ActiveItemSlot)
         {
@@ -88,15 +97,21 @@ public class EquipmentHandler : MonoBehaviour
 
     public void SwitchActiveWeapon()
     {
+        if (m_activeWeaponGameObjReference != null)
+            Destroy(m_activeWeaponGameObjReference);
+
         m_playerEquipmentData.ActiveWeaponSlot = (PlayerEquipmentData.Slot)(((int)m_playerEquipmentData.ActiveWeaponSlot % 2) + 1);
         WeaponInstanceData activeWeapon = (int)m_playerEquipmentData.ActiveWeaponSlot == 1 ? m_playerEquipmentData.Weapon1 : m_playerEquipmentData.Weapon2;
         if (activeWeapon != null && activeWeapon.WeaponData != null)
-            m_movesetData.weapon = activeWeapon.WeaponData;
-        else 
-            m_movesetData.weapon = m_defaultEmptyWeapon.WeaponData;
+              m_movesetData.weapon = activeWeapon.WeaponData;
+        else  m_movesetData.weapon = m_defaultEmptyWeapon.WeaponData;
+        if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
+            m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
+
 
         m_changeAnimation.ChangeWeapon(m_movesetData.weapon);
         m_characterActionAndMovement.SetNextPossibleWeaponActions();
+
     }
 
     public void SwitchActiveShield()

@@ -88,7 +88,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isMidAirPause = false;
     [Space]
     [SerializeField][EditorAttributes.ReadOnly] private int m_currentBaseLayerAnimation;
-    [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_currentUpperBodyAnimation;
+    [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_currentUpperBodyAnimation; // (AnimHash, Layer)
 
     //Previous Frame Values
     private Vector3 m_prevMove = Vector3.zero;
@@ -454,15 +454,27 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         SetDamageAnimation(Get_Hit, 3, 0);
     }
 
-    public void TriggerSwapWeapon()
+    public void TriggerSwitchWeapon()
     {
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
-        AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
-        if ((int)m_currentInteruptability >= (int)turningInterruptability) return;
+        AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
+        if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
 
-        if (EquipmentHandler.Instance == null) return;
-        EquipmentHandler.Instance.SwitchActiveWeapon();
+        AnimationData switchAction = m_characterMovesetData.weapon.SwapWeapon;
+        if (switchAction == null) { Debug.Log("MISSING ANIMATION DATA of SwitchWeapon"); return; }
+
+        m_currentInteruptability = switchEquipmentInterruptability;
+
+        Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveWeapon(); };
+
+
+        if (switchAction.bodyParts == AnimationData.BodyParts.UpperBody)
+            InitActionUpperBody(Switch_Weapon, switchAction, 1, effect: switchEffect);
+        else if (switchAction.bodyParts == AnimationData.BodyParts.Arms)
+            InitActionUpperBody(Switch_Weapon, switchAction, 2, effect: switchEffect);
+        else
+            InitAction(Switch_Weapon, switchAction, effect: switchEffect);
 
 
     }
@@ -733,7 +745,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     #region SET ACTIONS
 
-    private void InitAction(int animationHash, AnimationData animData, int staminaCost = 0, int specialEnergyCost = 0)
+    private void InitAction(int animationHash, AnimationData animData, int staminaCost = 0, int specialEnergyCost = 0, Action effect = null)
     {
         m_isAction = true;
         IsRunning = false;
@@ -754,12 +766,18 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         float animationDuration = animData.animationClip.length;
 
         m_characterStatus.PauseEnergyRegenerationByAction();
-
-        if (staminaCost != 0) //curently the animData.CostsPayTime must be earlier than the animData.PauseMidAirTime to make sense
+        
+        //effects like pay stamina cost at that moment
+        List<Action> actionList = new List<Action>();
+        if (staminaCost != 0)
         {
             Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_characterStatus.ExpendSpecialEnergyPoints(specialEnergyCost); m_actionPayCostCouroutine = null; };
-            m_actionPayCostCouroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.MainActionMomentTime, payActionCostsAction));
+            actionList.Add(payActionCostsAction);
         }
+        if (effect != null)
+            actionList.Add(effect);
+
+
         if (animData.IsPausingGravity && animData.PauseGravityTime != Vector2.zero)
         {
             Action noGravity = () =>
@@ -791,10 +809,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             m_actionPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseMidAirTime, pauseMidAir));
         }
 
-        SetActionValues(animData);
+        SetActionValues(animData, actionList.Count == 0 ? null : actionList);
     }
 
-    private void InitActionUpperBody(int animationHash, AnimationData animData, int layer)
+    private void InitActionUpperBody(int animationHash, AnimationData animData, int layer, Action effect = null)
     {
         m_isAction = true;
         m_isActionUpperBody = true;
@@ -810,7 +828,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         SetValues(); //needed, because what if it jumps from one action directly into another
 
-        SetActionValues(animData);
+        //effects like pay stamina cost at that moment
+        List<Action> actionList = new List<Action>();
+        if (effect != null)
+            actionList.Add(effect);
+
+        SetActionValues(animData, actionList.Count == 0 ? null : actionList);
     }
 
     private void SetNextPossibleWeaponAttacks(WeaponData.WeaponAttack currentAttackData = null, int currentAction = 0)
@@ -1105,7 +1128,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
 
-    private void SetActionValues(AnimationData animData)
+    private void SetActionValues(AnimationData animData, List<Action> effectList = null)
     {
         AnimationMovementData animMoveData = animData.AnimationMovementData;
         float animationDuration = animData.animationClip.length;
@@ -1123,7 +1146,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         if (animMoveData == null)
         {
-            Debug.Log("ANIMATION_DATA IS NULL");
+            Debug.Log("ANIMATION_Moveset_DATA IS NULL");
             animMoveData = m_characterMovesetData.emptyFallbackAnimation.AnimationMovementData;
         }
 
@@ -1266,7 +1289,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             }
         }
 
-        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, animData /*(int)m_actionTurningRelations, animMoveData.timeStepsForCurves, animationDuration, crossfadeOutTime, crossfadeStartBeforeEndTime*/); //This could be saved somewhere in future!
+        ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, animData, effectList); //This could be saved somewhere in future!
 
         m_ActionCoroutine = StartCoroutine(PerformAction(processedData));
 
@@ -1278,10 +1301,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     {
         float elapsedTime = 0;
         float startTime = Time.time;
-        float timeSteps = processedData.animationData.AnimationMovementData == null ? 0.05f : processedData.animationData.AnimationMovementData.timeStepsForCurves;
+        float timeSteps = processedData.AnimationData.AnimationMovementData == null ? 0.05f : processedData.AnimationData.AnimationMovementData.timeStepsForCurves;
         float delayByMidAir = 0;
 
-        float duration = processedData.animationData.animationClip.length; //what about blendtrees, do they affect it?
+        float duration = processedData.AnimationData.animationClip.length; //what about blendtrees, do they affect it?
 
         void SetValueByName(ProcessedAnimationMovementData.ValueName name, float newValue)
         {
@@ -1308,31 +1331,52 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         }
 
 
-        while (elapsedTime <= duration - processedData.animationData.crossfadeBeginn)
+        while (elapsedTime <= duration - processedData.AnimationData.crossfadeBeginn)
         {
 
             if (m_actionTimeTillNextChange <= 0)
             {
-                float timeTillEnd = ((duration - processedData.animationData.crossfadeBeginn) - elapsedTime);
+                float timeTillEnd = ((duration - processedData.AnimationData.crossfadeBeginn) - elapsedTime);
                 float waitTime = timeTillEnd;
                 float relativeElapsedTime = elapsedTime / duration;
 
-                //this is if a action is earlier interruptable than the lenght of the animation
-                float timetillChangeInteruptability = timeTillEnd - processedData.animationData.crossfadeBeginn;
-                if (timetillChangeInteruptability <= 0 && m_currentInteruptability != processedData.animationData.ChangedInterruptability)
-                {
-                    m_characterStatus.ContinueEnergyRegenerationInTime();
-                    m_currentInteruptability = processedData.animationData.ChangedInterruptability;
-                    m_actionChangesInterruptabilityCoroutine = null;
-                    if (m_playerInputManager.CheckRecallLatestBufferedInput())
-                        EndActionReset();
-                }
-                if (timetillChangeInteruptability > 0)
-                    waitTime = timetillChangeInteruptability;
 
+
+                //INTERRUPTABILITY this is if a action is earlier interruptable than the lenght of the animation
+                if (m_currentInteruptability != processedData.AnimationData.ChangedInterruptability)
+                {
+                    float timetillChangeInteruptability = timeTillEnd - processedData.AnimationData.crossfadeBeginn;
+                    if (timetillChangeInteruptability <= 0)
+                    {
+                        m_characterStatus.ContinueEnergyRegenerationInTime();
+                        m_currentInteruptability = processedData.AnimationData.ChangedInterruptability;
+                        m_actionChangesInterruptabilityCoroutine = null;
+                        if (m_playerInputManager.CheckRecallLatestBufferedInput())
+                            EndActionReset();
+                    }
+                    else
+                        waitTime = Mathf.Min(timetillChangeInteruptability, waitTime);
+                }
+
+                //EFFECT LIST
+                if (processedData.Effects != null)
+                {
+                    //float timetillEffectTime = timeTillEnd - duration * (1 - processedData.AnimationData.MainActionMomentTime);
+                    float timetillEffectTime = (duration * processedData.AnimationData.MainActionMomentTime) - ((duration - processedData.AnimationData.crossfadeBeginn) - timeTillEnd)  ;
+                    if (timetillEffectTime <= 0)
+                    {
+                        foreach (Action effect in processedData.Effects)
+                        {
+                            effect.Invoke();
+                        }
+                        processedData.Effects = null;
+                    }
+                    else
+                        waitTime = Mathf.Min(timetillEffectTime, waitTime);
+                }
 
                 //STARTEND VALUES
-                foreach (var rangeData in processedData.rangeValuesList)
+                foreach (var rangeData in processedData.RangeValuesList)
                 {
                     float activeFactor = relativeElapsedTime >= rangeData.startEnd.x && relativeElapsedTime < rangeData.startEnd.y ? 1 : 0;
                     float valueInRange = rangeData.value * activeFactor;
@@ -1347,7 +1391,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                 }
 
                 //CURVE VALUES
-                foreach (var curveData in processedData.curveValuesList)
+                foreach (var curveData in processedData.CurveValuesList)
                 {
                     float activeFactor = relativeElapsedTime > curveData.startEnd.x && relativeElapsedTime < curveData.startEnd.y ? 1 : 0;
                     float curveValue = curveData.value * curveData.curve.Evaluate(Mathf.InverseLerp(curveData.startEnd.x, curveData.startEnd.y, relativeElapsedTime)) * activeFactor;
@@ -1629,6 +1673,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     private void SetUpperBodyAnimation(int upperBodyAnimation,  int layer, float crossFadeDuration, float timeOffset = 0)
     {
+
         if (layer == 0 && upperBodyAnimation != Empty_UpperBody)
         { Debug.Log("This animationData should have a different animation layer, choose a bodypart beside wholeBody!"); return; }
 
@@ -1639,6 +1684,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         }
         else if (layer != 0)
         {
+        Debug.Log("remember switch weapon spam bug");
             m_animator.CrossFadeInFixedTime(upperBodyAnimation, crossFadeDuration, layer, timeOffset);
             if((int)m_currentUpperBodyAnimation.y != 0) m_animator.CrossFadeInFixedTime(Empty_UpperBody, m_nextUpperBodyCrossfadeOutTime, (int)m_currentUpperBodyAnimation.y, timeOffset);
             m_currentUpperBodyAnimation = new Vector2(upperBodyAnimation, layer);

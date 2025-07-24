@@ -13,22 +13,37 @@ MonoBehaviour:
   m_Name: TestSwapWeapon AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 0}
-  AnimationMovementData: {fileID: 0}
-  bodyParts: 0
+  animationClip: {fileID: 7400000, guid: e0f48d9d73f8edb4a98edde130044f55, type: 2}
+  AnimationMovementData: {fileID: 11400000, guid: 6a1ea8ce925b6f24ea52a566a30e6c00, type: 2}
+  bodyParts: 1
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
   crossfadeBeginn: 0.2
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0
   ChangedInterruptability: 1
-  CostsPayTime: 0
+  MainActionMomentTime: 0.35
   IsPausingMidAir: 0
   PauseMidAirTime: 0
   IsPausingGravity: 0
   PauseGravityTime: {x: 0, y: 0}
-  useLookAtData: 0
+  useLookAtData: 1
   lookAtData:
     m_applyAddRot: 1
     m_addRotEuler: {x: 0, y: 0, z: 0}
-    m_forwardCorrections: []
+    m_forwardCorrections:
+    - Element: 2
+      IsUsingOrigRot: 1
+      Weight: 1
+      IgnoreAxis: 0
+      Ignore: 0
+    - Element: 3
+      IsUsingOrigRot: 1
+      Weight: 0
+      IgnoreAxis: 0
+      Ignore: 0
+    - Element: 6
+      IsUsingOrigRot: 1
+      Weight: 0.72
+      IgnoreAxis: 0
+      Ignore: 0

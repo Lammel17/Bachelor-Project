@@ -1,30 +1,23 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class ProcessedAnimationMovementData
 {
 
-    public List<DataStartEnd> rangeValuesList;
-    public List<DataCurves> curveValuesList;
-    public AnimationData animationData; 
-    //public int turningRelations;
-    //public float timeSteps;
-    //public float animationDuration;
+    public List<DataStartEnd> RangeValuesList;
+    public List<DataCurves> CurveValuesList;
+    public AnimationData AnimationData;
+    public List<Action> Effects;
 
-    ////public float crossfadeInTime = 0.2f;
-    //public float crossfadeOutTime = 0.2f;
-    //public float crossfadeStartBeforeEndTime = 0.2f;
 
-    public ProcessedAnimationMovementData(List<DataStartEnd> StartEndValueList, List<DataCurves> CureveValueList, AnimationData animData/*int TurningRelations, float TimeSteps, float AnimDuration, float CrossfadeOutTime, float CrossfadeOutBeforeEnd*/)
+    public ProcessedAnimationMovementData(List<DataStartEnd> startEndValueList, List<DataCurves> cureveValueList, AnimationData animData, List<Action> effects)
     {
-        rangeValuesList = StartEndValueList;
-        curveValuesList = CureveValueList;
-        animationData = animData;
-        //turningRelations = TurningRelations;
-        //timeSteps = TimeSteps;
-        //animationDuration = Mathf.Max(AnimDuration, 0);
-        //crossfadeOutTime = Mathf.Max(CrossfadeOutTime, 0);
-        //crossfadeStartBeforeEndTime = Mathf.Max(CrossfadeOutBeforeEnd, 0);
+        RangeValuesList = startEndValueList;
+        CurveValuesList = cureveValueList;
+        AnimationData = animData;
+        Effects = effects;
+
     }
 
     public class DataCurves

@@ -355,7 +355,7 @@ MonoBehaviour:
     nextHeavy: 1
     nextSpecialLight: 0
     nextSpecialHeavy: 0
-  SwapWeapon: {fileID: 0}
+  SwapWeapon: {fileID: 11400000, guid: 32b39188694ae664dbca3b2e3b74dc39, type: 2}
   alternateAttacks:
     LightAttack1:
       AnimData: {fileID: 0}

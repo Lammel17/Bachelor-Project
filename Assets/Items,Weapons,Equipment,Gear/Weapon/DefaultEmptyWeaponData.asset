@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Description: 
   WeaponSprite: {fileID: 0}
-  WeaponModel: {fileID: 6595257129907456321, guid: 139145fff2a259747a683acd1cebb1d8, type: 3}
+  WeaponModel: {fileID: 0}
   BasePhysicalType: 2
   DamageTabel:
     PhysicalSlice: {x: 0, y: 0}
@@ -355,7 +355,7 @@ MonoBehaviour:
     nextHeavy: 1
     nextSpecialLight: 0
     nextSpecialHeavy: 0
-  SwapWeapon: {fileID: 0}
+  SwapWeapon: {fileID: 11400000, guid: 32b39188694ae664dbca3b2e3b74dc39, type: 2}
   alternateAttacks:
     LightAttack1:
       AnimData: {fileID: 0}
