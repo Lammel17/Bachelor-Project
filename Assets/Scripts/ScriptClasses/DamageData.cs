@@ -1,5 +1,5 @@
 using UnityEngine;
-
+[System.Serializable]
 public class DamageData //this script is for the data that is created and send through when hitboxes collide and damage is calculated and stored inside this
 {
     public int PhysicalSliceDamage = 0;

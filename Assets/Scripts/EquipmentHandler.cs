@@ -1,24 +1,32 @@
+using EditorAttributes;
 using System;
 using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterActionAndMovementHandler))]
 [RequireComponent(typeof(ChangeAnimation))]
+[RequireComponent(typeof(CharacterStatus))]
 
 public class EquipmentHandler : MonoBehaviour
 {
+    [SerializeField][ReadOnly] public String info = "Script is only for the Player!";
     [NonSerialized] public static EquipmentHandler Instance;
+    [Space]
     [SerializeField] private Transform m_weaponPosition;
     private GameObject m_activeWeaponGameObjReference = null;
+    //private HitBoxManager m_weaponsHitBoxManager = null;
     [SerializeField] private Transform m_shieldPosition;
     private GameObject m_activeShieldGameObjReference = null;
     [Space]
 
+    private CharacterStatus m_characterStatus;
     private Animator m_animator;
     private ChangeAnimation m_changeAnimation;
     private CharacterActionAndMovementHandler m_characterActionAndMovement;
     [SerializeField][EditorAttributes.ReadOnly] private PlayerEquipmentData m_playerEquipmentData = new PlayerEquipmentData();
     private CharacterMovesetData m_movesetData;
+
+
     [Space]
     [SerializeField] private WeaponInstanceData m_defaultEmptyWeapon;
     [SerializeField] private ShieldInstanceData m_defaultEmptyShield;
@@ -39,8 +47,10 @@ public class EquipmentHandler : MonoBehaviour
     private void Start()
     {
         m_characterActionAndMovement = GetComponent<CharacterActionAndMovementHandler>();
-        m_movesetData = m_characterActionAndMovement.MovesetData;
+        m_movesetData = m_characterStatus.MovesetData;
         m_changeAnimation = GetComponent<ChangeAnimation>();
+        m_characterStatus = GetComponent<CharacterStatus>();
+
 
         if (m_clearActiveEquipmentMovesetAtStart)
         {
@@ -63,20 +73,34 @@ public class EquipmentHandler : MonoBehaviour
     public void SetInitializingActiveEquippment()
     {
         WeaponInstanceData activeWeapon = (int)m_playerEquipmentData.ActiveWeaponSlot == 1 ? m_playerEquipmentData.Weapon1 : m_playerEquipmentData.Weapon2;
-        if (activeWeapon != null && activeWeapon.WeaponData != null)
-              m_movesetData.weapon = activeWeapon.WeaponData;
-        else  m_movesetData.weapon = m_defaultEmptyWeapon.WeaponData;
+        if (activeWeapon == null || activeWeapon.WeaponData == null)
+            activeWeapon = m_defaultEmptyWeapon;
+        m_movesetData.weapon = activeWeapon.WeaponData;
+        m_characterStatus.ActiveWeaponInstanceData = activeWeapon;
+
         if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
+        {
             m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
+            if (m_activeWeaponGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+            {
+                m_characterStatus.HitBoxManager = hitManager;
+                m_characterStatus.HitBoxManager.ReadyWeapon(m_characterStatus.HurtBoxManager);
+            }
+
+        }
 
 
 
         ShieldInstanceData activeShield = (int)m_playerEquipmentData.ActiveShieldSlot == 1 ? m_playerEquipmentData.Shield1 : m_playerEquipmentData.Shield2;
-        if (activeShield != null && activeShield.ShieldData != null)
-              m_movesetData.shield = activeShield.ShieldData;
-        else  m_movesetData.shield = m_defaultEmptyShield.ShieldData;
+        if (activeShield == null || activeShield.ShieldData == null)
+            activeShield = m_defaultEmptyShield;
+        m_movesetData.shield = activeShield.ShieldData;
+
         if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
+        {
             m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
+        }
+        
 
 
         switch ((int)m_playerEquipmentData.ActiveItemSlot)
@@ -104,11 +128,20 @@ public class EquipmentHandler : MonoBehaviour
 
         m_playerEquipmentData.ActiveWeaponSlot = (PlayerEquipmentData.Slot)(((int)m_playerEquipmentData.ActiveWeaponSlot % 2) + 1);
         WeaponInstanceData activeWeapon = (int)m_playerEquipmentData.ActiveWeaponSlot == 1 ? m_playerEquipmentData.Weapon1 : m_playerEquipmentData.Weapon2;
-        if (activeWeapon != null && activeWeapon.WeaponData != null)
-              m_movesetData.weapon = activeWeapon.WeaponData;
-        else  m_movesetData.weapon = m_defaultEmptyWeapon.WeaponData;
+        if (activeWeapon == null || activeWeapon.WeaponData == null)
+            activeWeapon = m_defaultEmptyWeapon;
+        m_movesetData.weapon = activeWeapon.WeaponData;
+        m_characterStatus.ActiveWeaponInstanceData = activeWeapon;
+
         if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
+        {
             m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
+            if (m_activeWeaponGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+            {
+                m_characterStatus.HitBoxManager = hitManager;
+                m_characterStatus.HitBoxManager.ReadyWeapon(m_characterStatus.HurtBoxManager);
+            }
+        }
 
 
         m_changeAnimation.ChangeWeapon(m_movesetData.weapon);
@@ -123,9 +156,10 @@ public class EquipmentHandler : MonoBehaviour
 
         m_playerEquipmentData.ActiveShieldSlot = (PlayerEquipmentData.Slot)(((int)m_playerEquipmentData.ActiveShieldSlot % 2) + 1);
         ShieldInstanceData activeShield = (int)m_playerEquipmentData.ActiveShieldSlot == 1 ? m_playerEquipmentData.Shield1 : m_playerEquipmentData.Shield2;
-        if (activeShield != null && activeShield.ShieldData != null)
-              m_movesetData.shield = activeShield.ShieldData;
-        else  m_movesetData.shield = m_defaultEmptyShield.ShieldData;
+        if (activeShield == null || activeShield.ShieldData == null)
+            activeShield = m_defaultEmptyShield;
+        m_movesetData.shield = activeShield.ShieldData;
+
         if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
             m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
 

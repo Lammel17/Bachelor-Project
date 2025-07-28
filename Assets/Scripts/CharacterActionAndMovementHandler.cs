@@ -33,7 +33,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private PlayerInputManager m_playerInputManager;
     [SerializeField] private Animator m_animator;
     private LookAt m_lookAtScript = null;
-    [SerializeField] private CharacterMovesetData m_characterMovesetData;
+    private CharacterMovesetData m_characterMovesetData;
     private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
 
     [Space]
@@ -94,9 +94,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private Vector3 m_prevMove = Vector3.zero;
     private float m_prevInputStrength = 0;
     private float m_prevPrevInputStrength = 0;
-    bool m_isStandingPrev = true;
+    private bool m_isStandingPrev = true;
 
-    AnimationData m_currentActionAnimData;
+    private AnimationData m_currentActionAnimData = null;
+    private WeaponData.WeaponAttack m_currentWeaponAttackData = null;
 
 
     private Coroutine m_actionChangesInterruptabilityCoroutine;
@@ -253,9 +254,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     void Start()
     {
+
         if (m_characterController == null) m_characterController = GetComponent<CharacterController>();
         if (m_characterStatus == null) m_characterStatus = GetComponent<CharacterStatus>();
-        
+        m_characterMovesetData = m_characterStatus.MovesetData;
+
+
 
         m_chraracterMesh.transform.position = new Vector3(0, -m_characterController.skinWidth, 0);
 
@@ -577,6 +581,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_currentInteruptability = lightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
+        m_currentWeaponAttackData = thisAttack;
         InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
     }
 
@@ -605,6 +610,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_currentInteruptability = specialLightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
+        m_currentWeaponAttackData = thisAttack;
         InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
     }
 
@@ -633,6 +639,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_currentInteruptability = heavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
+        m_currentWeaponAttackData = thisAttack;
         InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
 
     }
@@ -662,6 +669,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_currentInteruptability = specialHeavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
+        m_currentWeaponAttackData = thisAttack;
         InitAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
 
     }
@@ -1400,7 +1408,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                         waitTime = Mathf.Min(timetillChangeInteruptability, waitTime);
                 }
 
-                //EFFECT LIST
+                //EFFECT LIST //effects like pay stamina cost or switch weapons
                 if (processedData.Effects != null)
                 {
                     //float timetillEffectTime = timeTillEnd - duration * (1 - processedData.AnimationData.MainActionMomentTime);
@@ -1416,6 +1424,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                     else
                         waitTime = Mathf.Min(timetillEffectTime, waitTime);
                 }
+
+
+                foreach (AnimationData.HitBoxActiveData hitActiveData in processedData.AnimationData.hitBoxActiveData)
+                {
+                    m_characterStatus.HitBoxManager.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, m_characterStatus.GetDamageData(m_currentWeaponAttackData, transform.forward));
+                }
+
+
 
                 //STARTEND VALUES
                 foreach (var rangeData in processedData.RangeValuesList)
@@ -1493,6 +1509,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isTurning = false;
         m_characterStatus.ContinueEnergyRegenerationInTime();
         m_currentActionAnimData = null;
+        m_currentWeaponAttackData = null;
 
         SetLookAtTarget(m_target);
         SetLookAtForward(false);

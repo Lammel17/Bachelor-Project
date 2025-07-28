@@ -1,17 +1,21 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
+[RequireComponent(typeof(HitBoxManager))]
 public class simpleHitBoxManager : MonoBehaviour
 {
 
-    [SerializeField] private HitBox m_hitBox;
+    [SerializeField] private HitBoxManager m_hitBoxManager;
+    [SerializeField] private int m_hitBoxCollectionRef = 0;
     private DamageData m_damageData = new DamageData(0,0,0, new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), 0, 0, Vector3.zero);
-
+    [Space]
+    [Space]
     [SerializeField] private int m_physicalSliceDamage = 0;
     [SerializeField] private Vector2Int m_thermicDamage = new Vector2Int(0,0);
     [SerializeField] private int m_contaminationBuildUp = 0;
     [SerializeField] private int m_poiseDamage = 0;
-
+    [Space]
+    [Space]
     [SerializeField] private float m_timeIntervall = 2;
     [SerializeField] private bool m_refresh = false;
 
@@ -33,10 +37,10 @@ public class simpleHitBoxManager : MonoBehaviour
 
     private void Repeat( bool activate)
     {
-        if (m_hitBox != null)
+        if (m_hitBoxManager != null)
         {
-            if (activate) m_hitBox.ActivateHitBox(m_damageData);
-            else m_hitBox.DeactivateHitBox();
+            if (activate) m_hitBoxManager.ActivateHitboxCollection(m_hitBoxCollectionRef, m_damageData);
+            else m_hitBoxManager.DeactivateHitboxCollection();
         }
 
         StartCoroutine(UtilityFunctions.Wait(m_timeIntervall, () => { Repeat(!activate); }));

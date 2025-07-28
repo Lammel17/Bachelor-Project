@@ -1,6 +1,9 @@
 using EditorAttributes;
 using GD.MinMaxSlider;
+using NUnit.Framework;
 using UnityEngine;
+using System.Collections.Generic;
+
 
 [CreateAssetMenu(fileName = "AnimationData", menuName = "Scriptable Objects/AnimationData")]
 public class AnimationData : ScriptableObject
@@ -26,13 +29,23 @@ public class AnimationData : ScriptableObject
     public float InterruptabilityChangeBeforeEndTime = 0;
     public AnimationInterruptableType ChangedInterruptability = AnimationInterruptableType.Easily_Interruptable;
     [Space]
+    [Space]
+    [Space]
+    [Space]
     [Header("-> MainActionMoment in Relative Time ")]
     [Tooltip("Used mostly for the moment the actionCosts are paid, or the weapon is swaped...")]
-    [Range(0,1)] public float MainActionMomentTime = 0;
+    [UnityEngine.Range(0,1)] public float MainActionMomentTime = 0;
+    [Space]
+    [Header("-> HitBoxes Active in Relative Time ")]
+    [Tooltip("Used if the action is part of a weapon with hitboxes.")]
+    [SerializeField] public List<HitBoxActiveData> hitBoxActiveData;
+    [Space]
+    [Space]
+    [Space]
     [Space]
     [Header("-> Pause Anim when is not Grounded in Relative Time ")]
     public bool IsPausingMidAir = false;
-    [Range(0, 1)] public float PauseMidAirTime = 0;
+    [UnityEngine.Range(0, 1)] public float PauseMidAirTime = 0;
     [Space]
     [Header("-> Pause Gravity in Relative Time ")]
     public bool IsPausingGravity = false;
@@ -42,11 +55,22 @@ public class AnimationData : ScriptableObject
     [Space]
     [Space]
     [Header("-> CorrectSpineRotations for Non Base Layer Animations")]
-    [Tooltip("For Action-Animations only! This makes the action use the Look At Target correction. Usually Actions do not do this, since it was made for walking while looking at target.")]
+    [Tooltip("Bool affects only Action-Animations! This makes the action use the Look At Target correction. Usually Actions do not do this, since it was made for walking while looking at target.")]
     public bool actionUsesLookAtTargetData = false;
+    [Space]
     [Tooltip("Works only with Action-Animations! Corrects weird looking Upper Body Animations")]
     public bool useLookAtForwardData = false;
     public LookAtData lookAtData;
+
+    [System.Serializable]
+    public class HitBoxActiveData
+    {
+        [Tooltip("The hitBoxReference number is refernce to the hitboxCollection of the weapons hitboxes. (0 is the default)")]
+        [SerializeField] public int CollectionRefNumber;
+        [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 1)] public Vector2 activeTime = new Vector2(0, 0);
+
+        //[SerializeField] public AnimationCurve activeTime = AnimationCurve.Linear(0, 0, 0, 0);
+    }
 
     //[Header("Invincibility")]
     //public Invincibility invincibilitySettings;
@@ -70,7 +94,7 @@ public class AnimationData : ScriptableObject
     public class Invincibility
     {
         public bool hasInvincibilityFrames = false;
-        [Range(0, 1)] public float invincibilityStart = 0;
+        [UnityEngine.Range(0, 1)] public float invincibilityStart = 0;
         public float invincibilityDuration = 0;
     }
 
@@ -86,7 +110,7 @@ public class AnimationData : ScriptableObject
 
         public bool ignore = false;
         public float value = 0;
-        [Range(0, 1)] public float EffectStart = 0;
+        [UnityEngine.Range(0, 1)] public float EffectStart = 0;
         float effectDuration = 0;
 
 

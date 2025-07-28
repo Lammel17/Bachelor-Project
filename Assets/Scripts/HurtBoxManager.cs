@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using UnityEngine;
 
+
+[RequireComponent(typeof(CharacterStatus))]
 public class HurtBoxManager : MonoBehaviour
 {
     [SerializeField] private LayerMask m_triggerLayer;
@@ -43,7 +45,7 @@ public class HurtBoxManager : MonoBehaviour
             (int)(damageData.PoiseDamage * damageMultiplikator.PoiseDamageFactor),
             damageData.Direction);
 
-        m_characterStatus.TakeDamageData(damage);
+        m_characterStatus.TakeDamageByDamageData(damage);
     }
 
 

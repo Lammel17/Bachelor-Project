@@ -41,15 +41,12 @@ public class HurtBox : MonoBehaviour
 
         if(other.TryGetComponent<HitBox>(out HitBox hit))
         {
-
-            if (!hit.CheckIfCanBeHit(m_hurtboxManager))
+            DamageData damageData = hit.HurtBoxWasHit(m_hurtboxManager);
+            if (damageData == null) // if null, then it mean that it should not count as hit
                 return;
 
-            DamageData damageData = hit.HurtBoxWasHit(m_hurtboxManager);
             m_hurtboxManager.TriggerCollision(m_damageMultiplikator, damageData);
         }
-        
-
 
     }
 

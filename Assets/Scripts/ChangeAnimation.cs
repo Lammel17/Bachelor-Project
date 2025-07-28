@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterActionAndMovementHandler))]
 public class ChangeAnimation : MonoBehaviour
 {
+    [SerializeField][EditorAttributes.ReadOnly] public String info = "Script is only for the Player!";
 
     [SerializeField][EditorAttributes.ReadOnly] private Animator m_animator;
     private AnimatorOverrideController m_animatorOverrideController = null;

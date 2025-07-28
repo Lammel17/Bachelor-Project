@@ -1,11 +1,25 @@
+using EditorAttributes;
 using System;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterActionAndMovementHandler))]
+[RequireComponent(typeof(HurtBoxManager))]
 public class CharacterStatus : MonoBehaviour
 {
+    [Header("ImportantData Stuff")]
     [SerializeField] private CharacterStatsData m_characterStatsData;
-    [SerializeField] private CharacterActionAndMovementHandler m_playerMovement;
+    [SerializeField] private CharacterMovesetData m_movesetData;
+    [SerializeField] [ReadOnly] private CharacterActionAndMovementHandler m_playerMovement;
+    [SerializeField] [ReadOnly] private HurtBoxManager m_hurtBoxManager;
+    [Space]
+    [Header("Set if its not the Player")]
+    [SerializeField] private HitBoxManager m_activeWeaponHitBoxManager = null;
+    [SerializeField] private WeaponInstanceData m_activeWeaponInstance;
+    [SerializeField] private ShieldInstanceData m_activeShieldInstance;
+    [Space]
+    [Space]
+    [Space]
+    [Header("Character Stats")]
     [SerializeField] private bool m_infinteStamina = false;
     [Space]
     [SerializeField] private float m_energyRecoverySpeed = 1f;
@@ -54,6 +68,11 @@ public class CharacterStatus : MonoBehaviour
         Contamination
     }
 
+    public CharacterMovesetData MovesetData { get => m_movesetData; }
+    public HurtBoxManager HurtBoxManager { get => m_hurtBoxManager; }
+    public HitBoxManager HitBoxManager { get => m_activeWeaponHitBoxManager; set => m_activeWeaponHitBoxManager = value; }
+    public WeaponInstanceData ActiveWeaponInstanceData { get => m_activeWeaponInstance; set => m_activeWeaponInstance = value; }
+    public ShieldInstanceData ActiveShieldInstanceData { get => m_activeShieldInstance; set => m_activeShieldInstance = value; }
 
 
 
@@ -66,6 +85,7 @@ public class CharacterStatus : MonoBehaviour
         }
 
         m_playerMovement = GetComponent<CharacterActionAndMovementHandler>();
+        m_hurtBoxManager = GetComponent<HurtBoxManager>();
 
         m_characterStatsData.HealthPoints.x = m_characterStatsData.HealthPoints.y;
         m_characterStatsData.EnergyPoints.x = m_characterStatsData.EnergyPoints.y;
@@ -75,6 +95,9 @@ public class CharacterStatus : MonoBehaviour
         m_characterStatsData.ElectricBuildUp.x = 0;
         m_characterStatsData.MetaphysicBuildUp.x = 0;
         m_characterStatsData.ContaminationBuildUp.x = 0;
+
+
+        //m_activeWeaponInstance.DamageData = new DamageData( ); Here i stopped
     }
 
 
@@ -106,7 +129,7 @@ public class CharacterStatus : MonoBehaviour
         m_pauseEnergyRecoveryCoroutine = null;
     }
 
-    public void TakeDamageData(DamageData damageData)
+    public void TakeDamageByDamageData(DamageData damageData)
     {
         int damage =    damageData.PhysicalSliceDamage * (1 - (m_characterStatsData.PhysicalSliceNegation / 100))
                       + damageData.PhysicalBluntDamage * (1 - (m_characterStatsData.PhysicalBluntNegation / 100))
@@ -122,6 +145,22 @@ public class CharacterStatus : MonoBehaviour
         TakeAilmentBuildUpDamage(AilmentType.Contamination, damageData.ContaminationBuildUpDamage);
 
         TakePoiseDamage(damageData.PoiseDamage);
+    }
+
+    public DamageData GetDamageData(WeaponData.WeaponAttack attackData, Vector3 playerDirection)
+    {
+        DamageData dmgDat = new DamageData(
+            (int)(m_activeWeaponInstance.DamageData.PhysicalSliceDamage * attackData.actionDamageData.PhysicalFactor),
+            (int)(m_activeWeaponInstance.DamageData.PhysicalBluntDamage * attackData.actionDamageData.PhysicalFactor),
+            (int)(m_activeWeaponInstance.DamageData.PhysicalPierceDamage * attackData.actionDamageData.PhysicalFactor),
+            new Vector2Int((int)(m_activeWeaponInstance.DamageData.ThermicDamageAndBuildUp.x * attackData.actionDamageData.ThermicFactor), m_activeWeaponInstance.DamageData.ThermicDamageAndBuildUp.y),
+            new Vector2Int((int)(m_activeWeaponInstance.DamageData.ElectricDamageAndBuildUp.x * attackData.actionDamageData.ElectricFactor), m_activeWeaponInstance.DamageData.ElectricDamageAndBuildUp.y),
+            new Vector2Int((int)(m_activeWeaponInstance.DamageData.MetaphysicDamageAndBuildUp.x * attackData.actionDamageData.MetaphysicFactor), m_activeWeaponInstance.DamageData.MetaphysicDamageAndBuildUp.y),
+            (int)(m_activeWeaponInstance.DamageData.ContaminationBuildUpDamage * attackData.actionDamageData.AilmentsFactor),
+            (int)(m_activeWeaponInstance.DamageData.PoiseDamage * attackData.actionDamageData.PoiseDamageFactor),
+            Quaternion.LookRotation(playerDirection) * m_activeWeaponInstance.DamageData.Direction);
+
+        return dmgDat;
     }
 
 
