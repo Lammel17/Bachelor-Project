@@ -21,7 +21,8 @@ public class ShieldData : ScriptableObject
     public SimpleShieldAction ShiledStanceBreak;
 
     [Header("ShieldActions")]
-    public DamageTableData DamageTable;
+    public PhysicalDamageType PhysicalType = PhysicalDamageType.Slice;
+    public DamageTableData DamageTabel;
     [Space]
     public ShieldAction ShiledSpecialLight1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_1"));
     public ShieldAction ShiledSpecialLight2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_2"));
@@ -63,7 +64,8 @@ public class ShieldData : ScriptableObject
         public AnimationData AnimData;
 
         [NonSerialized] public int ActionkHash;
-        public DamageMultiplikatorData DamageData = new DamageMultiplikatorData(1, 1, 1, 1, 1, 1, 1);
+        public DamageMultiplikatorData actionDamageData = new DamageMultiplikatorData(1, 1, 1, 1, 1, 1, 1);
+        public PhysicalDamageType PhysicalType;
         public int EnergyCost = 20;
         public int SpecialEnergyCost = 0;
         public ShieldSpecialLight nextSpecialLight;

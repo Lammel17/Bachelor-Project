@@ -9,12 +9,13 @@ public class CharacterStatus : MonoBehaviour
     [Header("ImportantData Stuff")]
     [SerializeField] private CharacterStatsData m_characterStatsData;
     [SerializeField] private CharacterMovesetData m_movesetData;
-    [SerializeField] [ReadOnly] private CharacterActionAndMovementHandler m_playerMovement;
-    [SerializeField] [ReadOnly] private HurtBoxManager m_hurtBoxManager;
+    [SerializeField][ReadOnly] private CharacterActionAndMovementHandler m_playerMovement;
+    [SerializeField][ReadOnly] private HurtBoxManager m_hurtBoxManager;
     [Space]
     [Header("Must set if its not the Player")]
     [SerializeField] private HitBoxManager m_activeWeaponHitBoxManager = null;
     [SerializeField] private WeaponInstanceData m_activeWeaponInstance;
+    [SerializeField] private HitBoxManager m_activeShieldHitBoxManager = null;
     [SerializeField] private ShieldInstanceData m_activeShieldInstance;
     [Space]
     [Space]
@@ -34,10 +35,10 @@ public class CharacterStatus : MonoBehaviour
     [SerializeField] private float m_minRecoveredEnergyForAction = 40f;
     [SerializeField] private float m_minRecoveredEnergyConstantForAction = 90f;
 
-    [SerializeField][EditorAttributes.ReadOnly] [Range(0, 1)] private float m_hp = 1;
-    [SerializeField][EditorAttributes.ReadOnly] [Range(0, 1)] private float m_ep = 1;
-    [SerializeField][EditorAttributes.ReadOnly] [Range(0, 1)] private float m_sep = 1;
-    [SerializeField][EditorAttributes.ReadOnly] [Range(0, 1)] private float m_poise = 1;
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_hp = 1;
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_ep = 1;
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_sep = 1;
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_poise = 1;
     [Space]
     [SerializeField][EditorAttributes.ReadOnly][Range(1, -1)] private float m_thermic = 0;
     [SerializeField][EditorAttributes.ReadOnly][Range(1, -1)] private float m_electric = 0;
@@ -70,7 +71,8 @@ public class CharacterStatus : MonoBehaviour
 
     public CharacterMovesetData MovesetData { get => m_movesetData; }
     public HurtBoxManager HurtBoxManager { get => m_hurtBoxManager; }
-    public HitBoxManager HitBoxManager { get => m_activeWeaponHitBoxManager; set => m_activeWeaponHitBoxManager = value; }
+    public HitBoxManager HitBoxManagerWeapon { get => m_activeWeaponHitBoxManager; set => m_activeWeaponHitBoxManager = value; }
+    public HitBoxManager HitBoxManagerShield { get => m_activeShieldHitBoxManager; set => m_activeShieldHitBoxManager = value; }
     public WeaponInstanceData ActiveWeaponInstanceData { get => m_activeWeaponInstance; set => m_activeWeaponInstance = value; }
     public ShieldInstanceData ActiveShieldInstanceData { get => m_activeShieldInstance; set => m_activeShieldInstance = value; }
 
@@ -131,7 +133,7 @@ public class CharacterStatus : MonoBehaviour
 
     public void TakeDamageByDamageData(DamageData damageData)
     {
-        int damage =    damageData.PhysicalSliceDamage * (1 - (m_characterStatsData.PhysicalSliceNegation / 100))
+        int damage = damageData.PhysicalSliceDamage * (1 - (m_characterStatsData.PhysicalSliceNegation / 100))
                       + damageData.PhysicalBluntDamage * (1 - (m_characterStatsData.PhysicalBluntNegation / 100))
                       + damageData.PhysicalPierceDamage * (1 - (m_characterStatsData.PhysicalPierceNegation / 100))
                       + damageData.ThermicDamageAndBuildUp.x * (1 - (m_characterStatsData.ThermicNegation / 100))
@@ -147,30 +149,39 @@ public class CharacterStatus : MonoBehaviour
         TakePoiseDamage(damageData.PoiseDamage);
     }
 
-    public DamageData GetAttackDamageData(WeaponData.WeaponAttack attackData, Vector3 playerDirection, WeaponData.PhysicalDamageType Physicaltype)
+    public DamageData GetActionDamageData(WeaponData.WeaponAttack attackData, Vector3 playerDirection, WeaponData.PhysicalDamageType Physicaltype)
     {
         WeaponData.PhysicalDamageType physicalType = (attackData.PhysicalType != WeaponData.PhysicalDamageType.TypeByBase) ? attackData.PhysicalType : Physicaltype;
-
-        DamageData baseDmgDat = CalculateBaseDamageData(m_activeWeaponInstance);
-
+        DamageTableData tableData = m_activeWeaponInstance.WeaponData.DamageTabel;
+        float levelFactor = tableData.UpgradeCurve.Evaluate(m_activeWeaponInstance.WeaponLevelCurrentMax.x / m_activeWeaponInstance.WeaponLevelCurrentMax.y);
+        DamageData baseDmgDat = CalculateBaseDamageData(tableData, levelFactor);
+        return CalculateActionDamageData(baseDmgDat, attackData.actionDamageData, playerDirection, physicalType);
+    }
+    public DamageData GetActionDamageData(ShieldData.ShieldAction actionkData, Vector3 playerDirection, WeaponData.PhysicalDamageType Physicaltype)
+    {
+        WeaponData.PhysicalDamageType physicalType = (actionkData.PhysicalType != WeaponData.PhysicalDamageType.TypeByBase) ? actionkData.PhysicalType : Physicaltype;
+        DamageTableData tableData = m_activeShieldInstance.ShieldData.DamageTabel;
+        float levelFactor = tableData.UpgradeCurve.Evaluate(m_activeShieldInstance.ShieldLevelCurrentMax.x / m_activeShieldInstance.ShieldLevelCurrentMax.y);
+        DamageData baseDmgDat = CalculateBaseDamageData(tableData, levelFactor);
+        return CalculateActionDamageData(baseDmgDat, actionkData.actionDamageData, playerDirection, physicalType);
+    }
+    public DamageData CalculateActionDamageData(DamageData baseDmgDat, DamageMultiplikatorData actionDamageMultiplikator, Vector3 playerDirection, WeaponData.PhysicalDamageType physicaltype)
+    {
         DamageData dmgDat = new DamageData(
-            physicalType != WeaponData.PhysicalDamageType.Slice ?   0 : (int)(baseDmgDat.PhysicalSliceDamage * attackData.actionDamageData.PhysicalFactor),
-            physicalType != WeaponData.PhysicalDamageType.Blunt ?   0 : (int)(baseDmgDat.PhysicalBluntDamage * attackData.actionDamageData.PhysicalFactor),
-            physicalType != WeaponData.PhysicalDamageType.Pierce ?  0 : (int)(baseDmgDat.PhysicalPierceDamage * attackData.actionDamageData.PhysicalFactor),
-            new Vector2Int((int)(baseDmgDat.ThermicDamageAndBuildUp.x * attackData.actionDamageData.ThermicFactor), baseDmgDat.ThermicDamageAndBuildUp.y),
-            new Vector2Int((int)(baseDmgDat.ElectricDamageAndBuildUp.x * attackData.actionDamageData.ElectricFactor), baseDmgDat.ElectricDamageAndBuildUp.y),
-            new Vector2Int((int)(baseDmgDat.MetaphysicDamageAndBuildUp.x * attackData.actionDamageData.MetaphysicFactor), baseDmgDat.MetaphysicDamageAndBuildUp.y),
-            (int)(baseDmgDat.ContaminationBuildUpDamage * attackData.actionDamageData.AilmentsFactor),
-            (int)(baseDmgDat.PoiseDamage * attackData.actionDamageData.PoiseDamageFactor),
+            physicaltype != WeaponData.PhysicalDamageType.Slice ? 0 : (int)(baseDmgDat.PhysicalSliceDamage * actionDamageMultiplikator.PhysicalFactor),
+            physicaltype != WeaponData.PhysicalDamageType.Blunt ? 0 : (int)(baseDmgDat.PhysicalBluntDamage * actionDamageMultiplikator.PhysicalFactor),
+            physicaltype != WeaponData.PhysicalDamageType.Pierce ? 0 : (int)(baseDmgDat.PhysicalPierceDamage * actionDamageMultiplikator.PhysicalFactor),
+            new Vector2Int((int)(baseDmgDat.ThermicDamageAndBuildUp.x * actionDamageMultiplikator.ThermicFactor), baseDmgDat.ThermicDamageAndBuildUp.y),
+            new Vector2Int((int)(baseDmgDat.ElectricDamageAndBuildUp.x * actionDamageMultiplikator.ElectricFactor), baseDmgDat.ElectricDamageAndBuildUp.y),
+            new Vector2Int((int)(baseDmgDat.MetaphysicDamageAndBuildUp.x * actionDamageMultiplikator.MetaphysicFactor), baseDmgDat.MetaphysicDamageAndBuildUp.y),
+            (int)(baseDmgDat.ContaminationBuildUpDamage * actionDamageMultiplikator.AilmentsFactor),
+            (int)(baseDmgDat.PoiseDamage * actionDamageMultiplikator.PoiseDamageFactor),
             Quaternion.LookRotation(playerDirection) * baseDmgDat.Direction);
 
         return dmgDat;
     }
-    public DamageData CalculateBaseDamageData(WeaponInstanceData weaponInstanceData)
+    public DamageData CalculateBaseDamageData(DamageTableData tableData, float levelFactor)
     {
-        DamageTableData tableData = weaponInstanceData.WeaponData.DamageTabel;
-        float levelFactor = tableData.UpgradeCurve.Evaluate(weaponInstanceData.WeaponLevelCurrentMax.x/ weaponInstanceData.WeaponLevelCurrentMax.y);
-
         DamageData dmgDat = new DamageData(
             (int)(Mathf.Lerp(tableData.PhysicalSlice.x, tableData.PhysicalSlice.y, levelFactor)),
             (int)(Mathf.Lerp(tableData.PhysicalBlunt.x, tableData.PhysicalBlunt.y, levelFactor)),

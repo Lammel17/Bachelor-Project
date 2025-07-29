@@ -6,7 +6,7 @@ using EditorAttributes;
 [RequireComponent(typeof(Rigidbody))]
 public class HitBoxManager : MonoBehaviour
 {
-    [SerializeField] private List<HitBoxCollectionData> m_weaponHitboxes = new List<HitBoxCollectionData>();
+    [SerializeField] private List<HitBoxCollectionData> m_hitBoxCollectionList = new List<HitBoxCollectionData>();
     private List<int> m_activeCollections = new List<int>();
     [SerializeField][ReadOnly] private DamageData m_damageData;
     private HurtBoxManager m_ownHurtBoxManager;
@@ -14,13 +14,13 @@ public class HitBoxManager : MonoBehaviour
     private bool m_canHitOnlyOnce = false;
 
 
-    public HitBoxManager ReadyWeapon(HurtBoxManager ownHurtBoxManager)
+    public HitBoxManager ReadyHitBoxManager(HurtBoxManager ownHurtBoxManager)
     {
         m_ownHurtBoxManager = ownHurtBoxManager;
 
-        if (m_weaponHitboxes.Count != 0)
+        if (m_hitBoxCollectionList.Count != 0)
         {
-            foreach (HitBoxCollectionData hbcd in m_weaponHitboxes)
+            foreach (HitBoxCollectionData hbcd in m_hitBoxCollectionList)
             {
                 foreach (Collider coll in hbcd.HitColliders)
                 {
@@ -55,10 +55,10 @@ public class HitBoxManager : MonoBehaviour
 
     public void ActivateHitboxCollection(int hitboxCollectionRef, DamageData damageData)
     {
-        if (m_weaponHitboxes.Count == 0) return;
+        if (m_hitBoxCollectionList.Count == 0) return;
         m_damageData = damageData;
 
-        foreach (HitBoxCollectionData hbcd in m_weaponHitboxes)
+        foreach (HitBoxCollectionData hbcd in m_hitBoxCollectionList)
         {
             //Debug.Log(hitboxCollectionRef);
 
@@ -89,7 +89,7 @@ public class HitBoxManager : MonoBehaviour
         if (m_activeCollections.Contains(hitboxCollectionRef)) 
             return;
 
-        foreach (HitBoxCollectionData hbcd in m_weaponHitboxes)
+        foreach (HitBoxCollectionData hbcd in m_hitBoxCollectionList)
         {
             if (hitboxCollectionRef != hbcd.CollectionRefNumber)
                 continue;
@@ -100,6 +100,9 @@ public class HitBoxManager : MonoBehaviour
                     coll.enabled = false;
             }
         }
+
+        if (m_activeCollections.Count == 0)
+            m_hurtboxesHitted.Clear();
     }
 
 
@@ -108,7 +111,7 @@ public class HitBoxManager : MonoBehaviour
         m_damageData = null;
         if (m_activeCollections.Count == 0) return;
 
-        foreach (HitBoxCollectionData hbcd in m_weaponHitboxes)
+        foreach (HitBoxCollectionData hbcd in m_hitBoxCollectionList)
         {
             if (!m_activeCollections.Contains(hbcd.CollectionRefNumber))
                 continue;

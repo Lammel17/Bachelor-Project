@@ -190,6 +190,16 @@ MonoBehaviour:
   - CollectionRefNumber: 0
     HitColliders:
     - {fileID: 2080995307}
+  m_damageData:
+    PhysicalSliceDamage: 0
+    PhysicalBluntDamage: 0
+    PhysicalPierceDamage: 0
+    ThermicDamageAndBuildUp: {x: 0, y: 0}
+    ElectricDamageAndBuildUp: {x: 0, y: 0}
+    MetaphysicDamageAndBuildUp: {x: 0, y: 0}
+    ContaminationBuildUpDamage: 0
+    PoiseDamage: 0
+    Direction: {x: 0, y: 0, z: 0}
 --- !u!54 &40135812
 Rigidbody:
   m_ObjectHideFlags: 0

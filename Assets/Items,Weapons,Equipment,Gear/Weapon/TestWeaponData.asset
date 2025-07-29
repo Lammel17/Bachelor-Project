@@ -17,14 +17,14 @@ MonoBehaviour:
   WeaponModel: {fileID: 6595257129907456321, guid: 139145fff2a259747a683acd1cebb1d8, type: 3}
   BasePhysicalType: 1
   DamageTabel:
-    PhysicalSlice: {x: 0, y: 0}
+    PhysicalSlice: {x: 100, y: 1000}
     PhysicalBlunt: {x: 0, y: 0}
     PhysicalPierce: {x: 0, y: 0}
     Thermic: {x: 0, y: 0}
     Electric: {x: 0, y: 0}
     Metaphysic: {x: 0, y: 0}
     ContaminationBuildUp: {x: 0, y: 0}
-    Poise: {x: 0, y: 0}
+    Poise: {x: 100, y: 200}
     UpgradeCurve:
       serializedVersion: 2
       m_Curve:

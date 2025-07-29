@@ -13,20 +13,19 @@ public class EquipmentHandler : MonoBehaviour
     [NonSerialized] public static EquipmentHandler Instance;
     [Space]
     [SerializeField] private Transform m_weaponPosition;
-    private GameObject m_activeWeaponGameObjReference = null;
-    //private HitBoxManager m_weaponsHitBoxManager = null;
     [SerializeField] private Transform m_shieldPosition;
+    private GameObject m_activeWeaponGameObjReference = null;
     private GameObject m_activeShieldGameObjReference = null;
-    [Space]
 
     private CharacterStatus m_characterStatus;
     private Animator m_animator;
     private ChangeAnimation m_changeAnimation;
     private CharacterActionAndMovementHandler m_characterActionAndMovement;
-    [SerializeField][EditorAttributes.ReadOnly] private PlayerEquipmentData m_playerEquipmentData = new PlayerEquipmentData();
     private CharacterMovesetData m_movesetData;
 
 
+    [Space]
+    [SerializeField][EditorAttributes.ReadOnly] private PlayerEquipmentData m_playerEquipmentData = new PlayerEquipmentData();
     [Space]
     [SerializeField] private WeaponInstanceData m_defaultEmptyWeapon;
     [SerializeField] private ShieldInstanceData m_defaultEmptyShield;
@@ -86,8 +85,8 @@ public class EquipmentHandler : MonoBehaviour
             m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
             if (m_activeWeaponGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
             {
-                m_characterStatus.HitBoxManager = hitManager;
-                m_characterStatus.HitBoxManager.ReadyWeapon(m_characterStatus.HurtBoxManager);
+                m_characterStatus.HitBoxManagerWeapon = hitManager;
+                m_characterStatus.HitBoxManagerWeapon.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
             }
 
         }
@@ -98,10 +97,16 @@ public class EquipmentHandler : MonoBehaviour
         if (activeShield == null || activeShield.ShieldData == null)
             activeShield = m_defaultEmptyShield;
         m_movesetData.shield = activeShield.ShieldData;
+        m_characterStatus.ActiveShieldInstanceData = activeShield;
 
         if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
         {
             m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
+            if (m_activeShieldGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+            {
+                m_characterStatus.HitBoxManagerShield = hitManager;
+                m_characterStatus.HitBoxManagerShield.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
+            }
         }
         
 
@@ -141,8 +146,8 @@ public class EquipmentHandler : MonoBehaviour
             m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
             if (m_activeWeaponGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
             {
-                m_characterStatus.HitBoxManager = hitManager;
-                m_characterStatus.HitBoxManager.ReadyWeapon(m_characterStatus.HurtBoxManager);
+                m_characterStatus.HitBoxManagerWeapon = hitManager;
+                m_characterStatus.HitBoxManagerWeapon.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
             }
         }
 
@@ -162,9 +167,17 @@ public class EquipmentHandler : MonoBehaviour
         if (activeShield == null || activeShield.ShieldData == null)
             activeShield = m_defaultEmptyShield;
         m_movesetData.shield = activeShield.ShieldData;
+        m_characterStatus.ActiveShieldInstanceData = activeShield;
 
         if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
+        {
             m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
+            if (m_activeShieldGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+            {
+                m_characterStatus.HitBoxManagerShield = hitManager;
+                m_characterStatus.HitBoxManagerShield.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
+            }
+        }
 
         m_changeAnimation.ChangeShield(m_movesetData.shield);
         m_characterActionAndMovement.SetNextPossibleShieldActions();

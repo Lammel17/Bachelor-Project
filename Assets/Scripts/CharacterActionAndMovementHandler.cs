@@ -98,6 +98,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     private AnimationData m_currentActionAnimData = null;
     private WeaponData.WeaponAttack m_currentWeaponAttackData = null;
+    private ShieldData.ShieldAction m_currentShieldActionData = null;
 
 
     private Coroutine m_actionChangesInterruptabilityCoroutine;
@@ -720,7 +721,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         m_currentInteruptability = specialShieldLightActionInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
-
+        m_currentShieldActionData = thisAction;
         InitAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
     }
 
@@ -750,6 +751,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_currentInteruptability = specialShieldHeavyActionInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
+        m_currentShieldActionData = thisAction;
         InitAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
     }
 
@@ -775,7 +777,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         m_currentInteruptability = itemUseInterruptability;
 
-        if(thisAction.AnimData.bodyParts == AnimationData.BodyParts.WholeBody)
+        if (thisAction.AnimData.bodyParts == AnimationData.BodyParts.WholeBody)
             InitAction(Use_Item, thisAction.AnimData);
         else if (thisAction.AnimData.bodyParts == AnimationData.BodyParts.UpperBody)
             InitActionUpperBody(Use_Item_UpperBody, thisAction.AnimData, 1);
@@ -1357,9 +1359,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         float duration = processedData.AnimationData.animationClip.length; //what about blendtrees, do they affect it?
 
         DamageData actionDamageData = null;
-        List<int> activeActiveData = new List<int>();
+        List<int> activeHitBoxActiveDataList = new List<int>();
         if (processedData.AnimationData.hitBoxActiveData.Count != 0)
-            actionDamageData = m_characterStatus.GetAttackDamageData(m_currentWeaponAttackData, transform.forward, m_characterMovesetData.weapon.BasePhysicalType);
+            actionDamageData = m_currentWeaponAttackData != null ? m_characterStatus.GetActionDamageData(m_currentWeaponAttackData, transform.forward, m_characterMovesetData.weapon.BasePhysicalType) 
+                                                                 : m_characterStatus.GetActionDamageData(m_currentShieldActionData, transform.forward, m_characterMovesetData.shield.PhysicalType);
 
         void SetValueByName(ProcessedAnimationMovementData.ValueName name, float newValue)
         {
@@ -1442,18 +1445,20 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                         else if (relativeElapsedTime < hitActiveData.activeTime.y) //while Hitbox activation
                         {
                             timetillNextHitBoxChange = Mathf.Min((hitActiveData.activeTime.y - relativeElapsedTime) * duration, timetillNextHitBoxChange);
-                            if (!activeActiveData.Contains(activeDataIndex))
+                            if (!activeHitBoxActiveDataList.Contains(activeDataIndex))
                             {
-                                m_characterStatus.HitBoxManager.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, actionDamageData);
-                                activeActiveData.Add(activeDataIndex);
+                                if (m_currentWeaponAttackData != null && m_characterStatus.HitBoxManagerWeapon != null)  m_characterStatus.HitBoxManagerWeapon.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, actionDamageData);
+                                if (m_currentShieldActionData != null && m_characterStatus.HitBoxManagerShield != null) m_characterStatus.HitBoxManagerShield.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, actionDamageData);
+                                activeHitBoxActiveDataList.Add(activeDataIndex);
                             }
                         }
                         else if (relativeElapsedTime >= hitActiveData.activeTime.y)//after Hitbox activation
                         {
-                            if (activeActiveData.Contains(activeDataIndex))
+                            if (activeHitBoxActiveDataList.Contains(activeDataIndex))
                             {
-                                m_characterStatus.HitBoxManager.DeactivateHitboxCollection(hitActiveData.CollectionRefNumber);
-                                activeActiveData.Remove(activeDataIndex);
+                                if (m_currentWeaponAttackData != null && m_characterStatus.HitBoxManagerWeapon != null) m_characterStatus.HitBoxManagerWeapon.DeactivateHitboxCollection(hitActiveData.CollectionRefNumber);
+                                if (m_currentShieldActionData != null && m_characterStatus.HitBoxManagerShield != null) m_characterStatus.HitBoxManagerShield.DeactivateHitboxCollection(hitActiveData.CollectionRefNumber);
+                                activeHitBoxActiveDataList.Remove(activeDataIndex);
                             }
                         }
                         activeDataIndex++;
@@ -1539,8 +1544,9 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isTurning = false;
         m_characterStatus.ContinueEnergyRegenerationInTime();
         m_currentActionAnimData = null;
-        m_currentWeaponAttackData = null;
-        m_characterStatus.HitBoxManager.DeactivateAllHitboxCollections();
+        if (m_currentWeaponAttackData != null && m_characterStatus.HitBoxManagerWeapon != null) { m_currentWeaponAttackData = null; m_characterStatus.HitBoxManagerWeapon.DeactivateAllHitboxCollections();}
+        if (m_currentShieldActionData != null && m_characterStatus.HitBoxManagerShield != null) { m_currentShieldActionData = null; m_characterStatus.HitBoxManagerShield.DeactivateAllHitboxCollections();}
+        
 
         SetLookAtTarget(m_target);
         SetLookAtForward(false);
