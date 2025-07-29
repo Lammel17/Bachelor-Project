@@ -40,7 +40,7 @@ public class simpleHitBoxManager : MonoBehaviour
         if (m_hitBoxManager != null)
         {
             if (activate) m_hitBoxManager.ActivateHitboxCollection(m_hitBoxCollectionRef, m_damageData);
-            else m_hitBoxManager.DeactivateHitboxCollection();
+            else m_hitBoxManager.DeactivateAllHitboxCollections();
         }
 
         StartCoroutine(UtilityFunctions.Wait(m_timeIntervall, () => { Repeat(!activate); }));

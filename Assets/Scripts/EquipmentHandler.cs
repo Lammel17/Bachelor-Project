@@ -47,10 +47,9 @@ public class EquipmentHandler : MonoBehaviour
     private void Start()
     {
         m_characterActionAndMovement = GetComponent<CharacterActionAndMovementHandler>();
-        m_movesetData = m_characterStatus.MovesetData;
         m_changeAnimation = GetComponent<ChangeAnimation>();
         m_characterStatus = GetComponent<CharacterStatus>();
-
+        m_movesetData = m_characterStatus.MovesetData;
 
         if (m_clearActiveEquipmentMovesetAtStart)
         {
@@ -64,11 +63,15 @@ public class EquipmentHandler : MonoBehaviour
         if (m_useCheatEquipment)
             m_playerEquipmentData = CheatEquipment();
 
+
         if (m_animator != null)
             SetInitializingActiveEquippment();
         else Debug.Log("Missing Animator in EquipmentHandler Script");
 
     }
+
+
+
 
     public void SetInitializingActiveEquippment()
     {

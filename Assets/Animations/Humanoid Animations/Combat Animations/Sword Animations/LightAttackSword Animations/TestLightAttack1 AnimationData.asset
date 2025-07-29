@@ -24,7 +24,7 @@ MonoBehaviour:
   ChangedInterruptability: 1
   MainActionMomentTime: 0.4
   hitBoxActiveData:
-  - ReferenceNumber: 0
+  - CollectionRefNumber: 0
     activeTime: {x: 0.4, y: 0.61}
   IsPausingMidAir: 0
   PauseMidAirTime: 0

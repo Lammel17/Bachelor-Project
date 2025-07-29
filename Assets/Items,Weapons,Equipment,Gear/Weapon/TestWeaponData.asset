@@ -20,10 +20,10 @@ MonoBehaviour:
     PhysicalSlice: {x: 0, y: 0}
     PhysicalBlunt: {x: 0, y: 0}
     PhysicalPierce: {x: 0, y: 0}
-    Thermal: {x: 0, y: 0}
-    Electrical: {x: 0, y: 0}
-    Metaphysical: {x: 0, y: 0}
-    CorrosionBuildUp: {x: 0, y: 0}
+    Thermic: {x: 0, y: 0}
+    Electric: {x: 0, y: 0}
+    Metaphysic: {x: 0, y: 0}
+    ContaminationBuildUp: {x: 0, y: 0}
     Poise: {x: 0, y: 0}
     UpgradeCurve:
       serializedVersion: 2

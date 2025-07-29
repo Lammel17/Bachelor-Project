@@ -287,13 +287,13 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     public void SetNextPossibleWeaponActions() 
     {
-        if (m_characterMovesetData.weapon == null)
+        if (m_characterMovesetData == null || m_characterMovesetData.weapon == null)
             return;
         m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
     }
     public void SetNextPossibleShieldActions()
     {
-        if (m_characterMovesetData.shield == null)
+        if (m_characterMovesetData == null || m_characterMovesetData.shield == null)
             return;
         m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
     }
@@ -1356,6 +1356,11 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         float duration = processedData.AnimationData.animationClip.length; //what about blendtrees, do they affect it?
 
+        DamageData actionDamageData = null;
+        List<int> activeActiveData = new List<int>();
+        if (processedData.AnimationData.hitBoxActiveData.Count != 0)
+            actionDamageData = m_characterStatus.GetAttackDamageData(m_currentWeaponAttackData, transform.forward, m_characterMovesetData.weapon.BasePhysicalType);
+
         void SetValueByName(ProcessedAnimationMovementData.ValueName name, float newValue)
         {
             switch (name)
@@ -1425,12 +1430,37 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                         waitTime = Mathf.Min(timetillEffectTime, waitTime);
                 }
 
-
-                foreach (AnimationData.HitBoxActiveData hitActiveData in processedData.AnimationData.hitBoxActiveData)
+                //HITBOXES On and Off
+                if (processedData.AnimationData.hitBoxActiveData.Count != 0)
                 {
-                    m_characterStatus.HitBoxManager.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, m_characterStatus.GetDamageData(m_currentWeaponAttackData, transform.forward));
+                    int activeDataIndex = 0;
+                    float timetillNextHitBoxChange = timeTillEnd;
+                    foreach (AnimationData.HitBoxActiveData hitActiveData in processedData.AnimationData.hitBoxActiveData)
+                    {
+                        if (relativeElapsedTime < hitActiveData.activeTime.x)   //before Hitbox activation
+                        { timetillNextHitBoxChange = Mathf.Min((hitActiveData.activeTime.x - relativeElapsedTime) * duration, timetillNextHitBoxChange);}
+                        else if (relativeElapsedTime < hitActiveData.activeTime.y) //while Hitbox activation
+                        {
+                            timetillNextHitBoxChange = Mathf.Min((hitActiveData.activeTime.y - relativeElapsedTime) * duration, timetillNextHitBoxChange);
+                            if (!activeActiveData.Contains(activeDataIndex))
+                            {
+                                m_characterStatus.HitBoxManager.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, actionDamageData);
+                                activeActiveData.Add(activeDataIndex);
+                            }
+                        }
+                        else if (relativeElapsedTime >= hitActiveData.activeTime.y)//after Hitbox activation
+                        {
+                            if (activeActiveData.Contains(activeDataIndex))
+                            {
+                                m_characterStatus.HitBoxManager.DeactivateHitboxCollection(hitActiveData.CollectionRefNumber);
+                                activeActiveData.Remove(activeDataIndex);
+                            }
+                        }
+                        activeDataIndex++;
+                    }
+                    waitTime = Mathf.Min(timetillNextHitBoxChange, waitTime);
+                    //Debug.Log(relativeElapsedTime + timetillNextHitBoxChange / duration);
                 }
-
 
 
                 //STARTEND VALUES
@@ -1510,6 +1540,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_characterStatus.ContinueEnergyRegenerationInTime();
         m_currentActionAnimData = null;
         m_currentWeaponAttackData = null;
+        m_characterStatus.HitBoxManager.DeactivateAllHitboxCollections();
 
         SetLookAtTarget(m_target);
         SetLookAtForward(false);

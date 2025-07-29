@@ -1,13 +1,14 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using EditorAttributes;
 
 [RequireComponent(typeof(Rigidbody))]
 public class HitBoxManager : MonoBehaviour
 {
     [SerializeField] private List<HitBoxCollectionData> m_weaponHitboxes = new List<HitBoxCollectionData>();
     private List<int> m_activeCollections = new List<int>();
-    private DamageData m_damageData;
+    [SerializeField][ReadOnly] private DamageData m_damageData;
     private HurtBoxManager m_ownHurtBoxManager;
     private List<HurtBoxManager> m_hurtboxesHitted = new List<HurtBoxManager>();
     private bool m_canHitOnlyOnce = false;
@@ -46,7 +47,7 @@ public class HitBoxManager : MonoBehaviour
         m_hurtboxesHitted.Add(hurtBoxManager);
 
         if (m_canHitOnlyOnce)
-            DeactivateHitboxCollection();
+            DeactivateAllHitboxCollections();
 
         return m_damageData;
     }
@@ -59,22 +60,53 @@ public class HitBoxManager : MonoBehaviour
 
         foreach (HitBoxCollectionData hbcd in m_weaponHitboxes)
         {
-            if (hitboxCollectionRef != hbcd.CollectionRefNumber || m_activeCollections.Contains(hitboxCollectionRef)) 
-                continue;
+            //Debug.Log(hitboxCollectionRef);
 
-            m_activeCollections.Add(hitboxCollectionRef);
+            if (hitboxCollectionRef != hbcd.CollectionRefNumber) 
+                continue;
+            if (m_activeCollections.Contains(hitboxCollectionRef))
+            {
+                m_activeCollections.Add(hitboxCollectionRef);
+                continue;
+            }
+            else
+                m_activeCollections.Add(hitboxCollectionRef);
+
+
             foreach (Collider coll in hbcd.HitColliders)
             {
                 if (coll != null)
-                coll.enabled = true;
+                    coll.enabled = true;
             }
         }
     }
 
-    public void DeactivateHitboxCollection()
+    public void DeactivateHitboxCollection(int hitboxCollectionRef)
     {
-        if (m_activeCollections.Count == 0) return;
+        if (!m_activeCollections.Contains(hitboxCollectionRef)) 
+            return;
+        m_activeCollections.Remove(hitboxCollectionRef);
+        if (m_activeCollections.Contains(hitboxCollectionRef)) 
+            return;
+
+        foreach (HitBoxCollectionData hbcd in m_weaponHitboxes)
+        {
+            if (hitboxCollectionRef != hbcd.CollectionRefNumber)
+                continue;
+
+            foreach (Collider coll in hbcd.HitColliders)
+            {
+                if (coll != null)
+                    coll.enabled = false;
+            }
+        }
+    }
+
+
+    public void DeactivateAllHitboxCollections()
+    {
         m_damageData = null;
+        if (m_activeCollections.Count == 0) return;
 
         foreach (HitBoxCollectionData hbcd in m_weaponHitboxes)
         {
@@ -89,10 +121,8 @@ public class HitBoxManager : MonoBehaviour
         }
         m_activeCollections.Clear();
         m_hurtboxesHitted.Clear();
-        m_damageData = null;
 
     }
-
 
 
 

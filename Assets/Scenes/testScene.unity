@@ -137,7 +137,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &40135809
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3587,7 +3587,7 @@ MonoBehaviour:
   m_activeWeaponInstance:
     WeaponData: {fileID: 0}
     WeaponLevelCurrentMax: {x: 1, y: 10}
-    DamageData:
+    CustomDamageData:
       PhysicalSliceDamage: 0
       PhysicalBluntDamage: 0
       PhysicalPierceDamage: 0
@@ -3677,7 +3677,7 @@ MonoBehaviour:
     Weapon1:
       WeaponData: {fileID: 0}
       WeaponLevelCurrentMax: {x: 0, y: 0}
-      DamageData:
+      CustomDamageData:
         PhysicalSliceDamage: 0
         PhysicalBluntDamage: 0
         PhysicalPierceDamage: 0
@@ -3690,7 +3690,7 @@ MonoBehaviour:
     Weapon2:
       WeaponData: {fileID: 0}
       WeaponLevelCurrentMax: {x: 0, y: 0}
-      DamageData:
+      CustomDamageData:
         PhysicalSliceDamage: 0
         PhysicalBluntDamage: 0
         PhysicalPierceDamage: 0
@@ -3736,7 +3736,7 @@ MonoBehaviour:
   m_defaultEmptyWeapon:
     WeaponData: {fileID: 11400000, guid: d26c4771f231aff4781502331b1420ce, type: 2}
     WeaponLevelCurrentMax: {x: 1, y: 1}
-    DamageData:
+    CustomDamageData:
       PhysicalSliceDamage: 0
       PhysicalBluntDamage: 0
       PhysicalPierceDamage: 0
@@ -3755,7 +3755,7 @@ MonoBehaviour:
     Weapon1:
       WeaponData: {fileID: 11400000, guid: 4590ae21db6dc2e42892fb2d3d42c3a1, type: 2}
       WeaponLevelCurrentMax: {x: 1, y: 10}
-      DamageData:
+      CustomDamageData:
         PhysicalSliceDamage: 0
         PhysicalBluntDamage: 0
         PhysicalPierceDamage: 0
@@ -3768,7 +3768,7 @@ MonoBehaviour:
     Weapon2:
       WeaponData: {fileID: 0}
       WeaponLevelCurrentMax: {x: 1, y: 10}
-      DamageData:
+      CustomDamageData:
         PhysicalSliceDamage: 0
         PhysicalBluntDamage: 0
         PhysicalPierceDamage: 0
