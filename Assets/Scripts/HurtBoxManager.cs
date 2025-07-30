@@ -29,23 +29,12 @@ public class HurtBoxManager : MonoBehaviour
     }
 
 
-    public void TriggerCollision(DamageMultiplikatorData damageMultiplikator, DamageData damageData)
+    public void GetHitted(DamageMultiplikatorData damageMultiplikator, DamageData damageData)
     {
         if (m_characterStatus == null)
             return;
 
-        DamageData damage = new DamageData(
-            (int)(damageData.PhysicalSliceDamage * damageMultiplikator.PhysicalFactor * damageMultiplikator.OverallMultiplicator),
-            (int)(damageData.PhysicalBluntDamage * damageMultiplikator.PhysicalFactor * damageMultiplikator.OverallMultiplicator),
-            (int)(damageData.PhysicalPierceDamage * damageMultiplikator.PhysicalFactor * damageMultiplikator.OverallMultiplicator),
-            new Vector2Int((int)(damageData.ThermicDamageAndBuildUp.x * damageMultiplikator.ThermicFactor * damageMultiplikator.OverallMultiplicator), damageData.ThermicDamageAndBuildUp.y),
-            new Vector2Int((int)(damageData.ElectricDamageAndBuildUp.x * damageMultiplikator.ElectricFactor * damageMultiplikator.OverallMultiplicator), damageData.ElectricDamageAndBuildUp.y),
-            new Vector2Int((int)(damageData.MetaphysicDamageAndBuildUp.x * damageMultiplikator.MetaphysicFactor * damageMultiplikator.OverallMultiplicator), damageData.MetaphysicDamageAndBuildUp.y),
-            (int)(damageData.ContaminationBuildUpDamage * damageMultiplikator.AilmentsFactor),
-            (int)(damageData.PoiseDamage * damageMultiplikator.PoiseDamageFactor),
-            damageData.Direction);
-
-        m_characterStatus.TakeDamageByDamageData(damage);
+        m_characterStatus.TakeDamageByDamageData(CombatUtils.CalculateMultiplicatedDamageData(damageMultiplikator, damageData));
     }
 
 

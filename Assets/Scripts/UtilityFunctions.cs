@@ -58,7 +58,7 @@ public static class UtilityFunctions
     /// <summary>
     /// Define a range, if the Value is outside it gets clamp automatically, then the value gets refittet (stretched or squished) to a new range. 
     /// </summary>
-    public static float RefitRange(float value, float startRange, float endRange, float newMin, float newMax)
+    public static float RefitToNewRange(float value, float startRange, float endRange, float newMin, float newMax)
     {
         float relativeValue = Mathf.InverseLerp(startRange, endRange, value);
         return Mathf.Lerp(newMin, newMax, relativeValue);

@@ -186,7 +186,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4231fc4e85a84f54a92029de5de31920, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_weaponHitboxes:
+  m_hitBoxCollectionList:
   - CollectionRefNumber: 0
     HitColliders:
     - {fileID: 2080995307}
@@ -3607,6 +3607,7 @@ MonoBehaviour:
       ContaminationBuildUpDamage: 0
       PoiseDamage: 0
       Direction: {x: 0, y: 0, z: 0}
+  m_activeShieldHitBoxManager: {fileID: 0}
   m_activeShieldInstance:
     ShieldData: {fileID: 0}
     ShieldLevelCurrentMax: {x: 1, y: 10}

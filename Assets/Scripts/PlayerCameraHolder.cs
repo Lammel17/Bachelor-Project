@@ -225,7 +225,7 @@ public class PlayerCameraHolder : MonoBehaviour
             float camAdditionalHeight = m_additionalHeightWhenLockOn;
             float howMuchRotatingToTarget = m_lookToPlayerOrTargetFactor;
             //offset height is depending on angle
-            float camYOffset = UtilityFunctions.RefitRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x, false), 0, s_camHolderClampAngleMax, camAdditionalHeight, 2); 
+            float camYOffset = UtilityFunctions.RefitToNewRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x, false), 0, s_camHolderClampAngleMax, camAdditionalHeight, 2); 
 
             m_camPos = new Vector3(0, camYOffset, -s_camRestDist); 
             lockOnParameter = UtilityFunctions.SmartLerp(lockOnParameter, howMuchRotatingToTarget, Time.deltaTime * 2f);

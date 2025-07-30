@@ -13,6 +13,8 @@ public class HitBoxManager : MonoBehaviour
     private List<HurtBoxManager> m_hurtboxesHitted = new List<HurtBoxManager>();
     private bool m_canHitOnlyOnce = false;
 
+    public DamageData DamageData { get => m_damageData; }
+
 
     public HitBoxManager ReadyHitBoxManager(HurtBoxManager ownHurtBoxManager)
     {
@@ -32,16 +34,10 @@ public class HitBoxManager : MonoBehaviour
         return this;
     }
 
-    public bool CheckIfCanBeHit(HurtBoxManager hurtBoxManager)
+
+    public DamageData CheckIfCanHitAndGetDamageData(HurtBoxManager hurtBoxManager)
     {
         if (m_ownHurtBoxManager == hurtBoxManager || m_hurtboxesHitted.Contains(hurtBoxManager))
-            return false;
-        return true;
-    }
-
-    public DamageData HurtBoxWasHit(HurtBoxManager hurtBoxManager)
-    {
-        if (!CheckIfCanBeHit(hurtBoxManager))
             return null;
 
         m_hurtboxesHitted.Add(hurtBoxManager);

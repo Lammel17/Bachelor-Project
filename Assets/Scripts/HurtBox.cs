@@ -8,6 +8,8 @@ public class HurtBox : MonoBehaviour
     private LayerMask m_triggerLayer;
     private DamageMultiplikatorData m_damageMultiplikator = new DamageMultiplikatorData(1,1,1,1,1,1,1);
 
+    public HurtBoxManager HurtBoxManager { get => m_hurtboxManager; }
+
     //this might cause issues if there are alot of chars with many hurtboxes
     public void SetValues(LayerMask triggerLayer, HurtBoxManager hurtBoxManager, DamageMultiplikatorData damageMultiplikator) 
     {
@@ -18,35 +20,9 @@ public class HurtBox : MonoBehaviour
         return;
     }
 
-    public void ActivateHurtBox(DamageData damageData)
+    public void HurtBoxWasHit(DamageData damageData)
     {
-        if (m_hurtBoxCollider == null)
-            m_hurtBoxCollider.GetComponent<Collider>();
-        m_hurtBoxCollider.enabled = true;
-    }
-    public void DeactivateHurtBox()
-    {
-        if (m_hurtBoxCollider == null)
-            m_hurtBoxCollider.GetComponent<Collider>();
-        m_hurtBoxCollider.enabled = false;
-    }
-
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (m_hurtboxManager == null)
-            return;
-        if ((m_triggerLayer.value & (1 << other.transform.gameObject.layer)) == 0)
-            return;
-
-        if(other.TryGetComponent<HitBox>(out HitBox hit))
-        {
-            DamageData damageData = hit.HurtBoxWasHit(m_hurtboxManager);
-            if (damageData == null) // if null, then it mean that it should not count as hit
-                return;
-
-            m_hurtboxManager.TriggerCollision(m_damageMultiplikator, damageData);
-        }
+        m_hurtboxManager.GetHitted(m_damageMultiplikator, damageData);
 
     }
 

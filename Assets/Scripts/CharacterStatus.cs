@@ -133,7 +133,7 @@ public class CharacterStatus : MonoBehaviour
 
     public void TakeDamageByDamageData(DamageData damageData)
     {
-        int damage = damageData.PhysicalSliceDamage * (1 - (m_characterStatsData.PhysicalSliceNegation / 100))
+        int damage =    damageData.PhysicalSliceDamage * (1 - (m_characterStatsData.PhysicalSliceNegation / 100))
                       + damageData.PhysicalBluntDamage * (1 - (m_characterStatsData.PhysicalBluntNegation / 100))
                       + damageData.PhysicalPierceDamage * (1 - (m_characterStatsData.PhysicalPierceNegation / 100))
                       + damageData.ThermicDamageAndBuildUp.x * (1 - (m_characterStatsData.ThermicNegation / 100))
@@ -144,56 +144,27 @@ public class CharacterStatus : MonoBehaviour
         TakeAilmentBuildUpDamage(AilmentType.Thermic, damageData.ThermicDamageAndBuildUp.y);
         TakeAilmentBuildUpDamage(AilmentType.Electric, damageData.ElectricDamageAndBuildUp.y);
         TakeAilmentBuildUpDamage(AilmentType.Metaphysic, damageData.MetaphysicDamageAndBuildUp.y);
+
         TakeAilmentBuildUpDamage(AilmentType.Contamination, damageData.ContaminationBuildUpDamage);
 
         TakePoiseDamage(damageData.PoiseDamage);
     }
 
-    public DamageData GetActionDamageData(WeaponData.WeaponAttack attackData, Vector3 playerDirection, WeaponData.PhysicalDamageType Physicaltype)
+    public DamageData GetActionDamageData(WeaponData.WeaponAttack attackData, Vector3 playerDirection, CombatUtils.PhysicalDamageType Physicaltype)
     {
-        WeaponData.PhysicalDamageType physicalType = (attackData.PhysicalType != WeaponData.PhysicalDamageType.TypeByBase) ? attackData.PhysicalType : Physicaltype;
+        CombatUtils.PhysicalDamageType physicalType = (attackData.PhysicalType != CombatUtils.PhysicalDamageType.TypeByBase) ? attackData.PhysicalType : Physicaltype;
         DamageTableData tableData = m_activeWeaponInstance.WeaponData.DamageTabel;
         float levelFactor = tableData.UpgradeCurve.Evaluate(m_activeWeaponInstance.WeaponLevelCurrentMax.x / m_activeWeaponInstance.WeaponLevelCurrentMax.y);
-        DamageData baseDmgDat = CalculateBaseDamageData(tableData, levelFactor);
-        return CalculateActionDamageData(baseDmgDat, attackData.actionDamageData, playerDirection, physicalType);
+        DamageData baseDmgDat = CombatUtils.CalculateBaseDamageData(tableData, levelFactor);
+        return CombatUtils.CalculateActionDamageData(baseDmgDat, attackData.actionDamageData, playerDirection, physicalType);
     }
-    public DamageData GetActionDamageData(ShieldData.ShieldAction actionkData, Vector3 playerDirection, WeaponData.PhysicalDamageType Physicaltype)
+    public DamageData GetActionDamageData(ShieldData.ShieldAction actionkData, Vector3 playerDirection, CombatUtils.PhysicalDamageType Physicaltype)
     {
-        WeaponData.PhysicalDamageType physicalType = (actionkData.PhysicalType != WeaponData.PhysicalDamageType.TypeByBase) ? actionkData.PhysicalType : Physicaltype;
+        CombatUtils.PhysicalDamageType physicalType = (actionkData.PhysicalType != CombatUtils.PhysicalDamageType.TypeByBase) ? actionkData.PhysicalType : Physicaltype;
         DamageTableData tableData = m_activeShieldInstance.ShieldData.DamageTabel;
         float levelFactor = tableData.UpgradeCurve.Evaluate(m_activeShieldInstance.ShieldLevelCurrentMax.x / m_activeShieldInstance.ShieldLevelCurrentMax.y);
-        DamageData baseDmgDat = CalculateBaseDamageData(tableData, levelFactor);
-        return CalculateActionDamageData(baseDmgDat, actionkData.actionDamageData, playerDirection, physicalType);
-    }
-    public DamageData CalculateActionDamageData(DamageData baseDmgDat, DamageMultiplikatorData actionDamageMultiplikator, Vector3 playerDirection, WeaponData.PhysicalDamageType physicaltype)
-    {
-        DamageData dmgDat = new DamageData(
-            physicaltype != WeaponData.PhysicalDamageType.Slice ? 0 : (int)(baseDmgDat.PhysicalSliceDamage * actionDamageMultiplikator.PhysicalFactor),
-            physicaltype != WeaponData.PhysicalDamageType.Blunt ? 0 : (int)(baseDmgDat.PhysicalBluntDamage * actionDamageMultiplikator.PhysicalFactor),
-            physicaltype != WeaponData.PhysicalDamageType.Pierce ? 0 : (int)(baseDmgDat.PhysicalPierceDamage * actionDamageMultiplikator.PhysicalFactor),
-            new Vector2Int((int)(baseDmgDat.ThermicDamageAndBuildUp.x * actionDamageMultiplikator.ThermicFactor), baseDmgDat.ThermicDamageAndBuildUp.y),
-            new Vector2Int((int)(baseDmgDat.ElectricDamageAndBuildUp.x * actionDamageMultiplikator.ElectricFactor), baseDmgDat.ElectricDamageAndBuildUp.y),
-            new Vector2Int((int)(baseDmgDat.MetaphysicDamageAndBuildUp.x * actionDamageMultiplikator.MetaphysicFactor), baseDmgDat.MetaphysicDamageAndBuildUp.y),
-            (int)(baseDmgDat.ContaminationBuildUpDamage * actionDamageMultiplikator.AilmentsFactor),
-            (int)(baseDmgDat.PoiseDamage * actionDamageMultiplikator.PoiseDamageFactor),
-            Quaternion.LookRotation(playerDirection) * baseDmgDat.Direction);
-
-        return dmgDat;
-    }
-    public DamageData CalculateBaseDamageData(DamageTableData tableData, float levelFactor)
-    {
-        DamageData dmgDat = new DamageData(
-            (int)(Mathf.Lerp(tableData.PhysicalSlice.x, tableData.PhysicalSlice.y, levelFactor)),
-            (int)(Mathf.Lerp(tableData.PhysicalBlunt.x, tableData.PhysicalBlunt.y, levelFactor)),
-            (int)(Mathf.Lerp(tableData.PhysicalPierce.x, tableData.PhysicalPierce.y, levelFactor)),
-            new Vector2Int((int)(Mathf.Lerp(tableData.Thermic.x, tableData.Thermic.y, levelFactor)), (int)(Mathf.Lerp(tableData.Thermic.x, tableData.Thermic.y, levelFactor))), ////////////////////////hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-            new Vector2Int((int)(Mathf.Lerp(tableData.Electric.x, tableData.Electric.y, levelFactor)), (int)(Mathf.Lerp(tableData.Electric.x, tableData.Electric.y, levelFactor))),
-            new Vector2Int((int)(Mathf.Lerp(tableData.Metaphysic.x, tableData.Metaphysic.y, levelFactor)), (int)(Mathf.Lerp(tableData.Metaphysic.x, tableData.Metaphysic.y, levelFactor))),
-            (int)(Mathf.Lerp(tableData.ContaminationBuildUp.x, tableData.ContaminationBuildUp.y, levelFactor)),
-            (int)(Mathf.Lerp(tableData.Poise.x, tableData.Poise.y, levelFactor)),
-            Vector3.forward);
-
-        return dmgDat;
+        DamageData baseDmgDat = CombatUtils.CalculateBaseDamageData(tableData, levelFactor);
+        return CombatUtils.CalculateActionDamageData(baseDmgDat, actionkData.actionDamageData, playerDirection, physicalType);
     }
 
 

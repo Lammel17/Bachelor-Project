@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using static WeaponData;
 
 [CreateAssetMenu(fileName = "ShieldData", menuName = "Scriptable Objects/ShieldData")]
 public class ShieldData : ScriptableObject
@@ -16,12 +15,12 @@ public class ShieldData : ScriptableObject
     [Header("Shielding")]
     public SimpleShieldAction shieldIdle;
     public SimpleShieldAction shieldingUpperBody;
-    public ShieldAction m_STILL_UNKNOWN; //????????????????
+    public ShieldAction m_STILL_UNKNOWN; //????????????????????????????????????????????
     public SimpleShieldAction ShiledAlmostStanceBreak;
     public SimpleShieldAction ShiledStanceBreak;
 
     [Header("ShieldActions")]
-    public PhysicalDamageType PhysicalType = PhysicalDamageType.Slice;
+    public CombatUtils.PhysicalDamageType PhysicalType = CombatUtils.PhysicalDamageType.Slice;
     public DamageTableData DamageTabel;
     [Space]
     public ShieldAction ShiledSpecialLight1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_1"));
@@ -65,7 +64,7 @@ public class ShieldData : ScriptableObject
 
         [NonSerialized] public int ActionkHash;
         public DamageMultiplikatorData actionDamageData = new DamageMultiplikatorData(1, 1, 1, 1, 1, 1, 1);
-        public PhysicalDamageType PhysicalType;
+        public CombatUtils.PhysicalDamageType PhysicalType;
         public int EnergyCost = 20;
         public int SpecialEnergyCost = 0;
         public ShieldSpecialLight nextSpecialLight;

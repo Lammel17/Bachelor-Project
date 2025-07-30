@@ -287,10 +287,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4231fc4e85a84f54a92029de5de31920, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_weaponHitboxes:
+  m_hitBoxCollectionList:
   - CollectionRefNumber: 0
     HitColliders:
     - {fileID: 792527360299558948}
+  m_damageData:
+    PhysicalSliceDamage: 0
+    PhysicalBluntDamage: 0
+    PhysicalPierceDamage: 0
+    ThermicDamageAndBuildUp: {x: 0, y: 0}
+    ElectricDamageAndBuildUp: {x: 0, y: 0}
+    MetaphysicDamageAndBuildUp: {x: 0, y: 0}
+    ContaminationBuildUpDamage: 0
+    PoiseDamage: 0
+    Direction: {x: 0, y: 0, z: 0}
 --- !u!54 &1767057774329057429
 Rigidbody:
   m_ObjectHideFlags: 0

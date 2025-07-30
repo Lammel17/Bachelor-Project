@@ -11,35 +11,35 @@ public class WeaponData : ScriptableObject
     public Sprite WeaponSprite;
     public GameObject WeaponModel;
     [Space]
-    public PhysicalDamageType BasePhysicalType = PhysicalDamageType.Slice;
+    public CombatUtils.PhysicalDamageType BasePhysicalType = CombatUtils.PhysicalDamageType.Slice;
 
     public DamageTableData DamageTabel;
 
 
     [Header("Light Attack")]
-    public WeaponAttack LightAttack1 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_1"));
-    public WeaponAttack LightAttack2 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_3, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_2"));
-    public WeaponAttack LightAttack3 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_4, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_3"));
-    public WeaponAttack LightAttack4 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_5, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_4"));
-    public WeaponAttack LightAttack5 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_6, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_5"));
-    public WeaponAttack LightAttack6 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.end, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_6"));
-    public WeaponAttack SprintLightAttack =     new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Sprint_Light_Attack"));
-    public WeaponAttack EvadeLightAttack =      new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Evade_Light_Attack"));
+    public WeaponAttack LightAttack1 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_1"));
+    public WeaponAttack LightAttack2 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_3, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_2"));
+    public WeaponAttack LightAttack3 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_4, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_3"));
+    public WeaponAttack LightAttack4 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_5, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_4"));
+    public WeaponAttack LightAttack5 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_6, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_5"));
+    public WeaponAttack LightAttack6 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.end, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Light_Attack_6"));
+    public WeaponAttack SprintLightAttack =     new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Sprint_Light_Attack"));
+    public WeaponAttack EvadeLightAttack =      new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_1, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Evade_Light_Attack"));
 
-    public WeaponAttack SpecialLightAttack1 =   new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_2, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Special_Light_Attack_1"));
-    public WeaponAttack SpecialLightAttack2 =   new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Special_Light_Attack_1"));
+    public WeaponAttack SpecialLightAttack1 =   new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_2, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Special_Light_Attack_1"));
+    public WeaponAttack SpecialLightAttack2 =   new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_2, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Special_Light_Attack_1"));
 
     [Space]
     [Header("Heavy Attack")]
-    public WeaponAttack HeavyAttack1 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Heavy_Attack_1"));
-    public WeaponAttack HeavyAttack2 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_3, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Heavy_Attack_2"));
-    public WeaponAttack HeavyAttack3 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_4, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Heavy_Attack_3"));
-    public WeaponAttack HeavyAttack4 =          new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.end, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Heavy_Attack_4"));
-    public WeaponAttack SprintHeavyAttack =     new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Sprint_Heavy_Attack"));
-    public WeaponAttack EvadeHeavyAttack =      new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Evade_Heavy_Attack"));
+    public WeaponAttack HeavyAttack1 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Heavy_Attack_1"));
+    public WeaponAttack HeavyAttack2 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_3, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Heavy_Attack_2"));
+    public WeaponAttack HeavyAttack3 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_4, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Heavy_Attack_3"));
+    public WeaponAttack HeavyAttack4 =          new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.end, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Heavy_Attack_4"));
+    public WeaponAttack SprintHeavyAttack =     new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Sprint_Heavy_Attack"));
+    public WeaponAttack EvadeHeavyAttack =      new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Evade_Heavy_Attack"));
 
-    public WeaponAttack SpecialHeavyAttack1 =   new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_2, Animator.StringToHash("Special_Heavy_Attack_1"));
-    public WeaponAttack SpecialHeavyAttack2 =   new WeaponAttack(PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Special_Heavy_Attack_2"));
+    public WeaponAttack SpecialHeavyAttack1 =   new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_2, Animator.StringToHash("Special_Heavy_Attack_1"));
+    public WeaponAttack SpecialHeavyAttack2 =   new WeaponAttack(CombatUtils.PhysicalDamageType.TypeByBase, LightAttack.Light_Attack_1, HeavyAttack.Heavy_Attack_2, LightAttackSpecial.Special_Light_Attack_1, HeavyAttackSpecial.Special_Heavy_Attack_1, Animator.StringToHash("Special_Heavy_Attack_2"));
     [Space]
     public AnimationData SwitchWeapon;
 
@@ -56,14 +56,14 @@ public class WeaponData : ScriptableObject
         public DamageMultiplikatorData actionDamageData = new DamageMultiplikatorData(1, 1, 1, 1, 1, 1, 1);
         public int EnergyCost = 20;
         public int SpecialEnergyCost = 0;
-        public PhysicalDamageType PhysicalType;
+        public CombatUtils.PhysicalDamageType PhysicalType;
         [Space]
         public LightAttack nextLight;
         public HeavyAttack nextHeavy;
         public LightAttackSpecial nextSpecialLight;
         public HeavyAttackSpecial nextSpecialHeavy;
 
-        public WeaponAttack(/*float damage, float poiseDamage, float energyCost, float specialEnergyCost,*/ PhysicalDamageType type, LightAttack la, HeavyAttack ha, LightAttackSpecial las, HeavyAttackSpecial has, int name)
+        public WeaponAttack(CombatUtils.PhysicalDamageType type, LightAttack la, HeavyAttack ha, LightAttackSpecial las, HeavyAttackSpecial has, int name)
         {
             //Dmg_Poise_EP_SEP = new Vector4(damage, poiseDamage, energyCost, specialEnergyCost);
             PhysicalType = type;
@@ -73,18 +73,8 @@ public class WeaponData : ScriptableObject
             nextSpecialHeavy = has;
             AttackHash = name;
         }
-
     }
 
-    [System.Serializable]
-    public enum PhysicalDamageType
-    {
-        TypeByBase = 0,
-        Slice,
-        Blunt,
-        Pierce,
-        None
-    }
 
     public enum LightAttack
     {
