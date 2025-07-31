@@ -224,8 +224,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                 return;
 
             m_isRunning = value;
-            if (m_isRunning) { SetNextPossibleWeaponAttacks(currentAction: Running); SetLookAtTarget(null); }
-            else if (!m_isRunning && !m_isAction) { SetNextPossibleWeaponAttacks(currentAction: Reset); } 
+            if (m_isRunning) { SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Running); SetLookAtTarget(null); }
+            else if (!m_isRunning && !m_isAction) { SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset); } 
             if (!m_isRunning && !m_isAction && m_target != null) { SetLookAtTarget(m_target); }
 
             Speed = m_inputStrenght;
@@ -280,8 +280,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         SetNextPossibleWeaponActions();
         SetNextPossibleShieldActions();
 
-        m_currentBaseLayerAnimation = Idle_1;
-        m_currentUpperBodyAnimation = new Vector2(Empty_UpperBody, 0);
+        m_currentBaseLayerAnimation = AnimationTypes.Idle_1;
+        m_currentUpperBodyAnimation = new Vector2(AnimationTypes.Empty_UpperBody, 0);
 
         m_gravity = c_gravity;
 
@@ -425,6 +425,11 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     #region TRIGGER ACTIONS
 
+    public void TriggerDamage()
+    {
+        SetDamageAnimation(AnimationTypes.Get_Hit, 3, 0);
+    }
+
     void TriggerTurning()
     {
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
@@ -433,8 +438,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if ((int)m_currentInteruptability >= (int)turningInterruptability) return;    
 
         AnimationData animData = null;
-
-
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
         float angleMoveDirToPrevMoveDir = m_turningAngle;
 
@@ -454,8 +457,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         void SetTriggerTurning()
         {
             if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
-
-            ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
         
             m_isTurning = true;
             
@@ -465,13 +466,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             m_animator.SetFloat("TurningDir", Mathf.Sign(angleMoveDirToPrevMoveDir));
             m_currentInteruptability = turningInterruptability;
 
-            InitBaseAction(!m_isRunning ? Turning : Turning_Running, animData);
+            InitAction(!m_isRunning ? AnimationTypes.Turning : AnimationTypes.Turning_Running, animData.bodyParts, animData);
         }
-    }
-
-    public void TriggerDamage()
-    {
-        SetDamageAnimation(Get_Hit, 3, 0);
     }
 
 
@@ -483,22 +479,16 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
 
 
-        AnimationData readyOrRemoveWeapon = m_EquipmentIsReady ? m_characterMovesetData.weapon.ReadyWeapon : m_characterMovesetData.weapon.RemoveWeapon;
-        if (readyOrRemoveWeapon == null) { Debug.Log("MISSING ANIMATION DATA of ReadyWeapon"); return; }
+        AnimationData animData = m_EquipmentIsReady ? m_characterMovesetData.weapon.ReadyWeapon : m_characterMovesetData.weapon.RemoveWeapon;
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA of a ReadyOrRemoveWeapon"); return; }
         AnimationData readyOrRemoveShield = m_EquipmentIsReady ? m_characterMovesetData.shield.ReadyShield : m_characterMovesetData.shield.RemoveShield;
-        if (readyOrRemoveShield == null) { Debug.Log("MISSING ANIMATION DATA of ReadyShield"); return; }
+        if (readyOrRemoveShield == null) { Debug.Log("MISSING ANIMATION DATA of a ReadyOrRemoveShield"); return; }
 
         m_currentInteruptability = switchEquipmentInterruptability;
 
-        Action readyOrRemoveEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveWeapon(); };
+        Action readyOrRemoveEffect = EquipmentHandler.Instance == null ? null : () => { /*EquipmentHandler.Instance.SwitchActiveWeapon(); */};
 
-
-        if (readyOrRemoveWeapon.bodyParts == AnimationData.BodyParts.UpperBody)
-            InitActionUpperBody(Switch_Weapon, readyOrRemoveWeapon, 1, effect: readyOrRemoveEffect);
-        else if (readyOrRemoveWeapon.bodyParts == AnimationData.BodyParts.Arms)
-            InitActionUpperBody(Switch_Weapon, readyOrRemoveWeapon, 2, effect: readyOrRemoveEffect);
-        else
-            InitBaseAction(Switch_Weapon, readyOrRemoveWeapon, effect: readyOrRemoveEffect);
+        InitAction(AnimationTypes.Switch_Weapon, animData.bodyParts, animData, Effect: readyOrRemoveEffect);
 
     }
 
@@ -510,21 +500,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
         if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
 
-        AnimationData switchAction = m_characterMovesetData.weapon.SwitchWeapon;
-        if (switchAction == null) { Debug.Log("MISSING ANIMATION DATA of SwitchWeapon"); return; }
+        AnimationData animData = m_characterMovesetData.weapon.SwitchWeapon;
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA of SwitchWeapon"); return; }
 
         m_currentInteruptability = switchEquipmentInterruptability;
 
         Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveWeapon(); };
 
-
-        if (switchAction.bodyParts == AnimationData.BodyParts.UpperBody)
-            InitActionUpperBody(Switch_Weapon, switchAction, 1, effect: switchEffect);
-        else if (switchAction.bodyParts == AnimationData.BodyParts.Arms)
-            InitActionUpperBody(Switch_Weapon, switchAction, 2, effect: switchEffect);
-        else
-            InitBaseAction(Switch_Weapon, switchAction, effect: switchEffect);
-
+        InitAction(AnimationTypes.Switch_Weapon, animData.bodyParts, animData, Effect: switchEffect);
 
     }
 
@@ -535,21 +518,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
         if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
 
-        AnimationData switchAction = m_characterMovesetData.shield.SwitchShield;
-        if (switchAction == null) { Debug.Log("MISSING ANIMATION DATA of SwitchShield"); return; }
+        AnimationData animData = m_characterMovesetData.shield.SwitchShield;
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA of SwitchShield"); return; }
 
         m_currentInteruptability = switchEquipmentInterruptability;
 
         Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveShield(); };
 
-
-        if (switchAction.bodyParts == AnimationData.BodyParts.UpperBody)
-            InitActionUpperBody(Switch_Shield, switchAction, 1, effect: switchEffect);
-        else if (switchAction.bodyParts == AnimationData.BodyParts.Arms)
-            InitActionUpperBody(Switch_Shield, switchAction, 2, effect: switchEffect);
-        else
-            InitBaseAction(Switch_Shield, switchAction, effect: switchEffect);
-
+        InitAction(AnimationTypes.Switch_Shield, animData.bodyParts, animData, Effect: switchEffect);
 
     }
 
@@ -566,10 +542,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         AnimationData animData;
         int animHash = 0;
-        if (m_facingDirectionType == Direction.Forward)             { animData = m_characterMovesetData.evadeForward; animHash = Evade_Forward; }
-        else if (m_facingDirectionType == Direction.Left)           { animData = m_characterMovesetData.evadeLeft; animHash = Evade_Left; }
-        else if (m_facingDirectionType == Direction.Right)          { animData = m_characterMovesetData.evadeRight; animHash = Evade_Right; }
-        else                                                        { animData = m_characterMovesetData.evadeBackwards; animHash = Evade_Backwards; }
+        if (m_facingDirectionType == Direction.Forward)             { animData = m_characterMovesetData.evadeForward; animHash = AnimationTypes.Evade_Forward; }
+        else if (m_facingDirectionType == Direction.Left)           { animData = m_characterMovesetData.evadeLeft; animHash = AnimationTypes.Evade_Left; }
+        else if (m_facingDirectionType == Direction.Right)          { animData = m_characterMovesetData.evadeRight; animHash = AnimationTypes.Evade_Right; }
+        else                                                        { animData = m_characterMovesetData.evadeBackwards; animHash = AnimationTypes.Evade_Backwards; }
 
         if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
@@ -584,7 +560,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         m_currentInteruptability = evadeInterruptability;
 
-        InitBaseAction(animHash, animData, m_evadeCosts);
+        InitAction(animHash, animData.bodyParts, animData, m_evadeCosts);
 
         }
 
@@ -593,28 +569,28 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_isActionLocked) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
-        WeaponData.WeaponAttack thisAttack = m_nextPossibleWeaponActions.light; 
-        if (thisAttack == null) { Debug.Log("MISSING ANIMATION DATA of a Light Attack"); return;}
-        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Light Attack"); return; }
+        WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.light; 
+        if (thisAction == null) { Debug.Log("MISSING ANIMATION DATA of a Light Attack"); return;}
+        if (thisAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Light Attack"); return; }
 
-        AnimationInterruptableType lightAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
+        AnimationInterruptableType lightAttackInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)lightAttackInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
-        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAttack.SpecialEnergyCost)) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAction.SpecialEnergyCost)) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        SetNextPossibleWeaponAttacks(thisAttack);
+        SetNextPossibleWeaponAttacks(thisAction);
 
         m_currentInteruptability = lightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        m_currentWeaponAttackData = thisAttack;
-        InitBaseAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
+        m_currentWeaponAttackData = thisAction;
+        InitAction(thisAction.AttackHash, thisAction.AnimData.bodyParts, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
     }
 
     public void TriggerSpecialLightAttack()
@@ -622,28 +598,28 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_isActionLocked) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
-        WeaponData.WeaponAttack thisAttack = m_nextPossibleWeaponActions.specialLight;
-        if (thisAttack == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
-        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
+        WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.specialLight;
+        if (thisAction == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
+        if (thisAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
 
-        AnimationInterruptableType specialLightAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
+        AnimationInterruptableType specialLightAttackInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)specialLightAttackInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
-        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAttack.SpecialEnergyCost)) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAction.SpecialEnergyCost)) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        SetNextPossibleWeaponAttacks(thisAttack);
+        SetNextPossibleWeaponAttacks(thisAction);
 
         m_currentInteruptability = specialLightAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        m_currentWeaponAttackData = thisAttack;
-        InitBaseAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
+        m_currentWeaponAttackData = thisAction;
+        InitAction(thisAction.AttackHash, thisAction.AnimData.bodyParts, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
     }
 
     public void TriggerHeavyAttack()
@@ -651,28 +627,28 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_isActionLocked) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
 
-        WeaponData.WeaponAttack thisAttack = m_nextPossibleWeaponActions.heavy;
-        if (thisAttack == null) { Debug.Log("MISSING ATTACK DATA of a Heavy Attack"); return; }
-        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Heavy Attack"); return; }
+        WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.heavy;
+        if (thisAction == null) { Debug.Log("MISSING ATTACK DATA of a Heavy Attack"); return; }
+        if (thisAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Heavy Attack"); return; }
 
-        AnimationInterruptableType heavyAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
+        AnimationInterruptableType heavyAttackInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)heavyAttackInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
-        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAttack.SpecialEnergyCost)) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAction.SpecialEnergyCost)) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        SetNextPossibleWeaponAttacks(thisAttack);
+        SetNextPossibleWeaponAttacks(thisAction);
 
         m_currentInteruptability = heavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        m_currentWeaponAttackData = thisAttack;
-        InitBaseAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
+        m_currentWeaponAttackData = thisAction;
+        InitAction(thisAction.AttackHash, thisAction.AnimData.bodyParts, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
 
     }
     
@@ -681,28 +657,28 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_isActionLocked) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
 
-        WeaponData.WeaponAttack thisAttack = m_nextPossibleWeaponActions.specialHeavy;
-        if (thisAttack == null) { Debug.Log("MISSING ATTACK DATA of a Heavy Attack"); return; }
-        if (thisAttack.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Heavy Attack"); return; }
+        WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.specialHeavy;
+        if (thisAction == null) { Debug.Log("MISSING ATTACK DATA of a Heavy Attack"); return; }
+        if (thisAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Heavy Attack"); return; }
 
-        AnimationInterruptableType specialHeavyAttackInterruptability = thisAttack.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAttack.AnimData.CustomInterruptability;
+        AnimationInterruptableType specialHeavyAttackInterruptability = thisAction.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton ? AnimationInterruptableType.Not_Interruptable : thisAction.AnimData.CustomInterruptability;
         if ((int)m_currentInteruptability >= (int)specialHeavyAttackInterruptability) return;
 
         if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
-        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAttack.SpecialEnergyCost)) return;
+        if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAction.SpecialEnergyCost)) return;
 
         ///////////////////////////////////////////////////// starting here the aniamtion is definitely set to begin
 
         if (m_ActionCoroutine != null)
             EndActionReset();
 
-        SetNextPossibleWeaponAttacks(thisAttack);
+        SetNextPossibleWeaponAttacks(thisAction);
 
         m_currentInteruptability = specialHeavyAttackInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
-        m_currentWeaponAttackData = thisAttack;
-        InitBaseAction(thisAttack.AttackHash, thisAttack.AnimData, thisAttack.EnergyCost, thisAttack.SpecialEnergyCost);
+        m_currentWeaponAttackData = thisAction;
+        InitAction(thisAction.AttackHash, thisAction.AnimData.bodyParts, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
 
     }
 
@@ -753,7 +729,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_currentInteruptability = specialShieldLightActionInterruptability;
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
         m_currentShieldActionData = thisAction;
-        InitBaseAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
+        InitAction(thisAction.ActionkHash, thisAction.AnimData.bodyParts,thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
     }
 
     public void TriggerShieldSpecialHeavy()
@@ -783,7 +759,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         //m_actionDirectionConstrain = FacingDirectionTypeConstrains.LockedByAction;
 
         m_currentShieldActionData = thisAction;
-        InitBaseAction(thisAction.ActionkHash, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
+        InitAction(thisAction.ActionkHash, thisAction.AnimData.bodyParts, thisAction.AnimData, thisAction.EnergyCost, thisAction.SpecialEnergyCost);
     }
 
     public void TriggerItemUse()
@@ -808,14 +784,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         m_currentInteruptability = itemUseInterruptability;
 
-        if (thisAction.AnimData.bodyParts == AnimationData.BodyParts.WholeBody)
-            InitBaseAction(Use_Item, thisAction.AnimData);
-        else if (thisAction.AnimData.bodyParts == AnimationData.BodyParts.UpperBody)
-            InitActionUpperBody(Use_Item_UpperBody, thisAction.AnimData, 1);
-        else if (thisAction.AnimData.bodyParts == AnimationData.BodyParts.Arms)
-            InitActionUpperBody(Use_Item_UpperBody, thisAction.AnimData, 2);
-
-        //InitAction(thisAction.AnimData.bodyParts, thisAction.AnimData);
+        InitAction(AnimationTypes.Use_Item, thisAction.AnimData.bodyParts, thisAction.AnimData);
     }
 
     #endregion
@@ -824,10 +793,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
     #region SET ACTIONS
-    private void InitAction(int animHash, AnimationData.BodyParts animLayer, AnimationData animData, Action Effect = null)
+    private void InitAction(int animHash, AnimationData.BodyParts animLayer, AnimationData animData, int staminaCost = 0, int specialEnergyCost = 0, Action Effect = null)
     {
         if (animLayer == AnimationData.BodyParts.WholeBody)
-            InitBaseAction(animHash, animData, effect: Effect);
+            InitBaseAction(animHash, animData, staminaCost, specialEnergyCost, effect: Effect);
         else if (animLayer == AnimationData.BodyParts.UpperBody)
             InitActionUpperBody(animHash, animData, 1, effect: Effect);
         else if (animLayer == AnimationData.BodyParts.Arms)
@@ -842,7 +811,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (!m_isTurning) //stop upperbody animations
         {
             IsShielding = false;
-            SetUpperBodyAnimation(Empty_UpperBody, 0, crossFadeDuration: 0.1f);
+            SetUpperBodyAnimation(AnimationTypes.Empty_UpperBody, 0, crossFadeDuration: 0.1f);
         }
 
         SetLookAtTarget(animData.actionUsesLookAtTargetData ? m_target : null);
@@ -901,7 +870,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         SetActionValues(animData, actionList.Count == 0 ? null : actionList);
     }
 
-    private void InitActionUpperBody(int animationHash, AnimationData animData, int layer, Action effect = null)
+    private void InitActionUpperBody(int animationHash, AnimationData animData, int layer, int staminaCost = 0, int specialEnergyCost = 0, Action effect = null)
     {
         m_isAction = true;
         m_isActionUpperBody = true;
@@ -919,8 +888,15 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         SetValues(); //needed, because what if it jumps from one action directly into another
 
+        m_characterStatus.PauseEnergyRegenerationByAction();
+
         //effects like pay stamina cost at that moment
         List<Action> actionList = new List<Action>();
+        if (staminaCost != 0)
+        {
+            Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_characterStatus.ExpendSpecialEnergyPoints(specialEnergyCost); m_actionPayCostCouroutine = null; };
+            actionList.Add(payActionCostsAction);
+        }
         if (effect != null)
             actionList.Add(effect);
 
@@ -929,13 +905,13 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     private void SetNextPossibleWeaponAttacks(WeaponData.WeaponAttack currentAttackData = null, int currentAction = 0)
     {
-        if (currentAction == Evade_Forward || currentAction == Evade_Left || currentAction == Evade_Right || currentAction == Evade_Backwards)
+        if (currentAction == AnimationTypes.Evade_Forward || currentAction == AnimationTypes.Evade_Left || currentAction == AnimationTypes.Evade_Right || currentAction == AnimationTypes.Evade_Backwards)
             m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.EvadeLightAttack, m_characterMovesetData.weapon.EvadeHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
 
-        else if (currentAction == Running)
+        else if (currentAction == AnimationTypes.Running)
             m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.SprintLightAttack, m_characterMovesetData.weapon.SprintHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
 
-        else if (currentAction == Reset)
+        else if (currentAction == AnimationTypes.Reset)
             m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
 
         else if (currentAttackData != null)
@@ -1015,7 +991,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     }
     private void SetNextPossibleShieldActions(ShieldData.ShieldAction currentActionData = null, int currentAction = 0)
     {
-        if (currentAction == Reset)
+        if (currentAction == AnimationTypes.Reset)
             m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
 
         else if (currentActionData != null)
@@ -1555,8 +1531,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         //End of Action
         //bool isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isWalkingLocked;
         //if (isRunning) SetNextPossibleAttacks(currentAction: Running);
-        SetNextPossibleWeaponAttacks(currentAction: Reset);
-        SetNextPossibleShieldActions(currentAction: Reset);
+        SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
+        SetNextPossibleShieldActions(currentAction: AnimationTypes.Reset);
 
         EndActionReset();
 
@@ -1678,79 +1654,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
 
-    readonly int Get_Hit                    = Animator.StringToHash("Get_Hit");
-    
-    readonly int Shielding_UpperBody        = Animator.StringToHash("Shielding_UpperBody");
-    readonly int Use_Item_UpperBody         = Animator.StringToHash("Use_Item_UpperBody");
-    readonly int Empty_UpperBody            = Animator.StringToHash("Empty_UpperBody");
-
-    readonly int Running                    = Animator.StringToHash("Running");
-    readonly int Reset                      = Animator.StringToHash("Reset");
-
-    //animation States
-    #region
-    readonly int Idle_1                     = Animator.StringToHash("Idle_1");
-    readonly int Shield_Idle                = Animator.StringToHash("Shield_Idle");
-
-    readonly int Locomotion                 = Animator.StringToHash("Locomotion");
-    readonly int Turning                    = Animator.StringToHash("Turning");
-    readonly int Turning_Running            = Animator.StringToHash("Turning_Running");
-
-    readonly int Evade_Forward              = Animator.StringToHash("Evade_Forward");
-    readonly int Evade_Left                 = Animator.StringToHash("Evade_Left");
-    readonly int Evade_Right                = Animator.StringToHash("Evade_Right");
-    readonly int Evade_Backwards            = Animator.StringToHash("Evade_Backwards");
-
-    readonly int Use_Item                   = Animator.StringToHash("Use_Item");
-    readonly int Use_Item_Hold              = Animator.StringToHash("Use_Item_Hold");
-    readonly int Healing                    = Animator.StringToHash("Healing");
-    readonly int Environment_Interaction    = Animator.StringToHash("Environment_Interaction");
-    readonly int Pick_Up_Item_Low           = Animator.StringToHash("Pick_Up_Item_Low");
-    readonly int Pick_Up_Item_Up            = Animator.StringToHash("Pick_Up_Item_Up");
-
-    readonly int Switch_Weapon              = Animator.StringToHash("Switch_Weapon");
-    readonly int Switch_Shield              = Animator.StringToHash("Switch_Shield");
-    readonly int Ready_Weapon               = Animator.StringToHash("Ready_Weapon");
-    readonly int Ready_Shield               = Animator.StringToHash("Ready_Shield");
-    readonly int Remove_Weapon              = Animator.StringToHash("Remove_Weapon");
-    readonly int Remove_Shield              = Animator.StringToHash("Remove_Shield");
-
-    readonly int Light_Attack_1             = Animator.StringToHash("Light_Attack_1");
-    readonly int Light_Attack_2             = Animator.StringToHash("Light_Attack_2");
-    readonly int Light_Attack_3             = Animator.StringToHash("Light_Attack_3");
-    readonly int Light_Attack_4             = Animator.StringToHash("Light_Attack_4");
-    readonly int Light_Attack_5             = Animator.StringToHash("Light_Attack_5");
-    readonly int Light_Attack_6             = Animator.StringToHash("Light_Attack_6");
-    readonly int Sprint_Light_Attack        = Animator.StringToHash("Sprint_Light_Attack");
-    readonly int Evade_Light_Attack         = Animator.StringToHash("Evade_Light_Attack");
-    readonly int Special_Light_Attack_1     = Animator.StringToHash("Special_Light_Attack_1");
-    readonly int Special_Light_Attack_2     = Animator.StringToHash("Special_Light_Attack_2");
-
-    readonly int Heavy_Attack_1             = Animator.StringToHash("Heavy_Attack_1");
-    readonly int Heavy_Attack_2             = Animator.StringToHash("Heavy_Attack_2");
-    readonly int Heavy_Attack_3             = Animator.StringToHash("Heavy_Attack_3");
-    readonly int Heavy_Attack_4             = Animator.StringToHash("Heavy_Attack_4");
-    readonly int Sprint_Heavy_Attack        = Animator.StringToHash("Sprint_Heavy_Attack");
-    readonly int Evade_Heavy_Attack         = Animator.StringToHash("Evade_Heavy_Attack");
-    readonly int Special_Heavy_Attack_1     = Animator.StringToHash("Special_Heavy_Attack_1");
-    readonly int Special_Heavy_Attack_2     = Animator.StringToHash("Special_Heavy_Attack_2");
-
-    readonly int Special_Shield_1           = Animator.StringToHash("Special_Shield_1");
-    readonly int Special_Shield_2           = Animator.StringToHash("Special_Shield_2");
-    readonly int Special_Shield_3           = Animator.StringToHash("Special_Shield_3");
-    readonly int Special_Shield_4           = Animator.StringToHash("Special_Shield_4");
-
-    readonly int Almost_Stance_Break        = Animator.StringToHash("Almost_Stance_Break");
-    readonly int Stance_Break               = Animator.StringToHash("Stance_Break");
-    readonly int Falling_Forward            = Animator.StringToHash("Falling_Forward");
-    readonly int Standing_Up_Forward        = Animator.StringToHash("Standing_Up_Forward");
-    readonly int Falling_Backward           = Animator.StringToHash("Falling_Backward");
-    readonly int Standing_Up_Backward       = Animator.StringToHash("Standing_Up_Backward");
-
-    readonly int Falling_Mid_Air            = Animator.StringToHash("Falling_Mid_Air");
-    readonly int Landing                    = Animator.StringToHash("Landing");
-    #endregion 
-
 
     private void CheckAnimation(bool forceNewAnim = false)
     {
@@ -1761,17 +1664,17 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         {
             if (m_isShielding)
             {
-                if (m_currentBaseLayerAnimation != Shield_Idle)
+                if (m_currentBaseLayerAnimation != AnimationTypes.Shielding)
                 {
-                    SetAnimation(Shield_Idle, crossFadeDuration: m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeInTime);
+                    SetAnimation(AnimationTypes.Shielding, crossFadeDuration: m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeInTime);
                     m_nextCrossfadeOutTime = m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeOutTime;
                 }
             }
-            else if (m_currentBaseLayerAnimation != Idle_1)
-                SetAnimation(Idle_1, m_nextCrossfadeOutTime);
+            else if (m_currentBaseLayerAnimation != AnimationTypes.Idle_1)
+                SetAnimation(AnimationTypes.Idle_1, m_nextCrossfadeOutTime);
         }
-        if (!m_isStandingStill && m_currentBaseLayerAnimation != Locomotion)
-            SetAnimation(Locomotion, m_nextCrossfadeOutTime, 0.25f);
+        if (!m_isStandingStill && m_currentBaseLayerAnimation != AnimationTypes.Locomotion)
+            SetAnimation(AnimationTypes.Locomotion, m_nextCrossfadeOutTime, 0.25f);
 
 
 
@@ -1782,15 +1685,15 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         if (m_isShielding)
         {
-            if(m_currentUpperBodyAnimation.x != Shielding_UpperBody)
+            if(m_currentUpperBodyAnimation.x != AnimationTypes.Shielding)
             {
-                SetUpperBodyAnimation(Shielding_UpperBody, (int)m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.bodyParts, crossFadeDuration: m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeInTime);
+                SetUpperBodyAnimation(AnimationTypes.Shielding, (int)m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.bodyParts, crossFadeDuration: m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeInTime);
                 m_nextUpperBodyCrossfadeOutTime = m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeOutTime;
             }
         }
-        else if (!m_isShielding && m_currentUpperBodyAnimation.x != Empty_UpperBody)
+        else if (!m_isShielding && m_currentUpperBodyAnimation.x != AnimationTypes.Empty_UpperBody)
         {
-            SetUpperBodyAnimation(Empty_UpperBody, 0, m_nextUpperBodyCrossfadeOutTime); 
+            SetUpperBodyAnimation(AnimationTypes.Empty_UpperBody, 0, m_nextUpperBodyCrossfadeOutTime); 
         }
 
     }
@@ -1815,19 +1718,19 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private void SetUpperBodyAnimation(int upperBodyAnimation,  int layer, float crossFadeDuration, float timeOffset = 0)
     {
 
-        if (layer == 0 && upperBodyAnimation != Empty_UpperBody)
+        if (layer == 0 && upperBodyAnimation != AnimationTypes.Empty_UpperBody)
         { Debug.Log("This animationData should have a different animation layer, choose a bodypart beside wholeBody!"); return; }
 
         if (layer == 0 && m_currentUpperBodyAnimation.y != 0)
         {
-            m_animator.CrossFadeInFixedTime(Empty_UpperBody, crossFadeDuration, (int)m_currentUpperBodyAnimation.y, timeOffset);
-            m_currentUpperBodyAnimation = new Vector2(Empty_UpperBody, 0);
+            m_animator.CrossFadeInFixedTime(AnimationTypes.Empty_UpperBody, crossFadeDuration, (int)m_currentUpperBodyAnimation.y, timeOffset);
+            m_currentUpperBodyAnimation = new Vector2(AnimationTypes.Empty_UpperBody, 0);
         }
         else if (layer != 0)
         {
         Debug.Log("remember switch weapon spam bug");
             m_animator.CrossFadeInFixedTime(upperBodyAnimation, crossFadeDuration, layer, timeOffset);
-            if((int)m_currentUpperBodyAnimation.y != 0) m_animator.CrossFadeInFixedTime(Empty_UpperBody, m_nextUpperBodyCrossfadeOutTime, (int)m_currentUpperBodyAnimation.y, timeOffset);
+            if((int)m_currentUpperBodyAnimation.y != 0) m_animator.CrossFadeInFixedTime(AnimationTypes.Empty_UpperBody, m_nextUpperBodyCrossfadeOutTime, (int)m_currentUpperBodyAnimation.y, timeOffset);
             m_currentUpperBodyAnimation = new Vector2(upperBodyAnimation, layer);
         }
 

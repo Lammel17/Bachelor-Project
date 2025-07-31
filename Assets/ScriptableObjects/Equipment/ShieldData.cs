@@ -23,11 +23,11 @@ public class ShieldData : ScriptableObject
     public CombatUtils.PhysicalDamageType PhysicalType = CombatUtils.PhysicalDamageType.Slice;
     public DamageTableData DamageTabel;
     [Space]
-    public ShieldAction ShiledSpecialLight1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_1"));
-    public ShieldAction ShiledSpecialLight2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_2"));
+    public ShieldAction ShiledSpecialLight1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_1);
+    public ShieldAction ShiledSpecialLight2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_2);
 
-    public ShieldAction ShiledSpecialHeavy1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_3"));
-    public ShieldAction ShiledSpecialHeavy2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, Animator.StringToHash("Special_Shield_4"));
+    public ShieldAction ShiledSpecialHeavy1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_3);
+    public ShieldAction ShiledSpecialHeavy2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_4);
 
     [Space]
     public AnimationData SwitchShield;
