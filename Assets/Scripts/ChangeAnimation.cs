@@ -11,20 +11,8 @@ public class ChangeAnimation : MonoBehaviour
     private AnimatorOverrideController m_animatorOverrideController = null;
     private AnimationClipOverrides m_clipOverrides;
 
-    //// Start is called once before the first execution of Update after the MonoBehaviour is created
-    //void Start()
-    //{
-    //    m_animator = GetComponent<CharacterActionAndMovementHandler>().Animator;
-    //    m_animatorOverrideController = new AnimatorOverrideController(m_animator.runtimeAnimatorController);
-    //    m_animator.runtimeAnimatorController = m_animatorOverrideController;
-
-    //    m_clipOverrides = new AnimationClipOverrides(m_animatorOverrideController.overridesCount);
-    //    m_animatorOverrideController.GetOverrides(m_clipOverrides);
-
-    //}
 
 
-    //public AnimatorOverrideController overrideController;
     public void InitializeAnimationOverrideController(CharacterMovesetData moveset)
     {
         m_animator = GetComponent<CharacterActionAndMovementHandler>().Animator;
@@ -99,7 +87,6 @@ public class ChangeAnimation : MonoBehaviour
 
         //Item
         ChangeItemAnimations(moveset.item);
-        //ChangeItemAnimations(newOverrideController, moveset.healing);
 
         //Damage
         if (moveset.getHit != null) m_clipOverrides["EmptyGetHit"] = moveset.getHit;
@@ -107,7 +94,6 @@ public class ChangeAnimation : MonoBehaviour
 
 
         // Apply the override to the Animator
-        //m_animator.runtimeAnimatorController = newOverrideController;
         m_animatorOverrideController.ApplyOverrides(m_clipOverrides);
 
 
@@ -160,6 +146,8 @@ public class ChangeAnimation : MonoBehaviour
 
         //SwitchWeapon
         CheckClipAndChange(weaponMoveset.SwitchWeapon, "EmptySwitchWeapon");
+        CheckClipAndChange(weaponMoveset.SwitchWeapon, "EmptyReadyWeapon");
+        CheckClipAndChange(weaponMoveset.SwitchWeapon, "EmptyRemoveWeapon");
     }
 
     public void ChangeShield(ShieldData shieldMoveset)
@@ -194,6 +182,8 @@ public class ChangeAnimation : MonoBehaviour
 
         //SwitchShield
         CheckClipAndChange(shieldMoveset.SwitchShield, "EmptySwitchShield");
+        CheckClipAndChange(shieldMoveset.SwitchShield, "EmptyReadyShield");
+        CheckClipAndChange(shieldMoveset.SwitchShield, "EmptyRemoveShield");
 
 
     }
@@ -238,7 +228,6 @@ public class ChangeAnimation : MonoBehaviour
             Debug.Log($"ERROR: no animation clip in AnimationData found in {animData.name}");
         }
 
-        //newOverrideController[animName] = animData.animationClip;
         return;
 
     }

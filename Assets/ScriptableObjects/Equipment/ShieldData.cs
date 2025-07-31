@@ -31,6 +31,8 @@ public class ShieldData : ScriptableObject
 
     [Space]
     public AnimationData SwitchShield;
+    public AnimationData ReadyShield;
+    public AnimationData RemoveShield;
 
 
 

@@ -634,8 +634,12 @@ public class PlayerInputManager : MonoBehaviour
     //DPad
     private void OnDown(InputAction.CallbackContext context)
     {
-        //if (context.performed)
-        //    Debug.Log($"AAAAAAAAAAAAAAAAAAAAA Down");
+        int priority = 1;
+
+        if (SetBuffer(context, m_isShift, priority))
+            return;
+
+        m_characterActionAndMovement.TriggerReadyOrRemoveEquipment();
     }
 
     private void OnRight(InputAction.CallbackContext context)
