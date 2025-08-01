@@ -20,10 +20,10 @@ MonoBehaviour:
     PhysicalSlice: {x: 0, y: 0}
     PhysicalBlunt: {x: 0, y: 0}
     PhysicalPierce: {x: 0, y: 0}
-    Thermal: {x: 0, y: 0}
-    Electrical: {x: 0, y: 0}
-    Metaphysical: {x: 0, y: 0}
-    CorrosionBuildUp: {x: 0, y: 0}
+    Thermic: {x: 0, y: 0}
+    Electric: {x: 0, y: 0}
+    Metaphysic: {x: 0, y: 0}
+    ContaminationBuildUp: {x: 0, y: 0}
     Poise: {x: 0, y: 0}
     UpgradeCurve:
       serializedVersion: 2
@@ -356,6 +356,8 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SwitchWeapon: {fileID: 11400000, guid: 32b39188694ae664dbca3b2e3b74dc39, type: 2}
+  ReadyWeapon: {fileID: 11400000, guid: 32b39188694ae664dbca3b2e3b74dc39, type: 2}
+  RemoveWeapon: {fileID: 11400000, guid: 32b39188694ae664dbca3b2e3b74dc39, type: 2}
   alternateAttacks:
     LightAttack1:
       AnimData: {fileID: 0}

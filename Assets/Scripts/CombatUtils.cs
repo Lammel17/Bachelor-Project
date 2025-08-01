@@ -43,6 +43,7 @@ public static class CombatUtils
         int minElementThreshhold = 30;
 
         int buildUp = (int)UtilityFunctions.RefitToNewRange(elementDamage - minElementThreshhold, 0, elementDamage + physicalDamage - minElementThreshhold, 0, elementDamage * 0.1f);
+        //int buildUp = (int)Mathf.Lerp(0, elementDamage * 0.1f, Mathf.InverseLerp(0, elementDamage + physicalDamage - minElementThreshhold, elementDamage - minElementThreshhold));
 
         return buildUp;
     }

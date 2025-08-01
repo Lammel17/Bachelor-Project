@@ -356,6 +356,8 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SwitchWeapon: {fileID: 11400000, guid: 32b39188694ae664dbca3b2e3b74dc39, type: 2}
+  ReadyWeapon: {fileID: 11400000, guid: 32b39188694ae664dbca3b2e3b74dc39, type: 2}
+  RemoveWeapon: {fileID: 11400000, guid: 32b39188694ae664dbca3b2e3b74dc39, type: 2}
   alternateAttacks:
     LightAttack1:
       AnimData: {fileID: 0}

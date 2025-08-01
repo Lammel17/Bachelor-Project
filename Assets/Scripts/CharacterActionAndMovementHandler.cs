@@ -86,7 +86,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isShielding = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isGrounded = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isMidAirPause = false;
-    [SerializeField][EditorAttributes.ReadOnly] private bool m_EquipmentIsReady = true;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_equipmentIsReady = true;
     [Space]
     [SerializeField][EditorAttributes.ReadOnly] private int m_currentBaseLayerAnimation;
     [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_currentUpperBodyAnimation; // (AnimHash, Layer)
@@ -250,7 +250,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     }
     public Vector3 PreviousMove { get => m_prevMove; }
     public AnimationInterruptableType CurrentInteruptability { get => m_currentInteruptability;  }
-    public bool EquipmentIsReady { get => m_EquipmentIsReady; }
+    public bool EquipmentIsReady { get => m_equipmentIsReady; }
 
     #endregion
 
@@ -427,7 +427,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     public void TriggerDamage()
     {
-        SetDamageAnimation(AnimationTypes.Get_Hit, 3, 0);
+        SetDamageAnimation(AnimationTypes.Get_Hit, 5, 0);
     }
 
     void TriggerTurning()
@@ -478,23 +478,53 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
         if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
 
-
-        AnimationData animData = m_EquipmentIsReady ? m_characterMovesetData.weapon.ReadyWeapon : m_characterMovesetData.weapon.RemoveWeapon;
-        if (animData == null) { Debug.Log("MISSING ANIMATION DATA of a ReadyOrRemoveWeapon"); return; }
-        AnimationData readyOrRemoveShield = m_EquipmentIsReady ? m_characterMovesetData.shield.ReadyShield : m_characterMovesetData.shield.RemoveShield;
-        if (readyOrRemoveShield == null) { Debug.Log("MISSING ANIMATION DATA of a ReadyOrRemoveShield"); return; }
+        int animHashWeapon = 0;
+        int animHashShield = 0;
+        AnimationData animDataWeapon = null;
+        AnimationData animDataShield = null;
+        if (m_equipmentIsReady)
+        {
+            animDataWeapon = m_characterMovesetData.weapon.RemoveWeapon;
+            animDataShield =  m_characterMovesetData.shield.RemoveShield;
+            animHashWeapon = AnimationTypes.Ready_Weapon;
+            animHashShield = AnimationTypes.Ready_Shield;
+        }
+        else
+        {
+            animDataWeapon = m_characterMovesetData.weapon.ReadyWeapon;
+            animDataShield = m_characterMovesetData.shield.ReadyShield;
+            animHashWeapon = AnimationTypes.Remove_Weapon;
+            animHashShield = AnimationTypes.Remove_Shield;
+        }
+        if (animDataWeapon == null) { Debug.Log("MISSING ANIMATION DATA of a ReadyOrRemoveWeapon"); return; }
+        if (animDataShield == null) { Debug.Log("MISSING ANIMATION DATA of a ReadyOrRemoveShield"); return; }
 
         m_currentInteruptability = switchEquipmentInterruptability;
 
-        Action readyOrRemoveEffect = EquipmentHandler.Instance == null ? null : () => { /*EquipmentHandler.Instance.SwitchActiveWeapon(); */};
+        Action readyOrRemoveEffect = EquipmentHandler.Instance == null ? null : () => { m_equipmentIsReady = !m_equipmentIsReady; EquipmentHandler.Instance.ReadyOrRemoveEquipment(m_equipmentIsReady); };
 
-        InitAction(AnimationTypes.Switch_Weapon, animData.bodyParts, animData, Effect: readyOrRemoveEffect);
+        if(animDataWeapon.animationClip.length >= animDataShield.animationClip.length)
+        {
+            InitAction(animHashWeapon, animDataWeapon.bodyParts, animDataWeapon, Effect: readyOrRemoveEffect);
+            SetUpperBodyAnimation(animHashShield, (int)AnimationData.BodyParts.LeftArm, animDataShield.crossfadeInTime, exeptionForMultipleLayerAnimation: true);
+        }
+        else
+        {
+            InitAction(animHashShield, animDataShield.bodyParts, animDataShield, Effect: readyOrRemoveEffect);
+            SetUpperBodyAnimation(animHashWeapon, (int)AnimationData.BodyParts.RightArm, animDataWeapon.crossfadeInTime, exeptionForMultipleLayerAnimation: true);
+        }
 
     }
 
 
     public void TriggerSwitchWeapon()
     {
+        if (!m_equipmentIsReady)
+        {
+            EquipmentHandler.Instance.SwitchActiveWeapon();
+            return;
+        }
+
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
@@ -513,6 +543,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     public void TriggerSwitchShield()
     {
+        if (!m_equipmentIsReady)
+        {
+            EquipmentHandler.Instance.SwitchActiveShield();
+            return;
+        }
+
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
@@ -567,6 +603,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public void TriggerLightAttack()
     {
         if (m_isActionLocked) return;
+        if (!m_equipmentIsReady) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.light; 
@@ -596,6 +633,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public void TriggerSpecialLightAttack()
     {
         if (m_isActionLocked) return;
+        if (!m_equipmentIsReady) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.specialLight;
@@ -625,6 +663,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public void TriggerHeavyAttack()
     {
         if (m_isActionLocked) return;
+        if (!m_equipmentIsReady) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
 
         WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.heavy;
@@ -655,6 +694,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public void TriggerSpecialHeavyAttack()
     {
         if (m_isActionLocked) return;
+        if (!m_equipmentIsReady) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
 
         WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.specialHeavy;
@@ -707,6 +747,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public void TriggerShieldSpecialLight()
     {
         if (m_isActionLocked) return;
+        if (!m_equipmentIsReady) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         ShieldData.ShieldAction thisAction = m_nextPossibleShieldActions.specialShieldLight;
@@ -735,6 +776,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public void TriggerShieldSpecialHeavy()
     {
         if (m_isActionLocked) return;
+        if (!m_equipmentIsReady) return;
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         ShieldData.ShieldAction thisAction = m_nextPossibleShieldActions.specialShieldHeavy;
@@ -1542,6 +1584,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     private void EndActionReset()
     {
+        m_animator.SetTrigger("EndActionTrigger");
+
         //reset Values
         m_actionInfluenceOverMoveDirection = 0;
         m_actionInfluenceOverMoveSpeed = 0;
@@ -1715,7 +1759,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     }
 
 
-    private void SetUpperBodyAnimation(int upperBodyAnimation,  int layer, float crossFadeDuration, float timeOffset = 0)
+    private void SetUpperBodyAnimation(int upperBodyAnimation,  int layer, float crossFadeDuration, float timeOffset = 0, bool exeptionForMultipleLayerAnimation = false)
     {
 
         if (layer == 0 && upperBodyAnimation != AnimationTypes.Empty_UpperBody)
@@ -1730,8 +1774,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         {
         Debug.Log("remember switch weapon spam bug");
             m_animator.CrossFadeInFixedTime(upperBodyAnimation, crossFadeDuration, layer, timeOffset);
-            if((int)m_currentUpperBodyAnimation.y != 0) m_animator.CrossFadeInFixedTime(AnimationTypes.Empty_UpperBody, m_nextUpperBodyCrossfadeOutTime, (int)m_currentUpperBodyAnimation.y, timeOffset);
-            m_currentUpperBodyAnimation = new Vector2(upperBodyAnimation, layer);
+            if (!exeptionForMultipleLayerAnimation)
+            {
+                if ((int)m_currentUpperBodyAnimation.y != 0)
+                m_animator.CrossFadeInFixedTime(AnimationTypes.Empty_UpperBody, m_nextUpperBodyCrossfadeOutTime, (int)m_currentUpperBodyAnimation.y, timeOffset);
+                m_currentUpperBodyAnimation = new Vector2(upperBodyAnimation, layer);
+            }
         }
 
         m_nextUpperBodyCrossfadeOutTime = m_baseCrossFadeDuration;

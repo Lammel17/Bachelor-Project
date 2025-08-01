@@ -83,6 +83,8 @@ public class AnimationData : ScriptableObject
         WholeBody = 0,
         UpperBody = 1,
         Arms = 2,
+        RightArm = 3,
+        LeftArm = 4
     }
 
 

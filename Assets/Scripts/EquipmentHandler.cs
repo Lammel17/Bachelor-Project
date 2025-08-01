@@ -16,6 +16,7 @@ public class EquipmentHandler : MonoBehaviour
     [SerializeField] private Transform m_shieldPosition;
     private GameObject m_activeWeaponGameObjReference = null;
     private GameObject m_activeShieldGameObjReference = null;
+    private bool m_equipmentIsReady = true;
 
     private CharacterStatus m_characterStatus;
     private Animator m_animator;
@@ -129,17 +130,58 @@ public class EquipmentHandler : MonoBehaviour
     }
 
 
+    public void ReadyOrRemoveEquipment(bool isReadyEquipment)
+    {
+        m_equipmentIsReady = isReadyEquipment;
+
+        if (!m_equipmentIsReady)
+        {
+            m_characterStatus.HitBoxManagerWeapon = null;
+            m_characterStatus.HitBoxManagerShield= null;
+
+            if (m_activeWeaponGameObjReference != null)
+                Destroy(m_activeWeaponGameObjReference);
+            if (m_activeShieldGameObjReference != null)
+                Destroy(m_activeShieldGameObjReference);
+        }
+        else
+        {
+            if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
+            {
+                m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
+                if (m_activeWeaponGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+                {
+                    m_characterStatus.HitBoxManagerWeapon = hitManager;
+                    m_characterStatus.HitBoxManagerWeapon.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
+                }
+            }
+            if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
+            {
+                m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
+                if (m_activeShieldGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+                {
+                    m_characterStatus.HitBoxManagerShield = hitManager;
+                    m_characterStatus.HitBoxManagerShield.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
+                }
+            }
+        }
+    }
+
+
     public void SwitchActiveWeapon()
     {
-        if (m_activeWeaponGameObjReference != null)
-            Destroy(m_activeWeaponGameObjReference);
-
         m_playerEquipmentData.ActiveWeaponSlot = (PlayerEquipmentData.Slot)(((int)m_playerEquipmentData.ActiveWeaponSlot % 2) + 1);
         WeaponInstanceData activeWeapon = (int)m_playerEquipmentData.ActiveWeaponSlot == 1 ? m_playerEquipmentData.Weapon1 : m_playerEquipmentData.Weapon2;
         if (activeWeapon == null || activeWeapon.WeaponData == null)
             activeWeapon = m_defaultEmptyWeapon;
         m_movesetData.weapon = activeWeapon.WeaponData;
         m_characterStatus.ActiveWeaponInstanceData = activeWeapon;
+
+        if (!m_equipmentIsReady)
+            return;
+
+        if (m_activeWeaponGameObjReference != null)
+            Destroy(m_activeWeaponGameObjReference);
 
         if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
         {
@@ -159,15 +201,18 @@ public class EquipmentHandler : MonoBehaviour
 
     public void SwitchActiveShield()
     {
-        if (m_activeShieldGameObjReference != null)
-            Destroy(m_activeShieldGameObjReference);
-
         m_playerEquipmentData.ActiveShieldSlot = (PlayerEquipmentData.Slot)(((int)m_playerEquipmentData.ActiveShieldSlot % 2) + 1);
         ShieldInstanceData activeShield = (int)m_playerEquipmentData.ActiveShieldSlot == 1 ? m_playerEquipmentData.Shield1 : m_playerEquipmentData.Shield2;
         if (activeShield == null || activeShield.ShieldData == null)
             activeShield = m_defaultEmptyShield;
         m_movesetData.shield = activeShield.ShieldData;
         m_characterStatus.ActiveShieldInstanceData = activeShield;
+
+        if (!m_equipmentIsReady)
+            return;
+
+        if (m_activeShieldGameObjReference != null)
+            Destroy(m_activeShieldGameObjReference);
 
         if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
         {
