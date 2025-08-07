@@ -242,9 +242,15 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         { 
             m_isShielding = value;
             if (m_isShielding)
+            {
+                m_characterStatus.IsShielding(true);
                 SetLookAtForward(m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.useLookAtForwardData, m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData);
+            }
             else
+            {
+                m_characterStatus.IsShielding(false);
                 SetLookAtForward(false);
+            }
             
         } 
     }

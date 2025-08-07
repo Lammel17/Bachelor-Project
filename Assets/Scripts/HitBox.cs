@@ -6,7 +6,7 @@ using EditorAttributes;
 [RequireComponent(typeof(Collider))]
 public class HitBox : MonoBehaviour
 {
-    [SerializeField] [Required] private HitBoxManager m_hitBoxManager;
+    [SerializeField] [Required] private HitAndHurtBoxManagerOfEquipment m_hitBoxManager;
 
 
     private void OnTriggerEnter(Collider other)

@@ -10,6 +10,8 @@ public class ShieldData : ScriptableObject
     public GameObject ShieldModel;
     [Space]
     public DamageTableData DamageNegationTable;
+    public float ImpactAbsorbtionRecoveryDelay = 0;
+    public float ImpactAbsorbtionPerfBlockTimeFrame = 0;
 
 
     [Header("Shielding")]

@@ -1,5 +1,72 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4292331002872491771
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8155315264121094328}
+  - component: {fileID: 1549708050416661695}
+  - component: {fileID: 5620369001806212430}
+  m_Layer: 8
+  m_Name: shieldBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8155315264121094328
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4292331002872491771}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.3, z: -0}
+  m_LocalScale: {x: 1, y: 4.9737, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2494535597566908630}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1549708050416661695
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4292331002872491771}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &5620369001806212430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4292331002872491771}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 393e3ea8b7206d6479723210345da575, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_hurtBoxCollider: {fileID: 1549708050416661695}
 --- !u!1 &7409964803290368995
 GameObject:
   m_ObjectHideFlags: 0
@@ -10,7 +77,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7268846766307069973}
   - component: {fileID: 4874107979272858504}
-  - component: {fileID: 1897054551116541127}
+  - component: {fileID: 6297242383102355719}
   m_Layer: 7
   m_Name: TestShieldModel
   m_TagString: Untagged
@@ -61,7 +128,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &1897054551116541127
+--- !u!114 &6297242383102355719
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -70,7 +137,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7409964803290368995}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4231fc4e85a84f54a92029de5de31920, type: 3}
+  m_Script: {fileID: 11500000, guid: aecf6d015cbb33e49a23896d29721a58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_hitBoxCollectionList:
@@ -87,6 +154,8 @@ MonoBehaviour:
     ContaminationBuildUpDamage: 0
     PoiseDamage: 0
     Direction: {x: 0, y: 0, z: 0}
+  m_defensiveBox:
+  - {fileID: 5620369001806212430}
 --- !u!1 &8439444205675919415
 GameObject:
   m_ObjectHideFlags: 0
@@ -99,7 +168,7 @@ GameObject:
   - component: {fileID: 4022584941413152809}
   - component: {fileID: 6251443114393143146}
   m_Layer: 7
-  m_Name: Cube
+  m_Name: hitBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -153,7 +222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae9685a7dfec2354cbbc0f269f9c8b00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_hitBoxManager: {fileID: 1897054551116541127}
+  m_hitBoxManager: {fileID: 0}
 --- !u!1 &8484627814775481164
 GameObject:
   m_ObjectHideFlags: 0
@@ -187,6 +256,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5734959926221807722}
+  - {fileID: 8155315264121094328}
   m_Father: {fileID: 7268846766307069973}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!33 &4799696323071370364

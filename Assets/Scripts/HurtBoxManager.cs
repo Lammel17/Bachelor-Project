@@ -5,7 +5,6 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterStatus))]
 public class HurtBoxManager : MonoBehaviour
 {
-    [SerializeField] private LayerMask m_triggerLayer;
     [SerializeField] private CharacterStatus m_characterStatus;
     [SerializeField] private HurtBoxCollection[] m_hurtBoxCollection;
 
@@ -23,7 +22,7 @@ public class HurtBoxManager : MonoBehaviour
         {
             foreach (HurtBox hurtbox in collection.hurtBoxes)
             {
-                hurtbox.SetValues(m_triggerLayer, this, collection.bodyPartDamageMultiplikator);
+                hurtbox.SetValues(this, collection.bodyPartDamageMultiplikator);
             }
         }
     }
@@ -36,6 +35,7 @@ public class HurtBoxManager : MonoBehaviour
 
         m_characterStatus.TakeDamageByDamageData(CombatUtils.CalculateMultiplicatedDamageData(damageMultiplikator, damageData));
     }
+
 
 
 }

@@ -48,6 +48,8 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
+  ImpactAbsorbtionRecoveryDelay: 1
+  ImpactAbsorbtionPerfBlockTimeFrame: 0.1
   shieldIdle:
     AnimData: {fileID: 11400000, guid: 49deae5e4e8f5ea4dbe07365792115d7, type: 2}
   shieldingUpperBody:

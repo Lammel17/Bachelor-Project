@@ -12,11 +12,13 @@ public class CharacterStatus : MonoBehaviour
     [SerializeField][ReadOnly] private CharacterActionAndMovementHandler m_playerMovement;
     [SerializeField][ReadOnly] private HurtBoxManager m_hurtBoxManager;
     [Space]
-    [Header("Must set if its not the Player")]
-    [SerializeField] private HitBoxManager m_activeWeaponHitBoxManager = null;
+    [Header("Set if its not the Player")]
+    [SerializeField] private HitAndHurtBoxManagerOfEquipment m_activeWeaponHitBoxManager = null;
     [SerializeField] private WeaponInstanceData m_activeWeaponInstance;
-    [SerializeField] private HitBoxManager m_activeShieldHitBoxManager = null;
+    [SerializeField] private HitAndHurtBoxManagerOfEquipment m_activeShieldHitBoxManager = null;
     [SerializeField] private ShieldInstanceData m_activeShieldInstance;
+    [Header("Player only")]
+    [SerializeField] private ShieldImpactHandler m_shieldImpactHandler;
     [Space]
     [Space]
     [Space]
@@ -58,6 +60,7 @@ public class CharacterStatus : MonoBehaviour
     private float m_specialEnergyGainOfFrame = 0;
     private float m_gainingHealthForTimeFactor = 0;
     private float m_loosingHealthForTimeFactor = 0;
+    private float m_energyRecoverFactorByShielding = 1;
 
     private Coroutine m_pauseEnergyRecoveryCoroutine;
     public enum AilmentType
@@ -71,8 +74,8 @@ public class CharacterStatus : MonoBehaviour
 
     public CharacterMovesetData MovesetData { get => m_movesetData; }
     public HurtBoxManager HurtBoxManager { get => m_hurtBoxManager; }
-    public HitBoxManager HitBoxManagerWeapon { get => m_activeWeaponHitBoxManager; set => m_activeWeaponHitBoxManager = value; }
-    public HitBoxManager HitBoxManagerShield { get => m_activeShieldHitBoxManager; set => m_activeShieldHitBoxManager = value; }
+    public HitAndHurtBoxManagerOfEquipment HitBoxManagerWeapon { get => m_activeWeaponHitBoxManager; set => m_activeWeaponHitBoxManager = value; }
+    public HitAndHurtBoxManagerOfEquipment HitBoxManagerShield { get => m_activeShieldHitBoxManager; set => m_activeShieldHitBoxManager = value; }
     public WeaponInstanceData ActiveWeaponInstanceData { get => m_activeWeaponInstance; set => m_activeWeaponInstance = value; }
     public ShieldInstanceData ActiveShieldInstanceData { get => m_activeShieldInstance; set => m_activeShieldInstance = value; }
 
@@ -234,7 +237,7 @@ public class CharacterStatus : MonoBehaviour
         }
         else if (!m_isPauseEnergyRecoveryDueAction && !m_isPauseEnergyRecoveryDueEmpty)
         {
-            m_energyGainOfFrame += m_energyRecoverySpeed * Time.deltaTime;
+            m_energyGainOfFrame += m_energyRecoverySpeed * Time.deltaTime * m_energyRecoverFactorByShielding;
             m_characterStatsData.EnergyPoints.x = Mathf.Min(m_characterStatsData.EnergyPoints.x + (int)m_energyGainOfFrame, m_characterStatsData.EnergyPoints.y);
             m_energyGainOfFrame -= (int)m_energyGainOfFrame;
         }
@@ -250,6 +253,22 @@ public class CharacterStatus : MonoBehaviour
                 ContinueEnergyRegenerationInTime();
         }
     }
+
+    public void IsShielding(bool isShielding)
+    {
+        m_energyRecoverFactorByShielding = !isShielding ? 1 : 0;
+        if (m_shieldImpactHandler != null)
+        {
+            if (isShielding) m_shieldImpactHandler.UseShielding();
+            else m_shieldImpactHandler.StopUseShielding();
+        }
+        if (m_activeShieldHitBoxManager != null)
+        {
+            if (isShielding) m_activeShieldHitBoxManager.ActivateBlockBox();
+            else m_activeShieldHitBoxManager.DeactivateBlockBox();
+        }
+    }
+
 
     public void ExpendEnergyPoints(float expenses)
     {

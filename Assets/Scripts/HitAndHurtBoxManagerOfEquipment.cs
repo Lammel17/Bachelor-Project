@@ -4,7 +4,7 @@ using System;
 using EditorAttributes;
 
 [RequireComponent(typeof(Rigidbody))]
-public class HitBoxManager : MonoBehaviour
+public class HitAndHurtBoxManagerOfEquipment : MonoBehaviour
 {
     [SerializeField] private List<HitBoxCollectionData> m_hitBoxCollectionList = new List<HitBoxCollectionData>();
     private List<int> m_activeCollections = new List<int>();
@@ -15,8 +15,11 @@ public class HitBoxManager : MonoBehaviour
 
     public DamageData DamageData { get => m_damageData; }
 
+    [Header("HurtBox For defensive Blocking")]
+    [SerializeField] private List<HurtBox> m_defensiveBox;
 
-    public HitBoxManager ReadyHitBoxManager(HurtBoxManager ownHurtBoxManager)
+
+    public HitAndHurtBoxManagerOfEquipment ReadyHitBoxManager(HurtBoxManager ownHurtBoxManager)
     {
         m_ownHurtBoxManager = ownHurtBoxManager;
 
@@ -28,6 +31,17 @@ public class HitBoxManager : MonoBehaviour
                 {
                     coll.enabled = false;
                 }
+            }
+        }
+
+
+
+        if (m_defensiveBox.Count != 0)
+        {
+            foreach(HurtBox hrtb in m_defensiveBox)
+            {
+                hrtb.SetValues(m_ownHurtBoxManager, new DamageMultiplikatorData(1,1,1,1,1,1,1), true);
+                hrtb.EnableHurtBox(false);
             }
         }
 
@@ -123,6 +137,23 @@ public class HitBoxManager : MonoBehaviour
 
     }
 
+
+
+    public void ActivateBlockBox()
+    {
+        foreach (HurtBox hrtb in m_defensiveBox)
+        {
+            hrtb.EnableHurtBox(true);
+        }
+    }
+
+    public void DeactivateBlockBox()
+    {
+        foreach (HurtBox hrtb in m_defensiveBox)
+        {
+            hrtb.EnableHurtBox(false);
+        }
+    }
 
 
 }

@@ -239,7 +239,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae9685a7dfec2354cbbc0f269f9c8b00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_hitBoxManager: {fileID: 2738420107139361373}
+  m_hitBoxManager: {fileID: 0}
 --- !u!1 &6595257129907456321
 GameObject:
   m_ObjectHideFlags: 0
@@ -249,8 +249,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6847987287123368723}
-  - component: {fileID: 2738420107139361373}
   - component: {fileID: 1767057774329057429}
+  - component: {fileID: 7015786125367342923}
   m_Layer: 7
   m_Name: TestSwordModel
   m_TagString: Untagged
@@ -275,32 +275,6 @@ Transform:
   - {fileID: 1978104368852302103}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2738420107139361373
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6595257129907456321}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4231fc4e85a84f54a92029de5de31920, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_hitBoxCollectionList:
-  - CollectionRefNumber: 0
-    HitColliders:
-    - {fileID: 792527360299558948}
-  m_damageData:
-    PhysicalSliceDamage: 0
-    PhysicalBluntDamage: 0
-    PhysicalPierceDamage: 0
-    ThermicDamageAndBuildUp: {x: 0, y: 0}
-    ElectricDamageAndBuildUp: {x: 0, y: 0}
-    MetaphysicDamageAndBuildUp: {x: 0, y: 0}
-    ContaminationBuildUpDamage: 0
-    PoiseDamage: 0
-    Direction: {x: 0, y: 0, z: 0}
 --- !u!54 &1767057774329057429
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -328,3 +302,30 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &7015786125367342923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6595257129907456321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aecf6d015cbb33e49a23896d29721a58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_hitBoxCollectionList:
+  - CollectionRefNumber: 0
+    HitColliders:
+    - {fileID: 792527360299558948}
+  m_damageData:
+    PhysicalSliceDamage: 0
+    PhysicalBluntDamage: 0
+    PhysicalPierceDamage: 0
+    ThermicDamageAndBuildUp: {x: 0, y: 0}
+    ElectricDamageAndBuildUp: {x: 0, y: 0}
+    MetaphysicDamageAndBuildUp: {x: 0, y: 0}
+    ContaminationBuildUpDamage: 0
+    PoiseDamage: 0
+    Direction: {x: 0, y: 0, z: 0}
+  m_defensiveBox: []

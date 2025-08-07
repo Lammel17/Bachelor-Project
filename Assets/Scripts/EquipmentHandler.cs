@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterActionAndMovementHandler))]
 [RequireComponent(typeof(ChangeAnimation))]
 [RequireComponent(typeof(CharacterStatus))]
+[RequireComponent(typeof(ShieldImpactHandler))]
 
 public class EquipmentHandler : MonoBehaviour
 {
@@ -22,14 +23,16 @@ public class EquipmentHandler : MonoBehaviour
     private Animator m_animator;
     private ChangeAnimation m_changeAnimation;
     private CharacterActionAndMovementHandler m_characterActionAndMovement;
+    private ShieldImpactHandler m_shieldImpactHandler;
     private CharacterMovesetData m_movesetData;
 
 
     [Space]
     [SerializeField][EditorAttributes.ReadOnly] private PlayerEquipmentData m_playerEquipmentData = new PlayerEquipmentData();
     [Space]
-    [SerializeField] private WeaponInstanceData m_defaultEmptyWeapon;
-    [SerializeField] private ShieldInstanceData m_defaultEmptyShield;
+    [SerializeField][Required] private WeaponInstanceData m_defaultEmptyWeapon;
+    [SerializeField][Required] private ShieldInstanceData m_defaultEmptyShield;
+    [SerializeField][Required] private ImpactCrystalInstanceData m_defaultImpactCrystal;
     [Space]
     [SerializeField] private bool m_clearActiveEquipmentMovesetAtStart = false;
     [SerializeField] private bool m_useCheatEquipment = false;
@@ -48,6 +51,7 @@ public class EquipmentHandler : MonoBehaviour
     {
         m_characterActionAndMovement = GetComponent<CharacterActionAndMovementHandler>();
         m_changeAnimation = GetComponent<ChangeAnimation>();
+        m_shieldImpactHandler = GetComponent<ShieldImpactHandler>();
         m_characterStatus = GetComponent<CharacterStatus>();
         m_movesetData = m_characterStatus.MovesetData;
 
@@ -58,11 +62,16 @@ public class EquipmentHandler : MonoBehaviour
             m_movesetData.item = null;
         }
 
+
         m_animator = m_characterActionAndMovement.Animator;
 
         if (m_useCheatEquipment)
             m_playerEquipmentData = CheatEquipment();
 
+        //this cant be empty, always a crystal equipted
+        if (m_playerEquipmentData.ImpactCrystal == null || m_playerEquipmentData.ImpactCrystal.ImactCrystalData == null) m_playerEquipmentData.ImpactCrystal = m_defaultImpactCrystal;
+
+        SetImpactCrystal();
 
         if (m_animator != null)
             SetInitializingActiveEquippment();
@@ -81,36 +90,13 @@ public class EquipmentHandler : MonoBehaviour
         m_movesetData.weapon = activeWeapon.WeaponData;
         m_characterStatus.ActiveWeaponInstanceData = activeWeapon;
 
-        if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
-        {
-            m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
-            if (m_activeWeaponGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
-            {
-                m_characterStatus.HitBoxManagerWeapon = hitManager;
-                m_characterStatus.HitBoxManagerWeapon.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
-            }
-
-        }
-
-
 
         ShieldInstanceData activeShield = (int)m_playerEquipmentData.ActiveShieldSlot == 1 ? m_playerEquipmentData.Shield1 : m_playerEquipmentData.Shield2;
         if (activeShield == null || activeShield.ShieldData == null)
             activeShield = m_defaultEmptyShield;
         m_movesetData.shield = activeShield.ShieldData;
         m_characterStatus.ActiveShieldInstanceData = activeShield;
-
-        if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
-        {
-            m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
-            if (m_activeShieldGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
-            {
-                m_characterStatus.HitBoxManagerShield = hitManager;
-                m_characterStatus.HitBoxManagerShield.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
-            }
-        }
-        
-
+        m_shieldImpactHandler.SetShieldValues(activeShield.ShieldData.ImpactAbsorbtionRecoveryDelay, activeShield.ShieldData.ImpactAbsorbtionPerfBlockTimeFrame);
 
         switch ((int)m_playerEquipmentData.ActiveItemSlot)
         {
@@ -126,6 +112,32 @@ public class EquipmentHandler : MonoBehaviour
 
         m_characterActionAndMovement.SetNextPossibleWeaponActions();
         m_characterActionAndMovement.SetNextPossibleShieldActions();
+
+        //INSTANTIATE WEAPON AND SHIELD OBJECT
+        if (!m_equipmentIsReady)
+            return;
+
+        if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
+        {
+            m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
+            if (m_activeWeaponGameObjReference.TryGetComponent<HitAndHurtBoxManagerOfEquipment>(out HitAndHurtBoxManagerOfEquipment hitManager))
+            {
+                m_characterStatus.HitBoxManagerWeapon = hitManager;
+                m_characterStatus.HitBoxManagerWeapon.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
+            }
+
+        }
+
+        if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
+        {
+            m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
+            if (m_activeShieldGameObjReference.TryGetComponent<HitAndHurtBoxManagerOfEquipment>(out HitAndHurtBoxManagerOfEquipment hitManager))
+            {
+                m_characterStatus.HitBoxManagerShield = hitManager;
+                m_characterStatus.HitBoxManagerShield.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
+            }
+        }
+        
 
     }
 
@@ -149,7 +161,7 @@ public class EquipmentHandler : MonoBehaviour
             if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
             {
                 m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
-                if (m_activeWeaponGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+                if (m_activeWeaponGameObjReference.TryGetComponent<HitAndHurtBoxManagerOfEquipment>(out HitAndHurtBoxManagerOfEquipment hitManager))
                 {
                     m_characterStatus.HitBoxManagerWeapon = hitManager;
                     m_characterStatus.HitBoxManagerWeapon.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
@@ -158,7 +170,7 @@ public class EquipmentHandler : MonoBehaviour
             if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
             {
                 m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
-                if (m_activeShieldGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+                if (m_activeShieldGameObjReference.TryGetComponent<HitAndHurtBoxManagerOfEquipment>(out HitAndHurtBoxManagerOfEquipment hitManager))
                 {
                     m_characterStatus.HitBoxManagerShield = hitManager;
                     m_characterStatus.HitBoxManagerShield.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
@@ -177,6 +189,10 @@ public class EquipmentHandler : MonoBehaviour
         m_movesetData.weapon = activeWeapon.WeaponData;
         m_characterStatus.ActiveWeaponInstanceData = activeWeapon;
 
+        m_changeAnimation.ChangeWeapon(m_movesetData.weapon);
+        m_characterActionAndMovement.SetNextPossibleWeaponActions();
+
+        //INSTANTIATE NEW WEAPON OBJECT
         if (!m_equipmentIsReady)
             return;
 
@@ -186,16 +202,12 @@ public class EquipmentHandler : MonoBehaviour
         if (m_weaponPosition != null && m_movesetData.weapon.WeaponModel != null)
         {
             m_activeWeaponGameObjReference = Instantiate(m_movesetData.weapon.WeaponModel, m_weaponPosition);
-            if (m_activeWeaponGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+            if (m_activeWeaponGameObjReference.TryGetComponent<HitAndHurtBoxManagerOfEquipment>(out HitAndHurtBoxManagerOfEquipment hitManager))
             {
                 m_characterStatus.HitBoxManagerWeapon = hitManager;
                 m_characterStatus.HitBoxManagerWeapon.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
             }
         }
-
-
-        m_changeAnimation.ChangeWeapon(m_movesetData.weapon);
-        m_characterActionAndMovement.SetNextPossibleWeaponActions();
 
     }
 
@@ -207,7 +219,12 @@ public class EquipmentHandler : MonoBehaviour
             activeShield = m_defaultEmptyShield;
         m_movesetData.shield = activeShield.ShieldData;
         m_characterStatus.ActiveShieldInstanceData = activeShield;
+        m_shieldImpactHandler.SetShieldValues(activeShield.ShieldData.ImpactAbsorbtionRecoveryDelay, activeShield.ShieldData.ImpactAbsorbtionPerfBlockTimeFrame);
 
+        m_changeAnimation.ChangeShield(m_movesetData.shield);
+        m_characterActionAndMovement.SetNextPossibleShieldActions();
+
+        //INSTANTIATE NEW SHIELD OBJECT
         if (!m_equipmentIsReady)
             return;
 
@@ -217,15 +234,12 @@ public class EquipmentHandler : MonoBehaviour
         if (m_shieldPosition != null && m_movesetData.shield.ShieldModel != null)
         {
             m_activeShieldGameObjReference = Instantiate(m_movesetData.shield.ShieldModel, m_shieldPosition);
-            if (m_activeShieldGameObjReference.TryGetComponent<HitBoxManager>(out HitBoxManager hitManager))
+            if (m_activeShieldGameObjReference.TryGetComponent<HitAndHurtBoxManagerOfEquipment>(out HitAndHurtBoxManagerOfEquipment hitManager))
             {
                 m_characterStatus.HitBoxManagerShield = hitManager;
                 m_characterStatus.HitBoxManagerShield.ReadyHitBoxManager(m_characterStatus.HurtBoxManager);
             }
         }
-
-        m_changeAnimation.ChangeShield(m_movesetData.shield);
-        m_characterActionAndMovement.SetNextPossibleShieldActions();
     }
 
     public void SwitchActiveItem()
@@ -263,7 +277,8 @@ public class EquipmentHandler : MonoBehaviour
 
     public void SetImpactCrystal()
     {
-
+        ImpactCrystalData crystal = m_playerEquipmentData.ImpactCrystal.ImactCrystalData;
+        m_shieldImpactHandler.SetCrystalValues(crystal.MaxEnergyPointsGain, crystal.AbsorbtionCurveSpeed, crystal.AbsorbtionCurveDuration);
     }
     public void SetGears()
     {
