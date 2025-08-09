@@ -18,7 +18,18 @@ public class HitBox : MonoBehaviour
         {
             DamageData damageData = m_hitBoxManager.CheckIfCanHitAndGetDamageData(hurt.HurtBoxManager);
             if (damageData != null)
+            {
+                damageData = damageData.CreateACopy(); //Creates a copy to not alter the original one
+
+                if (damageData.Direction == Vector3.zero)
+                {
+                    Vector3 dir = (hurt.HurtBoxManager.gameObject.transform.position - m_hitBoxManager.gameObject.transform.position);
+                    damageData.Direction = (new Vector3(dir.x, 0, dir.z)).normalized;
+                    //Debug.DrawLine(transform.position, transform.position + damageData.Direction, Color.green);
+
+                }
                 hurt.HurtBoxWasHit(damageData);
+            }
         }
 
     }

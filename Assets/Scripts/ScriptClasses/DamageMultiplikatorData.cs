@@ -3,6 +3,7 @@ using UnityEngine;
     [System.Serializable]
 public class DamageMultiplikatorData
 {
+    [Header("Range from 0 to 1")]
     public float OverallMultiplicator = 1; //only to physical, thermic, electric, metaphysic
     [Space]
     public float PhysicalFactor = 1;

@@ -159,7 +159,9 @@ MonoBehaviour:
   m_electricDamage: {x: 0, y: 0}
   m_metaphysicDamage: {x: 0, y: 0}
   m_contaminationBuildUp: 0
-  m_poiseDamage: 1
+  m_poiseDamage: 10
+  m_direction: {x: 0, y: 0, z: 0}
+  m_staggerType: 3
   m_timeIntervall: 2
   m_refreshDamageData: 0
   m_objMeshRenderer: {fileID: 2080995308}
@@ -174,7 +176,7 @@ Transform:
   m_GameObject: {fileID: 40135808}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.9154832, y: 0.28889352, z: 0.29772985}
+  m_LocalPosition: {x: -5.93, y: 0.78, z: 0.08}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -234,6 +236,7 @@ MonoBehaviour:
     ContaminationBuildUpDamage: 0
     PoiseDamage: 0
     Direction: {x: 0, y: 0, z: 0}
+    StaggerType: 0
   m_defensiveBox: []
 --- !u!4 &66633496 stripped
 Transform:
@@ -1617,8 +1620,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.049999967, y: 0.3799999, z: 0.02}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.03, y: 0.22800009, z: 0.012000008}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 709844861}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3422,13 +3425,13 @@ GameObject:
   - component: {fileID: 1756236763}
   - component: {fileID: 1756236770}
   - component: {fileID: 1756236767}
+  - component: {fileID: 1756236772}
   - component: {fileID: 1756236768}
   - component: {fileID: 1756236764}
   - component: {fileID: 1756236765}
   - component: {fileID: 1756236766}
   - component: {fileID: 1756236769}
   - component: {fileID: 1756236771}
-  - component: {fileID: 1756236772}
   m_Layer: 0
   m_Name: TestPlayer
   m_TagString: Untagged
@@ -3616,19 +3619,23 @@ MonoBehaviour:
       ContaminationBuildUpDamage: 0
       PoiseDamage: 0
       Direction: {x: 0, y: 0, z: 0}
+      StaggerType: 0
   m_activeShieldHitBoxManager: {fileID: 0}
   m_activeShieldInstance:
     ShieldData: {fileID: 0}
     ShieldLevelCurrentMax: {x: 1, y: 10}
   m_shieldImpactHandler: {fileID: 1756236772}
+  m_invulnerable: 0
   m_infinteStamina: 0
-  m_energyRecoverySpeed: 100
-  m_energyRecoveryPause: 1
+  m_energyRecoverySpeed: 50
+  m_energyRecoveryPause: 2
   m_specialEnergyRecoverySpeed: 1
   m_PoiseRecoverySpeed: 1
   m_buildUpsRecoverySpeed: 1
+  m_poiseRecoverPauseTime: 3
   m_minRecoveredEnergyForAction: 40
   m_minRecoveredEnergyConstantForAction: 90
+  m_isShielding: 0
   m_hp: 1
   m_ep: 1
   m_sep: 1
@@ -3637,6 +3644,8 @@ MonoBehaviour:
   m_electric: 1
   m_metaphysic: 1
   m_contamination: 1
+  m_stunThreshhold: {x: 0.4, y: 0.05}
+  m_shieldStunThreshhold: {x: 0.4, y: 0.25}
 --- !u!114 &1756236768
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3705,6 +3714,7 @@ MonoBehaviour:
         ContaminationBuildUpDamage: 0
         PoiseDamage: 0
         Direction: {x: 0, y: 0, z: 0}
+        StaggerType: 0
     Weapon2:
       WeaponData: {fileID: 0}
       WeaponLevelCurrentMax: {x: 0, y: 0}
@@ -3718,6 +3728,7 @@ MonoBehaviour:
         ContaminationBuildUpDamage: 0
         PoiseDamage: 0
         Direction: {x: 0, y: 0, z: 0}
+        StaggerType: 0
     Shield1:
       ShieldData: {fileID: 0}
       ShieldLevelCurrentMax: {x: 0, y: 0}
@@ -3766,6 +3777,7 @@ MonoBehaviour:
       ContaminationBuildUpDamage: 0
       PoiseDamage: 0
       Direction: {x: 0, y: 0, z: 0}
+      StaggerType: 0
   m_defaultEmptyShield:
     ShieldData: {fileID: 11400000, guid: 688b9d96e58e8ee44968ec17fac7ce7f, type: 2}
     ShieldLevelCurrentMax: {x: 1, y: 1}
@@ -3776,7 +3788,7 @@ MonoBehaviour:
   m_cheatEquipmentData:
     Weapon1:
       WeaponData: {fileID: 11400000, guid: 4590ae21db6dc2e42892fb2d3d42c3a1, type: 2}
-      WeaponLevelCurrentMax: {x: 1, y: 10}
+      WeaponLevelCurrentMax: {x: 0, y: 10}
       CustomDamageData:
         PhysicalSliceDamage: 0
         PhysicalBluntDamage: 0
@@ -3787,6 +3799,7 @@ MonoBehaviour:
         ContaminationBuildUpDamage: 0
         PoiseDamage: 0
         Direction: {x: 0, y: 0, z: 0}
+        StaggerType: 0
     Weapon2:
       WeaponData: {fileID: 0}
       WeaponLevelCurrentMax: {x: 1, y: 10}
@@ -3800,9 +3813,10 @@ MonoBehaviour:
         ContaminationBuildUpDamage: 0
         PoiseDamage: 0
         Direction: {x: 0, y: 0, z: 0}
+        StaggerType: 0
     Shield1:
       ShieldData: {fileID: 11400000, guid: 69262b0ec61ffe04ba9698ab9eadf0d5, type: 2}
-      ShieldLevelCurrentMax: {x: 1, y: 10}
+      ShieldLevelCurrentMax: {x: 0, y: 10}
     Shield2:
       ShieldData: {fileID: 0}
       ShieldLevelCurrentMax: {x: 1, y: 10}
@@ -3906,6 +3920,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_absorption: 1
+  m_state: 0
 --- !u!4 &1879971498 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3965564025493070724, guid: ff74c251c2e297e47be091b310ce6e54, type: 3}
@@ -4049,7 +4064,7 @@ Transform:
   m_GameObject: {fileID: 2080995305}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.0545166, y: 0.35110646, z: -0.29772985}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.32, y: 1, z: 0.37}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4141,7 +4156,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae9685a7dfec2354cbbc0f269f9c8b00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_hitBoxManager: {fileID: 0}
+  m_hitBoxManager: {fileID: 40135813}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

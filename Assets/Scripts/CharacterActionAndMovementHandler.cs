@@ -1,18 +1,19 @@
+using EditorAttributes;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using TMPro;
 using Unity.Collections;
+using Unity.Hierarchy;
+using Unity.VisualScripting;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.TextCore.Text;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-using EditorAttributes;
-using TMPro;
-using Unity.Hierarchy;
-using System.Diagnostics;
 using Debug = UnityEngine.Debug;
-using Unity.VisualScripting;
 
 
 [RequireComponent(typeof(CharacterController))]
@@ -240,6 +241,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         get => m_isShielding; 
         set 
         { 
+            if (value == m_isShielding) return;
+
             m_isShielding = value;
             if (m_isShielding)
             {
@@ -251,7 +254,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                 m_characterStatus.IsShielding(false);
                 SetLookAtForward(false);
             }
-            
         } 
     }
     public Vector3 PreviousMove { get => m_prevMove; }
@@ -433,8 +435,51 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     public void TriggerDamage()
     {
+        //does not Affect anything
         SetDamageAnimation(AnimationTypes.Get_Hit, 5, 0);
     }
+    public void TriggerStun()
+    {
+        //cancels animation and stuns for less than a second, caused by amount of poise damage when below 40% poise
+        Debug.Log("TriggerStun");
+    }
+    public void TriggerStagger()
+    {
+        //cancels animation and stuns for more than a second, cause by depleated poise
+        Debug.Log("TriggerStagger");
+
+    }
+    public void TriggerFallingOver(Vector3 direction)
+    {
+        // cancels animation and throws character away
+        Debug.Log("TriggerFallingOver");
+
+    }
+    public void TriggerShieldDeflect()
+    {
+        //does not Affect anything
+        //SetDamageAnimation(AnimationTypes.Shield_Deflect, 5, 0);
+        Debug.Log("TriggerShieldDeflect");
+
+    }
+    public void TriggerShieldStun()
+    {
+        // cancels animation and stuns for less than a second, character is still blocking, caused by amount of energy consumption when below 40% energy
+        Debug.Log("TriggerShieldStun");
+
+    }
+    public void TriggerShieldBreak()
+    {
+        // cancels animation and stuns for more than a second, character is not blocking, cause by depleated energy
+        Debug.Log("TriggerShieldBreak");
+
+    }
+    public void TriggerDie()
+    {
+        Debug.Log("TriggerDie");
+
+    }
+
 
     void TriggerTurning()
     {

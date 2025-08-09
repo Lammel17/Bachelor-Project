@@ -16,38 +16,12 @@ MonoBehaviour:
   ShieldSprite: {fileID: 0}
   ShieldModel: {fileID: 7409964803290368995, guid: 757f07c021f398044a41050ba919949d, type: 3}
   DamageNegationTable:
-    PhysicalSlice: {x: 0, y: 0}
-    PhysicalBlunt: {x: 0, y: 0}
-    PhysicalPierce: {x: 0, y: 0}
-    Thermic: {x: 0, y: 0}
-    Electric: {x: 0, y: 0}
-    Metaphysic: {x: 0, y: 0}
-    ContaminationBuildUp: {x: 0, y: 0}
-    Poise: {x: 0, y: 0}
-    UpgradeCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 1
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 1
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
+    OverallMultiplicator: 0
+    PhysicalNegation: 0
+    ThermicNegation: 0
+    ElectricNegation: 0
+    MetaphysicNegation: 0
+  ShieldingAngle: 90
   ImpactAbsorbtionRecoveryDelay: 1
   ImpactAbsorbtionPerfBlockTimeFrame: 0.1
   shieldIdle:

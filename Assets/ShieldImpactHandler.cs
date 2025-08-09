@@ -12,13 +12,25 @@ public class ShieldImpactHandler : MonoBehaviour
     private float m_recoveryDalay = 0;
     private float m_perfectBlockTimeFrame = 0;
 
-    private float m_timeValue = 1;
+    private float m_timeValueInPercent = 1;
     private float m_delayTimeValue = 0;
     [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_absorption = 1;
+    [SerializeField][EditorAttributes.ReadOnly] ImpactState m_state = ImpactState.WaitingFull;
 
     private Coroutine m_usingShieldCoroutine;
     private Coroutine m_recoverShieldCoroutine;
     private Coroutine m_delayRecoverShieldCoroutine;
+
+    private enum ImpactState
+    {
+        WaitingFull,
+        Recovering,
+        Depleating,
+        ImpactHalt,
+        RecoverPause,
+        WaitingEmpty,
+
+    }
 
     private void Start()
     {
@@ -31,14 +43,17 @@ public class ShieldImpactHandler : MonoBehaviour
         m_curveSpeed = curve;
         m_duration = duration;
 
-        m_timeValue = Mathf.Min(m_timeValue, m_duration);
-        m_absorption = m_curveSpeed.Evaluate(m_timeValue);
+        //m_timeValueInPercent = Mathf.Min(m_timeValueInPercent, m_duration);
+        m_absorption = m_curveSpeed.Evaluate(m_timeValueInPercent);
     }
     public void SetShieldValues(float dalay, float perfBlockTime)
     {
         m_recoveryDalay = dalay;
         m_perfectBlockTimeFrame = perfBlockTime;
     }
+
+
+
 
     public void UseShielding()
     {
@@ -53,6 +68,7 @@ public class ShieldImpactHandler : MonoBehaviour
             m_delayRecoverShieldCoroutine = null;
         }
 
+        m_state = ImpactState.Depleating;
         m_usingShieldCoroutine = StartCoroutine(ShieldingUse());
     }
 
@@ -63,7 +79,7 @@ public class ShieldImpactHandler : MonoBehaviour
             StopCoroutine(m_usingShieldCoroutine);
             m_usingShieldCoroutine = null;
         }
-
+        m_state = ImpactState.RecoverPause;
         m_delayRecoverShieldCoroutine = StartCoroutine(DelayForRecovering());
     }
     private IEnumerator DelayForRecovering()
@@ -74,44 +90,66 @@ public class ShieldImpactHandler : MonoBehaviour
             yield return null; 
             m_delayTimeValue = Mathf.Max(m_delayTimeValue - Time.deltaTime, 0);
         }
+
+        m_state = ImpactState.Recovering;
         m_recoverShieldCoroutine = StartCoroutine(ShieldingRecover());
     }
 
 
 
-    public void ImpactStop()
+    public int EvaluateImpactAbsorpstion(int energyPoints)
     {
-        StopCoroutine(m_usingShieldCoroutine);
-        m_usingShieldCoroutine = null;
+        int impactEnergy = 0;
 
-        //calculate
-    }
-    private IEnumerator ShieldingUse()
-    {
-        while (m_timeValue != 0)
+        if (m_usingShieldCoroutine != null)
         {
-            yield return null;
-            m_timeValue = Mathf.Max(m_timeValue - (Time.deltaTime / m_duration), 0);
-            m_absorption = m_curveSpeed.Evaluate(m_timeValue);
+            StopCoroutine(m_usingShieldCoroutine);
+            m_usingShieldCoroutine = null;
+
+            m_state = ImpactState.ImpactHalt;
+
+            //calculate impact energy
+            impactEnergy = Mathf.CeilToInt((Mathf.Abs(energyPoints) + Mathf.Min(Mathf.Abs(energyPoints), 30)) * m_absorption);
+            return impactEnergy;
         }
 
+        return impactEnergy;
+
     }
 
-    private IEnumerator ShieldingRecover()
+
+
+    private IEnumerator ShieldingUse()
     {
-        while (m_timeValue != m_duration)
+        while (m_timeValueInPercent != 0)
         {
             yield return null;
-            m_timeValue = Mathf.Min(m_timeValue + (Time.deltaTime / m_duration), 1);
-            m_absorption = m_curveSpeed.Evaluate(m_timeValue);
+            m_timeValueInPercent = Mathf.Max(m_timeValueInPercent - (Time.deltaTime / m_duration), 0);
+            m_absorption = m_curveSpeed.Evaluate(m_timeValueInPercent);
+        }
+
+        m_state = ImpactState.WaitingEmpty;
+    }
+    private IEnumerator ShieldingRecover()
+    {
+        while (m_timeValueInPercent != 1)
+        {
+            yield return null;
+            m_timeValueInPercent = Mathf.Min(m_timeValueInPercent + (Time.deltaTime / m_duration), 1);
+            m_absorption = m_curveSpeed.Evaluate(m_timeValueInPercent);
         }
         StopRecover();
 
     }
     private void StopRecover()
     {
-        StopCoroutine(m_recoverShieldCoroutine);
-        m_recoverShieldCoroutine = null;
+        m_state = ImpactState.WaitingFull;
+
+        if (m_recoverShieldCoroutine != null)
+        {
+            StopCoroutine(m_recoverShieldCoroutine);
+            m_recoverShieldCoroutine = null;
+        }
     }
 
 }

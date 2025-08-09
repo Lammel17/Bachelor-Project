@@ -7,7 +7,7 @@ public class simpleHitBoxManager : MonoBehaviour
 
     [SerializeField] private HitAndHurtBoxManagerOfEquipment m_hitBoxManager;
     [SerializeField] private int m_hitBoxCollectionRef = 0;
-    private DamageData m_damageData = new DamageData(0,0,0, new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), 0, 0, Vector3.zero);
+    private DamageData m_damageData = new DamageData(0,0,0, new Vector2Int(0, 0), new Vector2Int(0, 0), new Vector2Int(0, 0), 0, 0, Vector3.zero, StaggerType.Stagger);
     [Space]
     [Space]
     [SerializeField] private int m_physicalSliceDamage = 0;
@@ -18,6 +18,8 @@ public class simpleHitBoxManager : MonoBehaviour
     [SerializeField] private Vector2Int m_metaphysicDamage = new Vector2Int(0,0);
     [SerializeField] private int m_contaminationBuildUp = 0;
     [SerializeField] private int m_poiseDamage = 0;
+    [SerializeField] private Vector3 m_direction = Vector3.zero;
+    [SerializeField] private StaggerType m_staggerType = StaggerType.Stagger;
     [Space]
     [Space]
     [SerializeField] private float m_timeIntervall = 2;
@@ -29,7 +31,7 @@ public class simpleHitBoxManager : MonoBehaviour
 
     void Start()
     {
-        m_damageData = new DamageData(m_physicalSliceDamage, m_physicalBluntDamage, m_physicalPierceDamage, m_thermicDamage, m_electricDamage, m_metaphysicDamage, m_contaminationBuildUp, m_poiseDamage, transform.forward);
+        m_damageData = new DamageData(m_physicalSliceDamage, m_physicalBluntDamage, m_physicalPierceDamage, m_thermicDamage, m_electricDamage, m_metaphysicDamage, m_contaminationBuildUp, m_poiseDamage, m_direction, m_staggerType);
 
         Repeat(true);
     }
@@ -38,7 +40,7 @@ public class simpleHitBoxManager : MonoBehaviour
     {
         if (m_refreshDamageData)
         {
-            m_damageData = new DamageData(m_physicalSliceDamage, 0, 0, m_thermicDamage, new Vector2Int(0, 0), new Vector2Int(0, 0), m_contaminationBuildUp, m_poiseDamage, transform.forward);
+            m_damageData = new DamageData(m_physicalSliceDamage, 0, 0, m_thermicDamage, new Vector2Int(0, 0), new Vector2Int(0, 0), m_contaminationBuildUp, m_poiseDamage, m_direction, m_staggerType);
             m_refreshDamageData = false;
         }
     }

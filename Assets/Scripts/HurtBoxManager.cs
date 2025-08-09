@@ -28,7 +28,7 @@ public class HurtBoxManager : MonoBehaviour
     }
 
 
-    public void GetHitted(DamageMultiplikatorData damageMultiplikator, DamageData damageData)
+    public void GetHitted(DamageMultiplikatorData damageMultiplikator, DamageData damageData, bool isBlockingBox /*this if for later when the shield gets hit and makes different sound or else*/)
     {
         if (m_characterStatus == null)
             return;

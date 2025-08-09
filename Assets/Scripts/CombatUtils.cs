@@ -13,7 +13,7 @@ public static class CombatUtils
         None
     }
 
-    public static DamageData CalculateBaseDamageData(DamageTableData tableData, float levelFactor)
+    public static DamageData CalculateBaseDamageData(DamageTableData tableData, float levelFactor, StaggerType staggerType)
     {
         int physicalSlice = (int)(Mathf.Lerp(tableData.PhysicalSlice.x, tableData.PhysicalSlice.y, levelFactor));
         int physicalBlunt = (int)(Mathf.Lerp(tableData.PhysicalBlunt.x, tableData.PhysicalBlunt.y, levelFactor));
@@ -32,7 +32,8 @@ public static class CombatUtils
             new Vector2Int(metaphysic, 0),
             (int)(Mathf.Lerp(tableData.ContaminationBuildUp.x, tableData.ContaminationBuildUp.y, levelFactor)),
             (int)(Mathf.Lerp(tableData.Poise.x, tableData.Poise.y, levelFactor)),
-            Vector3.forward);
+            Vector3.forward,
+            staggerType);
 
         return dmgDat;
     }
@@ -67,7 +68,8 @@ public static class CombatUtils
             new Vector2Int(metaphysic, CalculateElementBuildUp(metaphysic, physicalSlice + physicalBlunt + physicalPierce)),
             (int)(baseDmgDat.ContaminationBuildUpDamage * actionDamageMultiplikator.AilmentsFactor),
             (int)(baseDmgDat.PoiseDamage * actionDamageMultiplikator.PoiseDamageFactor),
-            Quaternion.LookRotation(playerDirection) * baseDmgDat.Direction);
+            Quaternion.LookRotation(playerDirection) * baseDmgDat.Direction,
+            baseDmgDat.StaggerType);
 
         return dmgDat;
     }
@@ -83,9 +85,32 @@ public static class CombatUtils
             new Vector2Int((int)(damageData.MetaphysicDamageAndBuildUp.x * damageMultiplikator.MetaphysicFactor * damageMultiplikator.OverallMultiplicator), damageData.MetaphysicDamageAndBuildUp.y),
             (int)(damageData.ContaminationBuildUpDamage * damageMultiplikator.AilmentsFactor),
             (int)(damageData.PoiseDamage * damageMultiplikator.PoiseDamageFactor),
-            damageData.Direction);
+            damageData.Direction,
+            damageData.StaggerType);
 
         return dmgDat;
-
     }
+
+    public static DamageData CalculateNegatedDamageData(ShieldDamageNegationData damageNegation, DamageData damageData)
+    {
+        DamageData dmgDat = new DamageData(
+            (int)(damageData.PhysicalSliceDamage * damageNegation.PhysicalNegation * damageNegation.OverallMultiplicator),
+            (int)(damageData.PhysicalBluntDamage * damageNegation.PhysicalNegation * damageNegation.OverallMultiplicator),
+            (int)(damageData.PhysicalPierceDamage * damageNegation.PhysicalNegation * damageNegation.OverallMultiplicator),
+            new Vector2Int((int)(damageData.ThermicDamageAndBuildUp.x * damageNegation.ThermicNegation * damageNegation.OverallMultiplicator), damageData.ThermicDamageAndBuildUp.y),
+            new Vector2Int((int)(damageData.ElectricDamageAndBuildUp.x * damageNegation.ElectricNegation * damageNegation.OverallMultiplicator), damageData.ElectricDamageAndBuildUp.y),
+            new Vector2Int((int)(damageData.MetaphysicDamageAndBuildUp.x * damageNegation.MetaphysicNegation * damageNegation.OverallMultiplicator), damageData.MetaphysicDamageAndBuildUp.y),
+            (int)(damageData.ContaminationBuildUpDamage),
+            (int)(damageData.PoiseDamage),
+            damageData.Direction,
+            damageData.StaggerType);
+
+        return dmgDat;
+    }
+
+    public static int CalculateDamagePoints(DamageData dD)
+    {
+        return dD.PhysicalSliceDamage + dD.PhysicalBluntDamage + dD.PhysicalPierceDamage + dD.ThermicDamageAndBuildUp.x + dD.ElectricDamageAndBuildUp.x + dD.MetaphysicDamageAndBuildUp.x;
+    }
+
 }

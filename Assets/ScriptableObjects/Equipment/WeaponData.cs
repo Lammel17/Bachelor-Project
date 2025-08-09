@@ -55,10 +55,11 @@ public class WeaponData : ScriptableObject
     {
         public AnimationData AnimData;
         [NonSerialized] public int AttackHash;
+        public CombatUtils.PhysicalDamageType PhysicalType;
         public DamageMultiplikatorData actionDamageData = new DamageMultiplikatorData(1, 1, 1, 1, 1, 1, 1);
         public int EnergyCost = 20;
         public int SpecialEnergyCost = 0;
-        public CombatUtils.PhysicalDamageType PhysicalType;
+        public StaggerType StaggerType = StaggerType.Stagger;
         [Space]
         public LightAttack nextLight;
         public HeavyAttack nextHeavy;

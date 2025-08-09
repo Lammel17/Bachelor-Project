@@ -14,7 +14,9 @@ public class DamageData //this script is for the data that is created and send t
 
     public Vector3 Direction = new Vector3(0, 0, 0);
 
-    public DamageData(int physicalSlice, int physicalBlunt, int physicalPierce, Vector2Int thermic, Vector2Int electric, Vector2Int metaphysic, int contamination, int poise , Vector3 direction)
+    public StaggerType StaggerType = StaggerType.None;
+
+    public DamageData(int physicalSlice, int physicalBlunt, int physicalPierce, Vector2Int thermic, Vector2Int electric, Vector2Int metaphysic, int contamination, int poise , Vector3 direction, StaggerType staggerType)
     {
         PhysicalSliceDamage = physicalSlice;
         PhysicalBluntDamage = physicalBlunt;
@@ -25,5 +27,25 @@ public class DamageData //this script is for the data that is created and send t
         ContaminationBuildUpDamage = contamination;
         PoiseDamage = poise;
         Direction = direction;
+        StaggerType = staggerType;
+    }
+
+    public DamageData(DamageData damageData)
+    {
+        PhysicalSliceDamage = damageData.PhysicalSliceDamage;
+        PhysicalBluntDamage = damageData.PhysicalBluntDamage;
+        PhysicalPierceDamage = damageData.PhysicalPierceDamage;
+        ThermicDamageAndBuildUp = damageData.ThermicDamageAndBuildUp;
+        ElectricDamageAndBuildUp = damageData.ElectricDamageAndBuildUp;
+        MetaphysicDamageAndBuildUp = damageData.MetaphysicDamageAndBuildUp;
+        ContaminationBuildUpDamage = damageData.ContaminationBuildUpDamage;
+        PoiseDamage = damageData.PoiseDamage;
+        Direction = damageData.Direction;
+        StaggerType =damageData.StaggerType;
+    }
+
+    public DamageData CreateACopy()
+    {
+        return new DamageData(this);
     }
 }

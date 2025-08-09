@@ -22,7 +22,7 @@ public class HurtBox : MonoBehaviour
 
     public void HurtBoxWasHit(DamageData damageData)
     {
-        m_hurtboxManager.GetHitted(m_damageMultiplikator, damageData);
+        m_hurtboxManager.GetHitted(m_damageMultiplikator, damageData, m_isBlockingBox);
 
     }
 

@@ -9,7 +9,9 @@ public class ShieldData : ScriptableObject
     public Sprite ShieldSprite;
     public GameObject ShieldModel;
     [Space]
-    public DamageTableData DamageNegationTable;
+    public ShieldDamageNegationData DamageNegationTable;
+    [Space]
+    public float ShieldingAngle = 0;
     public float ImpactAbsorbtionRecoveryDelay = 0;
     public float ImpactAbsorbtionPerfBlockTimeFrame = 0;
 
@@ -67,8 +69,9 @@ public class ShieldData : ScriptableObject
         public AnimationData AnimData;
 
         [NonSerialized] public int ActionkHash;
-        public DamageMultiplikatorData actionDamageData = new DamageMultiplikatorData(1, 1, 1, 1, 1, 1, 1);
         public CombatUtils.PhysicalDamageType PhysicalType;
+        public DamageMultiplikatorData actionDamageData = new DamageMultiplikatorData(1, 1, 1, 1, 1, 1, 1);
+        public StaggerType StaggerType = StaggerType.None;
         public int EnergyCost = 20;
         public int SpecialEnergyCost = 0;
         public ShieldSpecialLight nextSpecialLight;
