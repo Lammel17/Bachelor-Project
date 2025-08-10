@@ -58,7 +58,7 @@ public class LookAt : MonoBehaviour
         upperNeck,
         head
     }
-    private enum LookAtState { Deactive, Active, Deactivating}
+    private enum LookAtState { Deactive, Active, Deactivating, ActiveButOutOfArea}
 
 
 
@@ -129,11 +129,16 @@ public class LookAt : MonoBehaviour
 
             //the following is only for the smooth weighting when activating or deactivating (applyance means weighting)
             //when lookAtTarget is deactivating and looses applyance until 0
-            if ((m_lookAtTargetState == LookAtState.Deactivating || angleToTarget - constraintAnglesAdded < m_constrainsAngleYAxis.x || angleToTarget - constraintAnglesAdded > m_constrainsAngleYAxis.y))
+            if (angleToTarget - constraintAnglesAdded < m_constrainsAngleYAxis.x || angleToTarget - constraintAnglesAdded > m_constrainsAngleYAxis.y)
+                m_lookAtTargetState = LookAtState.ActiveButOutOfArea;
+            else if (m_lookAtTargetState == LookAtState.ActiveButOutOfArea)
+                m_lookAtTargetState = LookAtState.Active;
+
+            if ((m_lookAtTargetState == LookAtState.Deactivating || m_lookAtTargetState == LookAtState.ActiveButOutOfArea))
             {
                 if (m_lookAtTargetState == LookAtState.Deactivating && applyance == 0)
                     m_lookAtTargetState = LookAtState.Deactive;
-                m_lookAtTargetState = LookAtState.Deactivating;
+
                 applyance = UtilityFunctions.SmartLerp(m_lastLookTargetApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
                 m_lastLookTargetApplyance = applyance;
             }
@@ -171,7 +176,6 @@ public class LookAt : MonoBehaviour
 
                 float weightedAngle = Mathf.Lerp(0, usedAngle, Mathf.Abs(boneElement.Weight)); //weight is not changed in runtime
                 float angle = Mathf.Lerp(0, weightedAngle, applyance); //applyance is if targeting switches on or off
-
                 constraintAnglesAdded += angle;
 
                 bone.Rotate(new Vector3(0, angle + offset, 0), Space.World);
@@ -201,12 +205,20 @@ public class LookAt : MonoBehaviour
                 m_lastLookForwardApplyance = applyance;
             }
 
+            //this is when booth the LookAtTarget and LookAtForward is active, needs to be calculated
+            Quaternion DirToTargetRot = transform.rotation;
+            if (m_lookAtTargetState != LookAtState.Deactive)
+            {
+                Vector3 DirToTarget = new Vector3((m_fallbackTargetPos - transform.position).x, 0, (m_fallbackTargetPos - transform.position).z);
+                DirToTargetRot = Quaternion.LookRotation(DirToTarget);
+            }
+            Quaternion characterForwardRot = Quaternion.Slerp(transform.rotation, DirToTargetRot, m_lastLookTargetApplyance);
 
             //this saves the rotation before its changed in the frame
             foreach (LookAtData.ForwardElement boneElement in m_forwardData.m_forwardCorrections)
             {
                 if (boneElement.Ignore) { continue; }
-                boneElement.originalRot = Quaternion.Inverse(transform.rotation) * boneElement.bone.rotation;
+                boneElement.originalRot = Quaternion.Inverse(characterForwardRot) * boneElement.bone.rotation;
             }
 
             foreach (LookAtData.ForwardElement boneElement in m_forwardData.m_forwardCorrections)
@@ -214,18 +226,12 @@ public class LookAt : MonoBehaviour
                 if (boneElement.Ignore) { continue; }
 
                 Quaternion newForward = m_forwardData.m_applyAddRot ? Quaternion.Euler(boneElement.m_newDirection.x, boneElement.m_newDirection.y, boneElement.m_newDirection.z) : Quaternion.identity;
-                Quaternion zeroWeightRot = boneElement.IgnoreInfluence ? boneElement.originalRot : Quaternion.Inverse(transform.rotation) * boneElement.bone.rotation;
+                Quaternion zeroWeightRot = boneElement.IgnoreInfluence ? boneElement.originalRot : Quaternion.Inverse(characterForwardRot) * boneElement.bone.rotation;
                 Quaternion weightedRot = UtilityFunctions.WeightIndividualAxesOfQuaternion(zeroWeightRot, newForward, boneElement.Weight_X, boneElement.Weight_Y, boneElement.Weight_Z);
 
-                Quaternion rot = Quaternion.Slerp(boneElement.bone.rotation, transform.rotation * weightedRot, applyance); //applyance is if targeting switches on or off
+                Quaternion rot = Quaternion.Slerp(boneElement.bone.rotation, characterForwardRot * weightedRot, applyance); //applyance is if targeting switches on or off
                 boneElement.bone.rotation = rot;
 
-                //Quaternion DirToTargetRot = Quaternion.identity;
-                //if (m_isActiveTarget && !m_isDeactivatingLookAt)
-                //{
-                //    Vector3 DirToTarget = new Vector3((m_fallbackTargetPos - transform.position).x, 0, (m_fallbackTargetPos - transform.position).z);
-                //    DirToTargetRot = Quaternion.FromToRotation(transform.forward, DirToTarget);
-                //}
 
             }
         }
