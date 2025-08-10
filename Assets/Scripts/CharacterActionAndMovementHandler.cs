@@ -1660,10 +1660,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_currentShieldActionData != null && m_characterStatus.HitBoxManagerShield != null) { m_currentShieldActionData = null; m_characterStatus.HitBoxManagerShield.DeactivateAllHitboxCollections();}
         
 
+        if (m_isHoldShielding) IsShielding = true;
         SetLookAtTarget(m_target);
         SetLookAtForward(!m_isShielding ? false : m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.useLookAtForwardData, m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData);
 
-        if (m_isHoldShielding) IsShielding = true;
 
         //End Coroutines
         if (m_ActionCoroutine != null)
