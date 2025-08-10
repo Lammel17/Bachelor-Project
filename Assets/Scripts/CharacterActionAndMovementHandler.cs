@@ -1661,7 +1661,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         
 
         SetLookAtTarget(m_target);
-        SetLookAtForward(false);
+        SetLookAtForward(!m_isShielding ? false : m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.useLookAtForwardData, m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData);
+
         if (m_isHoldShielding) IsShielding = true;
 
         //End Coroutines
