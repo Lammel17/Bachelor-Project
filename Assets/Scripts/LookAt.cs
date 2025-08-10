@@ -19,7 +19,7 @@ public class LookAt : MonoBehaviour
     [SerializeField] private Transform m_target;
     private Vector3 m_fallbackTargetPos;
     [SerializeField] [Range(-180, 180)] private float offset = 0;
-    [Header("LookAtData for LockOn")]
+    [Header("LookAtData for LockOnTarget")]
     [Tooltip("Order: from Root to ends")]
     [SerializeField] private LookAtElement[] m_targetLookAt;
 
@@ -36,6 +36,7 @@ public class LookAt : MonoBehaviour
     public class LookAtElement 
     {
         public SpineParts Element;
+        [Tooltip("-1: ignoring all influence; 0: with influence of the other bones; 1: own influence to lookAtTarget")]
         [Range(-1, 1)] public float Weight = 0;
         [GD.MinMaxSlider.MinMaxSlider(-180, 180)] public Vector2 ConstrainsAngleYAxis = new Vector2(0,0); // if 0,0, them it will be used always, otherwise only if the desiredLookDir is inside that angle range
         public bool Ignore = false;
@@ -139,11 +140,11 @@ public class LookAt : MonoBehaviour
             {
                 if (boneElement.Ignore) continue;
                 if (m_target != null) m_fallbackTargetPos = m_target.position;
+                Vector3 DirToTarget = m_fallbackTargetPos - transform.position;
 
                 Transform bone = m_bones[(int)boneElement.Element].BoneRef;
-                Vector3 boneForward = bone.forward;
-                Vector3 DirToTarget = m_fallbackTargetPos - transform.position;
-                float angleToTarget = Vector3.SignedAngle(new Vector3(boneForward.x, 0, boneForward.z), new Vector3(DirToTarget.x, 0, DirToTarget.z), Vector3.up);
+                Vector3 boneForward = transform.forward;
+                float angleToTarget = Vector3.SignedAngle(new Vector3(boneForward.x, 0, boneForward.z), new Vector3(DirToTarget.x, 0, DirToTarget.z), Vector3.up) - constraintAnglesAdded;
                 float applyance = 0;
                 float usedAngle = 0;
 
@@ -202,10 +203,11 @@ public class LookAt : MonoBehaviour
                 if (boneElement.Ignore) { continue; }
 
                 float applyance = 0;
-                Quaternion usedRot = m_forwardData.m_applyAddRot ? Quaternion.Euler(m_forwardData.m_addRotEuler.x, m_forwardData.m_addRotEuler.y, m_forwardData.m_addRotEuler.z) : Quaternion.identity;
+                Quaternion newForward = m_forwardData.m_applyAddRot ? Quaternion.Euler(boneElement.m_newDirection.x, boneElement.m_newDirection.y, boneElement.m_newDirection.z) : Quaternion.identity;
 
 
 
+                //the following is only for the smooth weighting when activating or deactivating (applyance means weighting)
                 if (m_isDeactivatingForward) // when deactivating
                 {
                     applyance = UtilityFunctions.SmartLerp(boneElement.LastApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
@@ -224,24 +226,22 @@ public class LookAt : MonoBehaviour
                 }
 
 
+                Quaternion zeroWeightRot = boneElement.IgnoreInfluence ? boneElement.originalRot : Quaternion.Inverse(transform.rotation) * boneElement.bone.rotation;
 
-                // never try local space stuff here, better just change the word space to the inital bone rot as new worldspace and work from there
-                switch (boneElement.IgnoreAxis)
-                {
-                    case IgnoreAxis.None: { break; }
-                    case IgnoreAxis.IgnoreX: { usedRot = Quaternion.Euler(boneElement.originalRot.eulerAngles.x, usedRot.eulerAngles.y, usedRot.eulerAngles.z); break; }
-                    case IgnoreAxis.IgnoreY: { usedRot = Quaternion.Euler(usedRot.eulerAngles.x, boneElement.originalRot.eulerAngles.y, usedRot.eulerAngles.z); break; }
-                    case IgnoreAxis.IgnoreZ: { usedRot = Quaternion.Euler(usedRot.eulerAngles.x, usedRot.eulerAngles.y, boneElement.originalRot.eulerAngles.z); break; }
-                    case IgnoreAxis.IgnoreXY: { usedRot = Quaternion.Euler(boneElement.originalRot.eulerAngles.x, boneElement.originalRot.eulerAngles.y, usedRot.eulerAngles.z); break; }
-                    case IgnoreAxis.IgnoreXZ: { usedRot = Quaternion.Euler(boneElement.originalRot.eulerAngles.x, usedRot.eulerAngles.y, boneElement.originalRot.eulerAngles.z); break; }
-                    case IgnoreAxis.IgnoreYZ: { usedRot = Quaternion.Euler(usedRot.eulerAngles.x, boneElement.originalRot.eulerAngles.y, boneElement.originalRot.eulerAngles.z); break; }
-                }
+                Quaternion weightedRot = UtilityFunctions.WeightIndividualAxesOfQuaternion(zeroWeightRot, newForward, boneElement.Weight_X, boneElement.Weight_Y, boneElement.Weight_Z);
 
-                if (m_isActiveTarget && !m_isDeactivatingLookAt) usedRot = Quaternion.Euler(usedRot.eulerAngles.x, boneElement.originalRot.eulerAngles.y + m_forwardData.m_addRotEuler.y, usedRot.eulerAngles.z);
 
-                Quaternion weightedRot = Quaternion.Slerp(boneElement.IsUsingOrigRot ? boneElement.originalRot : boneElement.bone.rotation, usedRot, boneElement.Weight); //weight is not changed in runtime
                 Quaternion rot = Quaternion.Slerp(boneElement.bone.rotation, transform.rotation * weightedRot, applyance); //applyance is if targeting switches on or off
                 boneElement.bone.rotation = rot;
+
+
+
+                //Quaternion DirToTargetRot = Quaternion.identity;
+                //if (m_isActiveTarget && !m_isDeactivatingLookAt)
+                //{
+                //    Vector3 DirToTarget = new Vector3((m_fallbackTargetPos - transform.position).x, 0, (m_fallbackTargetPos - transform.position).z);
+                //    DirToTargetRot = Quaternion.FromToRotation(transform.forward, DirToTarget);
+                //}
 
 
             }

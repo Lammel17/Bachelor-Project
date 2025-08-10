@@ -15,10 +15,10 @@ public static class UtilityFunctions
     /// This Function turns a (0° - 360°) into a (-180° - 180°). 
     /// (a 5° angle stays 5°, but a 355° will be a -5°)
     /// </summary>
-    public static float Angle180(float angle, bool isAbsValue = false)
+    public static float Angle180(float angle)
     {
-        if (angle > 180)
-            return angle = isAbsValue ? -angle + 360 : angle - 360; // jetzt in -180 bis +180
+        if ((angle % 360) >= 180)
+            return angle = -180 + (angle % 180); // jetzt in -180 bis +180
 
         return angle;
     }
@@ -115,7 +115,22 @@ public static class UtilityFunctions
         return (Mathf.Sqrt(side * side + otherSide * otherSide));
     }
 
+    public static Quaternion WeightIndividualAxesOfQuaternion(Quaternion q0, Quaternion q1, float X_axis_weight, float Y_axis_weight, float Z_axis_weight)
+    {
+        // Convert to Euler angles
+        Vector3 e1 = q0.eulerAngles;
+        Vector3 e2 = q1.eulerAngles;
 
+        // Lerp each axis separately
+        float x = Mathf.LerpAngle(e1.x, e2.x, X_axis_weight);
+        float y = Mathf.LerpAngle(e1.y, e2.y, Y_axis_weight);
+        float z = Mathf.LerpAngle(e1.z, e2.z, Z_axis_weight);
+
+        // Back to quaternion
+        return Quaternion.Euler(x, y, z);
+
+
+    }
 
 
 

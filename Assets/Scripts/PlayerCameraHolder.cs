@@ -154,7 +154,7 @@ public class PlayerCameraHolder : MonoBehaviour
         {
             Vector3 camRestDir = TargetPos - m_camHolderCenterPos;
             desiredRotationForceVerX =  10;
-            desiredRotationForceHorY = Mathf.InverseLerp(5, 45, Vector2.Angle(new Vector2(camRestDir.x, camRestDir.z), new Vector2(transform.forward.x, transform.forward.z))) * 10; //if almost in center, force drops down
+            desiredRotationForceHorY =/* Mathf.InverseLerp(-10, 45, Vector2.Angle(new Vector2(camRestDir.x, camRestDir.z), new Vector2(transform.forward.x, transform.forward.z))) * */10; //if almost in center, force drops down
             desiredRotation = Quaternion.LookRotation(camRestDir);
         }
         else 
@@ -225,7 +225,7 @@ public class PlayerCameraHolder : MonoBehaviour
             float camAdditionalHeight = m_additionalHeightWhenLockOn;
             float howMuchRotatingToTarget = m_lookToPlayerOrTargetFactor;
             //offset height is depending on angle
-            float camYOffset = UtilityFunctions.RefitToNewRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x, false), 0, s_camHolderClampAngleMax, camAdditionalHeight, 2); 
+            float camYOffset = UtilityFunctions.RefitToNewRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x), 0, s_camHolderClampAngleMax, camAdditionalHeight, 2); 
 
             m_camPos = new Vector3(0, camYOffset, -s_camRestDist); 
             lockOnParameter = UtilityFunctions.SmartLerp(lockOnParameter, howMuchRotatingToTarget, Time.deltaTime * 2f);
