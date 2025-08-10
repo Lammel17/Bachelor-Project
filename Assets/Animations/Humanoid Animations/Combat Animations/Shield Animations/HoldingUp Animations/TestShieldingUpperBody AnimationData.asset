@@ -23,6 +23,7 @@ MonoBehaviour:
   InterruptabilityChangeBeforeEndTime: 0
   ChangedInterruptability: 1
   MainActionMomentTime: 0
+  hitBoxActiveData: []
   IsPausingMidAir: 0
   PauseMidAirTime: 0
   IsPausingGravity: 0
@@ -31,15 +32,25 @@ MonoBehaviour:
   useLookAtForwardData: 1
   lookAtData:
     m_applyAddRot: 1
-    m_addRotEuler: {x: 0, y: 40, z: 0}
     m_forwardCorrections:
-    - Element: 3
-      IsUsingOrigRot: 1
-      Weight: 0.782
-      IgnoreAxis: 1
-      Ignore: 0
-    - Element: 6
-      IsUsingOrigRot: 1
-      Weight: 0
-      IgnoreAxis: 0
-      Ignore: 0
+    - Ignore: 0
+      Element: 3
+      IgnoreInfluence: 0
+      m_newDirection: {x: 0, y: 40, z: 0}
+      Weight_X: 0
+      Weight_Y: 0.867
+      Weight_Z: 0.693
+    - Ignore: 0
+      Element: 4
+      IgnoreInfluence: 1
+      m_newDirection: {x: 0, y: 0, z: 4.3}
+      Weight_X: 0
+      Weight_Y: 0.465
+      Weight_Z: 0.465
+    - Ignore: 0
+      Element: 6
+      IgnoreInfluence: 1
+      m_newDirection: {x: 0, y: 0, z: 0}
+      Weight_X: 0
+      Weight_Y: 0
+      Weight_Z: 0

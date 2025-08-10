@@ -588,6 +588,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveWeapon(); };
 
+        Debug.Log("remember switch weapon spam bug");
         InitAction(AnimationTypes.Switch_Weapon, animData.bodyParts, animData, Effect: switchEffect);
 
     }
@@ -612,6 +613,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveShield(); };
 
+        Debug.Log("remember switch weapon spam bug");
         InitAction(AnimationTypes.Switch_Shield, animData.bodyParts, animData, Effect: switchEffect);
 
     }
@@ -1824,7 +1826,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         }
         else if (layer != 0)
         {
-        Debug.Log("remember switch weapon spam bug");
             m_animator.CrossFadeInFixedTime(upperBodyAnimation, crossFadeDuration, layer, timeOffset);
             if (!exeptionForMultipleLayerAnimation)
             {

@@ -5,8 +5,10 @@ using UnityEngine;
 public class LookAt : MonoBehaviour
 {
     [SerializeField] private bool m_isActive = true;
-    [SerializeField] [EditorAttributes.ReadOnly] private bool m_isActiveForwardCorrection = false;
-    [SerializeField] [EditorAttributes.ReadOnly] private bool m_isActiveTarget = false;
+    [SerializeField][EditorAttributes.ReadOnly] LookAtState m_lookAtTargetState = LookAtState.Deactive;
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_lastLookTargetApplyance = 0;
+    [SerializeField][EditorAttributes.ReadOnly] LookAtState m_lookAtForwardState = LookAtState.Deactive;
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_lastLookForwardApplyance = 0;
     [SerializeField] private float m_applyRemoveSpeed = 1;
     [Space]
 
@@ -18,8 +20,9 @@ public class LookAt : MonoBehaviour
     [Header("LookAt Target")]
     [SerializeField] private Transform m_target;
     private Vector3 m_fallbackTargetPos;
-    [SerializeField] [Range(-180, 180)] private float offset = 0;
+    [SerializeField][Range(-180, 180)] private float offset = 0;
     [Header("LookAtData for LockOnTarget")]
+    [GD.MinMaxSlider.MinMaxSlider(-180, 180)] public Vector2 m_constrainsAngleYAxis = new Vector2(-90, 90);
     [Tooltip("Order: from Root to ends")]
     [SerializeField] private LookAtElement[] m_targetLookAt;
 
@@ -33,15 +36,14 @@ public class LookAt : MonoBehaviour
     }
 
     [System.Serializable]
-    public class LookAtElement 
+    public class LookAtElement
     {
         public SpineParts Element;
         [Tooltip("-1: ignoring all influence; 0: with influence of the other bones; 1: own influence to lookAtTarget")]
         [Range(-1, 1)] public float Weight = 0;
-        [GD.MinMaxSlider.MinMaxSlider(-180, 180)] public Vector2 ConstrainsAngleYAxis = new Vector2(0,0); // if 0,0, them it will be used always, otherwise only if the desiredLookDir is inside that angle range
         public bool Ignore = false;
         [NonSerialized] public float LastAngle = 0;
-        [NonSerialized] public float LastApplyance = 0;
+        //[NonSerialized] public float LastApplyance = 0;
 
         [NonSerialized] public Quaternion LastRot = Quaternion.identity;
     }
@@ -56,20 +58,7 @@ public class LookAt : MonoBehaviour
         upperNeck,
         head
     }
-    public enum IgnoreAxis
-    {
-        None = 0,
-        IgnoreX,
-        IgnoreY,
-        IgnoreZ,
-        IgnoreXY,
-        IgnoreXZ,
-        IgnoreYZ,
-    }
-
-    bool m_isDeactivatingLookAt = false;
-    bool m_isDeactivatingForward = false;
-
+    private enum LookAtState { Deactive, Active, Deactivating}
 
 
 
@@ -78,16 +67,18 @@ public class LookAt : MonoBehaviour
         if (Target == null)
         {
             m_target = null;
-            if (!m_isActiveTarget)
+            if (m_lookAtTargetState == LookAtState.Deactive )
                 return;
-            m_isDeactivatingLookAt = true;
+            m_lookAtTargetState = LookAtState.Deactivating;
             return;
         }
+        else
+        {
+            m_lookAtTargetState = LookAtState.Active;
+            m_target = Target;
+            m_fallbackTargetPos = m_target.position;
+        }
 
-        m_isDeactivatingLookAt = false;
-        m_isActiveTarget = true;
-        m_target = Target;
-        m_fallbackTargetPos = m_target.position;
     }
 
 
@@ -95,7 +86,6 @@ public class LookAt : MonoBehaviour
     {
         if (data == null)
             return;
-
         foreach (LookAtData.ForwardElement we in data.m_forwardCorrections)
         {
             if (we.bone == null)
@@ -104,14 +94,13 @@ public class LookAt : MonoBehaviour
 
         m_forwardData = data;
 
-        m_isDeactivatingForward = false;
-        m_isActiveForwardCorrection = true;
+        m_lookAtForwardState = LookAtState.Active;
     }
     public void SetForwardDeactive()
     {
-        if (!m_isActiveForwardCorrection)
+        if (m_lookAtForwardState != LookAtState.Active)
             return;
-        m_isDeactivatingForward = true;
+        m_lookAtForwardState = LookAtState.Deactivating;
         return;
     }
 
@@ -129,46 +118,50 @@ public class LookAt : MonoBehaviour
 
 
         //LOOK AT TARGET
-        if (m_isActiveTarget)
+        if (m_lookAtTargetState != LookAtState.Deactive)
         {
-            if (m_target == null && m_fallbackTargetPos == Vector3.zero)
-                return;
 
             float constraintAnglesAdded = 0; //with every next bone, the current angle must be subtracted, otherwise overshoot
+            float applyance = m_lastLookTargetApplyance;
+            if (m_target != null) m_fallbackTargetPos = m_target.position;
+            Vector3 DirToTarget = m_fallbackTargetPos - transform.position;
+            float angleToTarget = Vector3.SignedAngle(new Vector3(transform.forward.x, 0, transform.forward.z), new Vector3(DirToTarget.x, 0, DirToTarget.z), Vector3.up) - constraintAnglesAdded;
+
+            //the following is only for the smooth weighting when activating or deactivating (applyance means weighting)
+            //when lookAtTarget is deactivating and looses applyance until 0
+            if ((m_lookAtTargetState == LookAtState.Deactivating || angleToTarget - constraintAnglesAdded < m_constrainsAngleYAxis.x || angleToTarget - constraintAnglesAdded > m_constrainsAngleYAxis.y))
+            {
+                if (m_lookAtTargetState == LookAtState.Deactivating && applyance == 0)
+                    m_lookAtTargetState = LookAtState.Deactive;
+                m_lookAtTargetState = LookAtState.Deactivating;
+                applyance = UtilityFunctions.SmartLerp(m_lastLookTargetApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
+                m_lastLookTargetApplyance = applyance;
+            }
+            else //when lookAtTarget is activating and increases applyance or is fully active
+            {
+                m_lookAtTargetState = LookAtState.Active;
+                applyance = m_lastLookTargetApplyance == 1 ? 1 : UtilityFunctions.SmartLerp(m_lastLookTargetApplyance, 1, m_applyRemoveSpeed * Time.deltaTime);
+                m_lastLookTargetApplyance = applyance;
+            }
 
             foreach (LookAtElement boneElement in m_targetLookAt)
             {
                 if (boneElement.Ignore) continue;
-                if (m_target != null) m_fallbackTargetPos = m_target.position;
-                Vector3 DirToTarget = m_fallbackTargetPos - transform.position;
 
+                float usedAngle = 0;
                 Transform bone = m_bones[(int)boneElement.Element].BoneRef;
                 Vector3 boneForward = transform.forward;
-                float angleToTarget = Vector3.SignedAngle(new Vector3(boneForward.x, 0, boneForward.z), new Vector3(DirToTarget.x, 0, DirToTarget.z), Vector3.up) - constraintAnglesAdded;
-                float applyance = 0;
-                float usedAngle = 0;
+                float boneAngleToTarget = Vector3.SignedAngle(new Vector3(boneForward.x, 0, boneForward.z), new Vector3(DirToTarget.x, 0, DirToTarget.z), Vector3.up) - constraintAnglesAdded;
 
 
 
                 //the following is only for the smooth weighting when activating or deactivating (applyance means weighting)
-                //when lookAtTarget is deactivating and looses applyance until 0
-                if (boneElement.ConstrainsAngleYAxis != Vector2.zero && (m_isDeactivatingLookAt || angleToTarget - constraintAnglesAdded < boneElement.ConstrainsAngleYAxis.x || angleToTarget - constraintAnglesAdded > boneElement.ConstrainsAngleYAxis.y))
-                {
-                    applyance = UtilityFunctions.SmartLerp(boneElement.LastApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
-                    boneElement.LastApplyance = applyance;
+                if (m_lookAtTargetState == LookAtState.Deactivating)
                     usedAngle = boneElement.LastAngle;
-                    if (m_isDeactivatingLookAt && applyance == 0)
-                    {
-                        m_isActiveTarget = false;
-                        m_isDeactivatingLookAt = false;
-                    }
-                }
-                else //when lookAtTarget is activating and increases applyance or is fully active
+                else if (m_lookAtTargetState == LookAtState.Active)
                 {
-                    applyance = UtilityFunctions.SmartLerp(boneElement.LastApplyance, 1, m_applyRemoveSpeed * Time.deltaTime);
-                    boneElement.LastApplyance = applyance;
-                    usedAngle = angleToTarget;
                     boneElement.LastAngle = usedAngle;
+                    usedAngle = boneAngleToTarget;
                 }
 
 
@@ -189,8 +182,26 @@ public class LookAt : MonoBehaviour
 
 
         //LOOK AT Forward
-        if (m_isActiveForwardCorrection)
+        if (m_lookAtForwardState != LookAtState.Deactive)
         {
+            float applyance = m_lastLookForwardApplyance;
+            //the following is only for the smooth weighting when activating or deactivating (applyance means weighting)
+            if (m_lookAtForwardState == LookAtState.Deactivating) // when deactivating
+            {
+                if (applyance == 0)
+                    m_lookAtForwardState = LookAtState.Deactive;
+
+                applyance = UtilityFunctions.SmartLerp(m_lastLookForwardApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
+                m_lastLookForwardApplyance = applyance;
+            }
+            else //when activating or is active
+            {
+                m_lookAtForwardState = LookAtState.Active;
+                applyance = m_lastLookForwardApplyance == 1 ? 1 : UtilityFunctions.SmartLerp(m_lastLookForwardApplyance, 1, m_applyRemoveSpeed * Time.deltaTime);
+                m_lastLookForwardApplyance = applyance;
+            }
+
+
             //this saves the rotation before its changed in the frame
             foreach (LookAtData.ForwardElement boneElement in m_forwardData.m_forwardCorrections)
             {
@@ -202,39 +213,12 @@ public class LookAt : MonoBehaviour
             {
                 if (boneElement.Ignore) { continue; }
 
-                float applyance = 0;
                 Quaternion newForward = m_forwardData.m_applyAddRot ? Quaternion.Euler(boneElement.m_newDirection.x, boneElement.m_newDirection.y, boneElement.m_newDirection.z) : Quaternion.identity;
-
-
-
-                //the following is only for the smooth weighting when activating or deactivating (applyance means weighting)
-                if (m_isDeactivatingForward) // when deactivating
-                {
-                    applyance = UtilityFunctions.SmartLerp(boneElement.LastApplyance, 0, m_applyRemoveSpeed * Time.deltaTime);
-                    boneElement.LastApplyance = applyance;
-
-                    if (m_isDeactivatingForward && applyance == 0)
-                    {
-                        m_isActiveForwardCorrection = false;
-                        m_isDeactivatingForward = false;
-                    }
-                }
-                else //when activating or is active
-                {
-                    applyance = UtilityFunctions.SmartLerp(boneElement.LastApplyance, 1, m_applyRemoveSpeed * Time.deltaTime);
-                    boneElement.LastApplyance = applyance;
-                }
-
-
                 Quaternion zeroWeightRot = boneElement.IgnoreInfluence ? boneElement.originalRot : Quaternion.Inverse(transform.rotation) * boneElement.bone.rotation;
-
                 Quaternion weightedRot = UtilityFunctions.WeightIndividualAxesOfQuaternion(zeroWeightRot, newForward, boneElement.Weight_X, boneElement.Weight_Y, boneElement.Weight_Z);
-
 
                 Quaternion rot = Quaternion.Slerp(boneElement.bone.rotation, transform.rotation * weightedRot, applyance); //applyance is if targeting switches on or off
                 boneElement.bone.rotation = rot;
-
-
 
                 //Quaternion DirToTargetRot = Quaternion.identity;
                 //if (m_isActiveTarget && !m_isDeactivatingLookAt)
@@ -242,7 +226,6 @@ public class LookAt : MonoBehaviour
                 //    Vector3 DirToTarget = new Vector3((m_fallbackTargetPos - transform.position).x, 0, (m_fallbackTargetPos - transform.position).z);
                 //    DirToTargetRot = Quaternion.FromToRotation(transform.forward, DirToTarget);
                 //}
-
 
             }
         }

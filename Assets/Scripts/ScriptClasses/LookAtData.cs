@@ -23,7 +23,7 @@ public class LookAtData
         [Range(0, 1)] public float Weight_Y = 0;
         [Range(0, 1)] public float Weight_Z = 0;
         //public IgnoreAxis IgnoreAxis = IgnoreAxis.None;
-        [NonSerialized] public float LastApplyance = 0;
+        //[NonSerialized] public float LastApplyance = 0;
         [NonSerialized] public Quaternion originalRot = Quaternion.identity;
 
     }
