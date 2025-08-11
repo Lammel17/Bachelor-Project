@@ -35,11 +35,11 @@ MonoBehaviour:
     m_forwardCorrections:
     - Ignore: 0
       Element: 3
-      IgnoreInfluence: 0
-      m_newDirection: {x: 0, y: 40, z: 0}
-      Weight_X: 0
+      IgnoreInfluence: 1
+      m_newDirection: {x: 11.7, y: 40, z: 0}
+      Weight_X: 0.884
       Weight_Y: 0.702
-      Weight_Z: 0.684
+      Weight_Z: 0.702
     - Ignore: 0
       Element: 4
       IgnoreInfluence: 1

@@ -128,8 +128,41 @@ public static class UtilityFunctions
 
         // Back to quaternion
         return Quaternion.Euler(x, y, z);
+    }
 
+    public static Quaternion WeightIndividualAxesOfQuaternionNoGIMBAL(Quaternion q0, Quaternion q1, float X_axis_weight, float Y_axis_weight, float Z_axis_weight, bool useRollAroundForwardAxis = false)
+    {
+        //NOT SURE IF IT ACTUALLY WORKS
 
+        // Extract directional vectors
+        Vector3 f1 = q0 * Vector3.forward;
+        Vector3 u1 = q0 * Vector3.up;
+        Vector3 r1 = q0 * Vector3.right;
+
+        Vector3 f2 = q1 * Vector3.forward;
+        Vector3 u2 = q1 * Vector3.up;
+        Vector3 r2 = q1 * Vector3.right;
+
+        // Per-axis influence
+        float weightX = X_axis_weight; // influence over 'pitch' (x axis tilt)
+        float weightY = Y_axis_weight; // influence over 'yaw' (y axis rotation)
+        float weightZ = Z_axis_weight; // influence over 'roll' (z axis tilt)
+
+        // Blend direction vectors
+        Vector3 f = Vector3.Slerp(f1, f2, weightY); // yaw mostly affects forward
+        Vector3 u = Vector3.Slerp(u1, u2, weightX); // pitch mostly affects up
+
+        if (useRollAroundForwardAxis)
+        {
+            Vector3 r = Vector3.Slerp(r1, r2, weightZ); // roll mostly affects right
+                                                        // Orthonormalize the blended basis
+            r.Normalize();
+            u = Vector3.Cross(f, r).normalized;
+            f = Vector3.Cross(r, u).normalized;
+        }
+
+        // Rebuild quaternion
+        return Quaternion.LookRotation(f, u);
     }
 
 

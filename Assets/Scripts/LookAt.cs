@@ -129,7 +129,7 @@ public class LookAt : MonoBehaviour
 
             //the following is only for the smooth weighting when activating or deactivating (applyance means weighting)
             //when lookAtTarget is deactivating and looses applyance until 0
-            if (angleToTarget - constraintAnglesAdded < m_constrainsAngleYAxis.x || angleToTarget - constraintAnglesAdded > m_constrainsAngleYAxis.y)
+            if (m_lookAtTargetState != LookAtState.Deactivating  && (angleToTarget - constraintAnglesAdded < m_constrainsAngleYAxis.x || angleToTarget - constraintAnglesAdded > m_constrainsAngleYAxis.y))
                 m_lookAtTargetState = LookAtState.ActiveButOutOfArea;
             else if (m_lookAtTargetState == LookAtState.ActiveButOutOfArea)
                 m_lookAtTargetState = LookAtState.Active;
@@ -227,6 +227,7 @@ public class LookAt : MonoBehaviour
 
                 Quaternion newForward = m_forwardData.m_applyAddRot ? Quaternion.Euler(boneElement.m_newDirection.x, boneElement.m_newDirection.y, boneElement.m_newDirection.z) : Quaternion.identity;
                 Quaternion zeroWeightRot = boneElement.IgnoreInfluence ? boneElement.originalRot : Quaternion.Inverse(characterForwardRot) * boneElement.bone.rotation;
+                //Quaternion weightedRot = UtilityFunctions.WeightIndividualAxesOfQuaternionNoGIMBAL(zeroWeightRot, newForward, boneElement.Weight_X, boneElement.Weight_Y, boneElement.Weight_Z, true);
                 Quaternion weightedRot = UtilityFunctions.WeightIndividualAxesOfQuaternion(zeroWeightRot, newForward, boneElement.Weight_X, boneElement.Weight_Y, boneElement.Weight_Z);
 
                 Quaternion rot = Quaternion.Slerp(boneElement.bone.rotation, characterForwardRot * weightedRot, applyance); //applyance is if targeting switches on or off
