@@ -155,7 +155,7 @@ MonoBehaviour:
   m_physicalSliceDamage: 100
   m_physicalBluntDamage: 0
   m_physicalPierceDamage: 0
-  m_thermicDamage: {x: 0, y: 0}
+  m_thermicDamage: {x: 0, y: -50}
   m_electricDamage: {x: 0, y: 0}
   m_metaphysicDamage: {x: 0, y: 0}
   m_contaminationBuildUp: 0
@@ -1589,9 +1589,19 @@ MonoBehaviour:
   m_playerMovement: {fileID: 1756236770}
   m_camera: {fileID: 330585543}
   m_playerTransform: {fileID: 1756236761}
-  m_additionalHeightWhenLockOn: 1
-  m_lookToPlayerOrTargetFactor: 0.6
+  m_isLockOn: 0
+  m_camHolderLocalCenter: {x: 0, y: 1.5, z: 0}
+  m_camHolderRestDirection: {x: 0, y: -2, z: 4}
+  m_distCenterToCam: 4
+  m_camHolderClampAngleXAxisMax: 75
+  m_horAndVerInputStrenght: {x: 250, y: 250}
+  m_accelerationOfCamHolderFollowPlayer: 5
+  m_accelerationOfCamHolderRotation: 6
   m_chosenLockOnTransform: {fileID: 1176693130}
+  m_lookToPlayerOrTargetFactor: 0.6
+  m_additionalCamHeightLockOn: {x: 0.5, y: 2}
+  m_lockOnApplyance: 0
+  m_camLockOnSpeed: 5
 --- !u!1 &639159209
 GameObject:
   m_ObjectHideFlags: 0
@@ -2578,7 +2588,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6906138895346458571, guid: 9fe0c6d37d1b3294f9a5c4af0c5aa93c, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -30.000122
+      value: -30.000061
       objectReference: {fileID: 0}
     - target: {fileID: 6906138895503271302, guid: 9fe0c6d37d1b3294f9a5c4af0c5aa93c, type: 3}
       propertyPath: m_IsActive
@@ -3493,8 +3503,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_isActive: 1
-  m_isActiveForwardCorrection: 0
-  m_isActiveTarget: 0
+  m_lookAtTargetState: 0
+  m_lastLookTargetApplyance: 0
+  m_lookAtForwardState: 0
+  m_lastLookForwardApplyance: 0
   m_applyRemoveSpeed: 15
   m_bones:
   - Bone: 0
@@ -3513,18 +3525,16 @@ MonoBehaviour:
     BoneRef: {fileID: 422825807}
   m_target: {fileID: 0}
   offset: 0
+  m_constrainsAngleYAxis: {x: -90, y: 90}
   m_targetLookAt:
   - Element: 0
     Weight: 0.203
-    ConstrainsAngleYAxis: {x: -90, y: 90}
     Ignore: 0
   - Element: 3
     Weight: 0.59
-    ConstrainsAngleYAxis: {x: -90, y: 90}
     Ignore: 0
   - Element: 6
     Weight: 1
-    ConstrainsAngleYAxis: {x: -90, y: 90}
     Ignore: 0
 --- !u!114 &1756236765
 MonoBehaviour:
@@ -3630,9 +3640,9 @@ MonoBehaviour:
   m_energyRecoverySpeed: 50
   m_energyRecoveryPause: 2
   m_specialEnergyRecoverySpeed: 1
-  m_PoiseRecoverySpeed: 1
+  m_PoiseRecoverySpeed: 2
   m_buildUpsRecoverySpeed: 1
-  m_poiseRecoverPauseTime: 3
+  m_poiseRecoverPauseTime: 8
   m_minRecoveredEnergyForAction: 40
   m_minRecoveredEnergyConstantForAction: 90
   m_isShielding: 0

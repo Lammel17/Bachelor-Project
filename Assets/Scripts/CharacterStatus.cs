@@ -131,9 +131,9 @@ public class CharacterStatus : MonoBehaviour
         m_sep = (float)m_characterStatsData.SpecialEnergyPoints.x / (float)m_characterStatsData.SpecialEnergyPoints.y;
         m_poise = m_characterStatsData.PoisePoints.x / m_characterStatsData.PoisePoints.y;
 
-        m_thermic = m_characterStatsData.ThermicBuildUp.x >= 0 ? m_characterStatsData.ThermicBuildUp.x / m_characterStatsData.ThermicBuildUp.y : m_characterStatsData.ThermicBuildUp.x / m_characterStatsData.ThermicBuildUp.z;
-        m_electric = m_characterStatsData.ElectricBuildUp.x >= 0 ? m_characterStatsData.ElectricBuildUp.x / m_characterStatsData.ElectricBuildUp.y : m_characterStatsData.ElectricBuildUp.x / m_characterStatsData.ElectricBuildUp.z;
-        m_metaphysic = m_characterStatsData.MetaphysicBuildUp.x >= 0 ? m_characterStatsData.MetaphysicBuildUp.x / m_characterStatsData.MetaphysicBuildUp.y : m_characterStatsData.MetaphysicBuildUp.x / m_characterStatsData.MetaphysicBuildUp.z;
+        m_thermic = m_characterStatsData.ThermicBuildUp.x >= 0 ? m_characterStatsData.ThermicBuildUp.x / m_characterStatsData.ThermicBuildUp.y : -(m_characterStatsData.ThermicBuildUp.x / m_characterStatsData.ThermicBuildUp.z);
+        m_electric = m_characterStatsData.ElectricBuildUp.x >= 0 ? m_characterStatsData.ElectricBuildUp.x / m_characterStatsData.ElectricBuildUp.y : -(m_characterStatsData.ElectricBuildUp.x / m_characterStatsData.ElectricBuildUp.z);
+        m_metaphysic = m_characterStatsData.MetaphysicBuildUp.x >= 0 ? m_characterStatsData.MetaphysicBuildUp.x / m_characterStatsData.MetaphysicBuildUp.y : -(m_characterStatsData.MetaphysicBuildUp.x / m_characterStatsData.MetaphysicBuildUp.z);
         m_contamination = m_characterStatsData.ContaminationBuildUp.x / m_characterStatsData.ContaminationBuildUp.y;
 
     }

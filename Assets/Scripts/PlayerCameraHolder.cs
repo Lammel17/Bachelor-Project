@@ -14,17 +14,17 @@ public class PlayerCameraHolder : MonoBehaviour
     [SerializeField] private CharacterActionAndMovementHandler m_playerMovement;
     [SerializeField] private GameObject m_camera;
     [SerializeField] private Transform m_playerTransform;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isLockOn = false;
     [Space]
-    //[Header("Camera Holder")]
-    private Vector3 s_camHolderLocalCenter = new Vector3(0, 1.5f, 0);
-    private Vector3 s_camHolderRestDirection = new Vector3(0, -2, 4f);
-    private float s_distCenterToCam = 4f;
+    [Header("Camera Holder")]
+    [SerializeField] private Vector3 m_camHolderLocalCenter = new Vector3(0, 1.5f, 0);
+    [SerializeField] private Vector3 m_camHolderRestDirection = new Vector3(0, -2, 4f);
+    [SerializeField] private float m_distCenterToCam = 4f;
     [Space]
-    private float s_camHolderClampAngleXAxisMax = 75f;
-    private float s_horizontalInputStrenght = 250f;
-    private float s_verticalInputStrenght = 250f;
-    private float s_accelerationOfCamHolderFollowPlayer = 5f;
-    private float s_accelerationOfCamHolderRotation = 6f;
+    [SerializeField] private float m_camHolderClampAngleXAxisMax = 75f;
+    [SerializeField] private Vector2 m_horAndVerInputStrenght = new Vector2(250,250);
+    [SerializeField] private float m_accelerationOfCamHolderFollowPlayer = 5f;
+    [SerializeField] private float m_accelerationOfCamHolderRotation = 6f;
     [Space]
 
     private float m_camHolderClampAngleXAxis;
@@ -42,14 +42,11 @@ public class PlayerCameraHolder : MonoBehaviour
     [SerializeField] [Range(0,1)]private float m_lookToPlayerOrTargetFactor = 0.6f;
     [SerializeField] private Vector2 m_additionalCamHeightLockOn = new Vector2(0.5f, 2);
     [SerializeField][EditorAttributes.ReadOnly][Range(0,1)]private float m_lockOnApplyance = 0;
-
-    private Vector3 m_camPos;
+    [SerializeField] private float m_camLockOnSpeed = 4f;
 
     private Transform m_target;
     private Vector3 m_lastTargetPos = Vector3.zero;
     private Vector3 m_lastLocalForwardOfCam = Vector3.zero;
-    private bool m_isLockOn = false;
-    private float m_camLockOnSpeed = 4f;
 
     public Vector3 CameraHolderCenterBase { get => m_camHolderCenterPosBase; }
     public Vector3 CameraHolderLookDirection { get => m_camHolderLookDirection.eulerAngles; }
@@ -74,9 +71,9 @@ public class PlayerCameraHolder : MonoBehaviour
     {
         m_playerInputManager = PlayerInputManager.Instance;
 
-        gameObject.transform.SetLocalPositionAndRotation(s_camHolderLocalCenter, Quaternion.LookRotation(s_camHolderRestDirection, Vector3.up));
-        m_camera.transform.localPosition = new Vector3(0, 0, -s_distCenterToCam);
-        m_camHolderClampAngleXAxis = s_camHolderClampAngleXAxisMax;
+        gameObject.transform.SetLocalPositionAndRotation(m_camHolderLocalCenter, Quaternion.LookRotation(m_camHolderRestDirection, Vector3.up));
+        m_camera.transform.localPosition = new Vector3(0, 0, -m_distCenterToCam);
+        m_camHolderClampAngleXAxis = m_camHolderClampAngleXAxisMax;
 
         m_target = m_chosenLockOnTransform;///////////////////
 
@@ -104,8 +101,8 @@ public class PlayerCameraHolder : MonoBehaviour
     private void CalculateCameraHolderCenter()
     {
 
-        m_camHolderCenterPosBase = UtilityFunctions.SmartLerp(m_camHolderCenterPosBase, m_playerTransform.position, Time.deltaTime * s_accelerationOfCamHolderFollowPlayer);
-        m_camHolderCenterPos = m_camHolderCenterPosBase + s_camHolderLocalCenter;
+        m_camHolderCenterPosBase = UtilityFunctions.SmartLerp(m_camHolderCenterPosBase, m_playerTransform.position, Time.deltaTime * m_accelerationOfCamHolderFollowPlayer);
+        m_camHolderCenterPos = m_camHolderCenterPosBase + m_camHolderLocalCenter;
 
     }
 
@@ -124,15 +121,15 @@ public class PlayerCameraHolder : MonoBehaviour
         m_camHolderClampAngleXAxis = CalculateClampAngleVerX(input, verTurn); 
 
         //Kameraposition als Vertikal und Horizontal Drehung, da wo ich sie linear hinschiebe mit den Right-Stick Input
-        m_WIP_camHolderRotationHorY *= Quaternion.Euler(0, horTurn * s_horizontalInputStrenght * Time.deltaTime, 0);
-        m_WIP_camHolderRotationVerX *= Quaternion.Euler(verTurn * s_verticalInputStrenght * Time.deltaTime, 0, 0);
+        m_WIP_camHolderRotationHorY *= Quaternion.Euler(0, horTurn * m_horAndVerInputStrenght.x * Time.deltaTime, 0);
+        m_WIP_camHolderRotationVerX *= Quaternion.Euler(verTurn * m_horAndVerInputStrenght.y * Time.deltaTime, 0, 0);
 
         //Apply Clamping
         m_WIP_camHolderRotationVerX = Quaternion.Euler(UtilityFunctions.AngleClamping(m_WIP_camHolderRotationVerX.eulerAngles.x, -m_camHolderClampAngleXAxis, m_camHolderClampAngleXAxis),0,0);
 
         ForcingPosition();
 
-        float camHolderRotAcc = m_isLockOn ? UtilityFunctions.SmartLerp(s_accelerationOfCamHolderRotation, 100f, Mathf.InverseLerp(200, 0, Vector3.Angle(CamPos - m_playerTransform.position, TargetPos - m_playerTransform.position) )) : s_accelerationOfCamHolderRotation;
+        float camHolderRotAcc = m_isLockOn ? UtilityFunctions.SmartLerp(m_accelerationOfCamHolderRotation, 100f, Mathf.InverseLerp(200, 0, Vector3.Angle(CamPos - m_playerTransform.position, TargetPos - m_playerTransform.position) )) : m_accelerationOfCamHolderRotation;
         // Die eigentliche Kamera-Rotation wird hier smooth zur WorkInProgress Rotation gezogen | KEIN SMART SLERP HIER!!!
         m_camHolderRotationVerX = Quaternion.Slerp(Quaternion.Euler(transform.rotation.eulerAngles.x, 0, 0), m_WIP_camHolderRotationVerX, Time.deltaTime * camHolderRotAcc); 
         m_camHolderRotationHorY = Quaternion.Slerp(Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0), m_WIP_camHolderRotationHorY, Time.deltaTime * camHolderRotAcc);
@@ -164,7 +161,7 @@ public class PlayerCameraHolder : MonoBehaviour
         {
             return;/////////////////////////////////////////////////Just for test
             float m_desiredDirForceFactor = 0.25f;
-            Vector3 camRestDir = s_camHolderRestDirection;
+            Vector3 camRestDir = m_camHolderRestDirection;
             //here, abhängig nur vom seitwärts laufen, weil beim seitswärts laufen die kamera gedreht wird
             desiredRotationForceVerX = desiredRotationForceHorY = m_desiredDirForceFactor * Mathf.Abs((Quaternion.Inverse(CameraHolderForwardYAxis) * m_playerMovement.PreviousMove).x); 
             //Die Gewünschte End-Drehung von der Aktuellen Dreh-Richtung aus
@@ -182,11 +179,11 @@ public class PlayerCameraHolder : MonoBehaviour
         float clampAppyingAcceleration = 6F;
 
         if (input.sqrMagnitude >= 0.98f * 0.98f)
-            return UtilityFunctions.SmartLerp(m_camHolderClampAngleXAxis, Mathf.Abs(verTurn) * s_camHolderClampAngleXAxisMax, Time.deltaTime * clampAppyingAcceleration); //this is the clamp and how fast it applies when stick.magnitude is ~1  | 
-        else if (m_camHolderClampAngleXAxis != s_camHolderClampAngleXAxisMax)
-            return UtilityFunctions.SmartLerp(m_camHolderClampAngleXAxis, s_camHolderClampAngleXAxisMax, Time.deltaTime * clampAppyingAcceleration); //this is how fast the clampAngleMax applies when stick.magnitude is less than 1
+            return UtilityFunctions.SmartLerp(m_camHolderClampAngleXAxis, Mathf.Abs(verTurn) * m_camHolderClampAngleXAxisMax, Time.deltaTime * clampAppyingAcceleration); //this is the clamp and how fast it applies when stick.magnitude is ~1  | 
+        else if (m_camHolderClampAngleXAxis != m_camHolderClampAngleXAxisMax)
+            return UtilityFunctions.SmartLerp(m_camHolderClampAngleXAxis, m_camHolderClampAngleXAxisMax, Time.deltaTime * clampAppyingAcceleration); //this is how fast the clampAngleMax applies when stick.magnitude is less than 1
         
-        return s_camHolderClampAngleXAxisMax;
+        return m_camHolderClampAngleXAxisMax;
     }
 
     private float CalculateVerticalTurning(Vector2 input)
@@ -228,13 +225,13 @@ public class PlayerCameraHolder : MonoBehaviour
             m_lockOnApplyance = UtilityFunctions.SmartLerp(m_lockOnApplyance, 0f, Time.deltaTime * m_camLockOnSpeed);
 
         //offset height is depending on angle
-        float camYOffset = UtilityFunctions.RefitToNewRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x), 0, s_camHolderClampAngleXAxisMax, m_additionalCamHeightLockOn.x, m_additionalCamHeightLockOn.y);
+        float camYOffset = UtilityFunctions.RefitToNewRange(UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x), 0, m_camHolderClampAngleXAxisMax, m_additionalCamHeightLockOn.x, m_additionalCamHeightLockOn.y);
         //float camYOffset = m_lockOnApplyance <= 0.0001 ? 0 : Mathf.Lerp(m_additionalCamHeightLockOn.x, m_additionalCamHeightLockOn.y, Mathf.InverseLerp( 0, s_camHolderClampAngleXAxisMax, UtilityFunctions.Angle180(m_camHolderRotationVerX.eulerAngles.x))); 
 
         //cameraCenter gets an offset, to look over the players head a bit
         //m_camera.transform.localPosition = UtilityFunctions.SmartLerp(m_camera.transform.localPosition, m_camPos, Time.deltaTime * s_camLocalPosAcceleration);
         float height = UtilityFunctions.SmartLerp(0, camYOffset, m_lockOnApplyance);
-        m_camera.transform.localPosition = new Vector3(0, height, -s_distCenterToCam);
+        m_camera.transform.localPosition = new Vector3(0, height, -m_distCenterToCam);
 
 
         if (m_isLockOn) m_lastLocalForwardOfCam = Quaternion.Inverse(transform.rotation) * (TargetPos - m_camera.transform.position);

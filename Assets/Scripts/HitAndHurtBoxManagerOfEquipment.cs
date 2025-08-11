@@ -18,7 +18,7 @@ public class HitAndHurtBoxManagerOfEquipment : MonoBehaviour
     [Header("HurtBox For defensive Blocking")]
     [SerializeField] private List<HurtBox> m_defensiveBox;
 
-
+    //gets set when weapon/shield is put out and set active
     public HitAndHurtBoxManagerOfEquipment ReadyHitBoxManager(HurtBoxManager ownHurtBoxManager)
     {
         m_ownHurtBoxManager = ownHurtBoxManager;
@@ -35,7 +35,7 @@ public class HitAndHurtBoxManagerOfEquipment : MonoBehaviour
         }
 
 
-
+        //if the equipment has a hurtbox as a defensive collider, like a shield
         if (m_defensiveBox.Count != 0)
         {
             foreach(HurtBox hrtb in m_defensiveBox)
@@ -138,7 +138,7 @@ public class HitAndHurtBoxManagerOfEquipment : MonoBehaviour
     }
 
 
-
+    //if the equipment has a hurtbox as a defensive collider, like a shield
     public void ActivateBlockBox()
     {
         foreach (HurtBox hrtb in m_defensiveBox)

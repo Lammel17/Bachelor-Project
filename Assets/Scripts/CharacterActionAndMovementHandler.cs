@@ -579,16 +579,16 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
-        if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
+        if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) { return; }
 
         AnimationData animData = m_characterMovesetData.weapon.SwitchWeapon;
         if (animData == null) { Debug.Log("MISSING ANIMATION DATA of SwitchWeapon"); return; }
 
         m_currentInteruptability = switchEquipmentInterruptability;
 
-        Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveWeapon(); };
+        Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveWeapon(); Debug.Log("action"); };
 
-        Debug.Log("remember switch weapon spam bug");
+        //Debug.Log("remember switch weapon spam bug");
         InitAction(AnimationTypes.Switch_Weapon, animData.bodyParts, animData, Effect: switchEffect);
 
     }
