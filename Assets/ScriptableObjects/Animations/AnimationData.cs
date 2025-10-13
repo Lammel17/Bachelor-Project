@@ -20,7 +20,7 @@ public class AnimationData : ScriptableObject
     public float crossfadeInTime = 0.2f;
     public float crossfadeOutTime = 0.2f;
     [Tooltip("how long before the end of animation should the crossfade begin ")]
-    public float crossfadeBeginn = 0.2f;
+    public float crossfadeOutBeginn = 0.2f;
 
     [Header("-> Interruptability")]
     public AnimationInterruptableType CustomInterruptability = AnimationInterruptableType.SetByButton;

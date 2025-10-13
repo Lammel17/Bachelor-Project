@@ -9,6 +9,7 @@ public class AnimationTypes
     public static readonly int Locomotion                     = Animator.StringToHash("Locomotion");
     public static readonly int Running                        = Animator.StringToHash("Running");
 
+    public static readonly int Running_Sliding                = Animator.StringToHash("Running_Sliding");
     public static readonly int Turning                        = Animator.StringToHash("Turning");
     public static readonly int Turning_Running                = Animator.StringToHash("Turning_Running");
 

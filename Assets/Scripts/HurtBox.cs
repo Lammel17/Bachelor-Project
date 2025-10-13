@@ -1,9 +1,11 @@
 using UnityEngine;
+using EditorAttributes;
+
 
 [RequireComponent(typeof(Collider))]
 public class HurtBox : MonoBehaviour
 {
-    [SerializeField] private Collider m_hurtBoxCollider;
+    [SerializeField][Required] private Collider m_hurtBoxCollider;
     private HurtBoxManager m_hurtboxManager;
     private DamageMultiplikatorData m_damageMultiplikator = new DamageMultiplikatorData(1,1,1,1,1,1,1);
     private bool m_isBlockingBox = false;

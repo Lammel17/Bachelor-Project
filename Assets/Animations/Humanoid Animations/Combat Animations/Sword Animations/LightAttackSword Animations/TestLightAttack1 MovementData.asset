@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
   m_Name: TestLightAttack1 MovementData
   m_EditorClassIdentifier: 
-  ActionDescription: 
+  MovementDescription: 
   moveInfluence: 1
   turningInfluence: 1
   moveDirPredefinition: 1
@@ -27,7 +27,7 @@ MonoBehaviour:
       valueType: 0
       value: 50
       valueSettings:
-        startEnd: {x: 0, y: 0.10157486}
+        startEnd: {x: 0, y: 0.1}
         curveValue:
           serializedVersion: 2
           m_Curve: []
@@ -49,9 +49,9 @@ MonoBehaviour:
     ignore: 0
     settings:
       valueType: 1
-      value: 4
+      value: 4.5
       valueSettings:
-        startEnd: {x: 0.12, y: 0.41166854}
+        startEnd: {x: 0.08098762, y: 0.37098765}
         curveValue:
           serializedVersion: 2
           m_Curve: []

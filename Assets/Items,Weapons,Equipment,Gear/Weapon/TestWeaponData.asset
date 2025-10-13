@@ -51,6 +51,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   LightAttack1:
     AnimData: {fileID: 11400000, guid: 4b3775208a25e694fb167e07f4f93660, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -61,13 +62,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 1
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   LightAttack2:
     AnimData: {fileID: 11400000, guid: 8a74efbede48d4e4799623a298941f36, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -78,13 +80,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 2
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   LightAttack3:
     AnimData: {fileID: 0}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -95,13 +98,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 3
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   LightAttack4:
     AnimData: {fileID: 0}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -112,13 +116,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 4
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   LightAttack5:
     AnimData: {fileID: 0}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -129,13 +134,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 5
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   LightAttack6:
     AnimData: {fileID: 0}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -146,13 +152,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 8
     nextHeavy: 1
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SprintLightAttack:
     AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -163,13 +170,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 1
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   EvadeLightAttack:
     AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -180,13 +188,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 1
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SpecialLightAttack1:
     AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -197,13 +206,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 1
     nextHeavy: 0
     nextSpecialLight: 1
     nextSpecialHeavy: 0
   SpecialLightAttack2:
     AnimData: {fileID: 0}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -214,13 +224,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 1
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   HeavyAttack1:
     AnimData: {fileID: 11400000, guid: 21c32426275a76846be5728270f4c3f4, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -229,15 +240,16 @@ MonoBehaviour:
       MetaphysicFactor: 1
       AilmentsFactor: 1
       PoiseDamageFactor: 1
-    EnergyCost: 20
+    EnergyCost: 100
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 0
     nextHeavy: 1
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   HeavyAttack2:
     AnimData: {fileID: 11400000, guid: 6efba914182ac4245a0db792963347a2, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -248,13 +260,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 0
     nextHeavy: 2
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   HeavyAttack3:
     AnimData: {fileID: 0}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -265,13 +278,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 0
     nextHeavy: 3
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   HeavyAttack4:
     AnimData: {fileID: 0}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -282,13 +296,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 0
     nextHeavy: 6
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SprintHeavyAttack:
     AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -299,13 +314,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 1
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   EvadeHeavyAttack:
     AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -316,13 +332,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 1
     nextHeavy: 0
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SpecialHeavyAttack1:
     AnimData: {fileID: 11400000, guid: 31f0a6219d0d71f45b4ef3dbf267ff5e, type: 2}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -333,13 +350,14 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 0
     nextHeavy: 1
     nextSpecialLight: 0
     nextSpecialHeavy: 1
   SpecialHeavyAttack2:
     AnimData: {fileID: 0}
+    PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
       PhysicalFactor: 1
@@ -350,7 +368,7 @@ MonoBehaviour:
       PoiseDamageFactor: 1
     EnergyCost: 20
     SpecialEnergyCost: 0
-    PhysicalType: 0
+    StaggerType: 3
     nextLight: 0
     nextHeavy: 1
     nextSpecialLight: 0
@@ -361,6 +379,7 @@ MonoBehaviour:
   alternateAttacks:
     LightAttack1:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -371,13 +390,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     LightAttack2:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -388,13 +408,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     LightAttack3:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -405,13 +426,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     LightAttack4:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -422,13 +444,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     LightAttack5:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -439,13 +462,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     LightAttack6:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -456,13 +480,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     SprintLightAttack:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -473,13 +498,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     EvadeLightAttack:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -490,13 +516,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     SpecialLightAttack1:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -507,13 +534,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     SpecialLightAttack2:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -524,13 +552,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     HeavyAttack1:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -541,13 +570,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     HeavyAttack2:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -558,13 +588,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     HeavyAttack3:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -575,13 +606,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     HeavyAttack4:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -592,13 +624,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     SprintHeavyAttack:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -609,13 +642,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     EvadeHeavyAttack:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -626,13 +660,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     SpecialHeavyAttack1:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -643,13 +678,14 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0
       nextSpecialHeavy: 0
     SpeciaHeavyAttack2:
       AnimData: {fileID: 0}
+      PhysicalType: 0
       actionDamageData:
         OverallMultiplicator: 0
         PhysicalFactor: 0
@@ -660,7 +696,7 @@ MonoBehaviour:
         PoiseDamageFactor: 0
       EnergyCost: 0
       SpecialEnergyCost: 0
-      PhysicalType: 0
+      StaggerType: 0
       nextLight: 0
       nextHeavy: 0
       nextSpecialLight: 0

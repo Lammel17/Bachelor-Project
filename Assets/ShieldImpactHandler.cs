@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterActionAndMovementHandler))]
+[RequireComponent(typeof(CharacterStatus))]
 public class ShieldImpactHandler : MonoBehaviour
 {
     private CharacterActionAndMovementHandler m_characterActionAndMovementHandler;
@@ -17,9 +19,13 @@ public class ShieldImpactHandler : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_absorption = 1;
     [SerializeField][EditorAttributes.ReadOnly] ImpactState m_state = ImpactState.WaitingFull;
 
+    public event Action<float, bool> OnShieldChanged;
+
     private Coroutine m_usingShieldCoroutine;
     private Coroutine m_recoverShieldCoroutine;
     private Coroutine m_delayRecoverShieldCoroutine;
+
+    public float Absorption { get => m_absorption; }
 
     private enum ImpactState
     {
@@ -35,6 +41,7 @@ public class ShieldImpactHandler : MonoBehaviour
     private void Start()
     {
         m_characterActionAndMovementHandler = GetComponent<CharacterActionAndMovementHandler>();
+        GetComponent<CharacterStatus>().ShieldImpactHandler = this;
     }
 
     public void SetCrystalValues(int maxGain, AnimationCurve curve, float duration)
@@ -107,6 +114,7 @@ public class ShieldImpactHandler : MonoBehaviour
             m_usingShieldCoroutine = null;
 
             m_state = ImpactState.ImpactHalt;
+            OnShieldChanged.Invoke(m_absorption, true);
 
             //calculate impact energy
             impactEnergy = Mathf.CeilToInt((Mathf.Abs(energyPoints) + Mathf.Min(Mathf.Abs(energyPoints), 30)) * m_absorption);
@@ -126,6 +134,7 @@ public class ShieldImpactHandler : MonoBehaviour
             yield return null;
             m_timeValueInPercent = Mathf.Max(m_timeValueInPercent - (Time.deltaTime / m_duration), 0);
             m_absorption = m_curveSpeed.Evaluate(m_timeValueInPercent);
+            OnShieldChanged.Invoke(m_absorption, false);
         }
 
         m_state = ImpactState.WaitingEmpty;
@@ -137,6 +146,7 @@ public class ShieldImpactHandler : MonoBehaviour
             yield return null;
             m_timeValueInPercent = Mathf.Min(m_timeValueInPercent + (Time.deltaTime / m_duration), 1);
             m_absorption = m_curveSpeed.Evaluate(m_timeValueInPercent);
+            OnShieldChanged.Invoke(m_absorption, false);
         }
         StopRecover();
 

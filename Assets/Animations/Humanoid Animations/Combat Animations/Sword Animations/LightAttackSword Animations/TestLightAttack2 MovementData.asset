@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
   m_Name: TestLightAttack2 MovementData
   m_EditorClassIdentifier: 
-  ActionDescription: 
+  MovementDescription: 2
   moveInfluence: 1
   turningInfluence: 1
   moveDirPredefinition: 1

@@ -15,9 +15,21 @@ MonoBehaviour:
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: 9f927846e26e23e47a749aaa2e719173, type: 2}
   AnimationMovementData: {fileID: 11400000, guid: bbf4809a02a45c64a9178f158d1c765f, type: 2}
+  bodyParts: 0
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.3
-  crossfadeBeginn: 0.05
+  crossfadeOutBeginn: 0.2
   CustomInterruptability: 5
-  InterruptabilityChangeBeforeEndTime: 0.05
+  InterruptabilityChangeBeforeEndTime: 0.02
   ChangedInterruptability: 1
+  MainActionMomentTime: 0
+  hitBoxActiveData: []
+  IsPausingMidAir: 0
+  PauseMidAirTime: 0
+  IsPausingGravity: 0
+  PauseGravityTime: {x: 0, y: 0}
+  actionUsesLookAtTargetData: 0
+  useLookAtForwardData: 0
+  lookAtData:
+    m_applyAddRot: 1
+    m_forwardCorrections: []

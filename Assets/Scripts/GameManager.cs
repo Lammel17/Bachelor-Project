@@ -7,8 +7,11 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private GameObject m_playerInputManagerObject;
 
+    [SerializeField] private GameObject m_player;
     [SerializeField] private CharacterActionAndMovementHandler m_characterActionAndMovement;
     [SerializeField] private PlayerCameraHolder m_playerCameraHolder;
+
+    public GameObject Player { get => m_player; }
 
 
     private void Awake()

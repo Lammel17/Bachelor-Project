@@ -18,7 +18,7 @@ MonoBehaviour:
   bodyParts: 0
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
-  crossfadeBeginn: 0.2
+  crossfadeOutBeginn: 0.2
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0.15
   ChangedInterruptability: 1
@@ -34,5 +34,4 @@ MonoBehaviour:
   useLookAtForwardData: 0
   lookAtData:
     m_applyAddRot: 1
-    m_addRotEuler: {x: 0, y: 0, z: 0}
     m_forwardCorrections: []

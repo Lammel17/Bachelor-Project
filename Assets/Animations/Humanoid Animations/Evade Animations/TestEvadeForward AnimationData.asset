@@ -17,14 +17,19 @@ MonoBehaviour:
   AnimationMovementData: {fileID: 11400000, guid: 6ee937aa03e98a24380d71d23d531e52, type: 2}
   bodyParts: 0
   crossfadeInTime: 0.2
-  crossfadeOutTime: 0.3
-  crossfadeBeginn: 0.05
+  crossfadeOutTime: 0.2
+  crossfadeOutBeginn: 0.15
   CustomInterruptability: 5
-  InterruptabilityChangeBeforeEndTime: 0.05
+  InterruptabilityChangeBeforeEndTime: 0.02
   ChangedInterruptability: 1
-  CostsPayTime: 0
-  useLookAtData: 0
+  MainActionMomentTime: 0
+  hitBoxActiveData: []
+  IsPausingMidAir: 0
+  PauseMidAirTime: 0
+  IsPausingGravity: 0
+  PauseGravityTime: {x: 0, y: 0}
+  actionUsesLookAtTargetData: 0
+  useLookAtForwardData: 0
   lookAtData:
     m_applyAddRot: 1
-    m_addRotEuler: {x: 0, y: 0, z: 0}
     m_forwardCorrections: []

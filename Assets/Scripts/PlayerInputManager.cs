@@ -288,7 +288,7 @@ public class PlayerInputManager : MonoBehaviour
     {
         if (!m_lastInputIsUnread)
             return;
-
+        
         bool buffedIsShift = m_lastBufferedInputCombi.isNorth;
 
         switch (m_lastBufferedInputCombi.lastBuffedInput.action.name)
@@ -334,6 +334,7 @@ public class PlayerInputManager : MonoBehaviour
 
     private bool SetBuffer(InputAction.CallbackContext context, bool isShift, int priority)
     {
+
         if (priority > (int)m_characterActionAndMovement.CurrentInteruptability) ///////////check if Animation is currently interuptable
         {
             m_lastInputIsUnread = false;            //not sure if needed

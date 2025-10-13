@@ -6,39 +6,6 @@ using UnityEngine;
 [RequireComponent(typeof(HurtBoxManager))]
 public class CharacterStatus : MonoBehaviour
 {
-    [Header("ImportantData Stuff")]
-    [SerializeField] private CharacterStatsData m_characterStatsData;
-    [SerializeField] private CharacterMovesetData m_movesetData;
-    [SerializeField][ReadOnly] private CharacterActionAndMovementHandler m_playerMovement;
-    [SerializeField][ReadOnly] private HurtBoxManager m_hurtBoxManager;
-    [Space]
-    [Header("Set if its not the Player")]
-    [SerializeField] private HitAndHurtBoxManagerOfEquipment m_activeWeaponHitBoxManager = null;
-    [SerializeField] private WeaponInstanceData m_activeWeaponInstance;
-    [SerializeField] private HitAndHurtBoxManagerOfEquipment m_activeShieldHitBoxManager = null;
-    [SerializeField] private ShieldInstanceData m_activeShieldInstance;
-    [Header("Player only")]
-    [SerializeField] private ShieldImpactHandler m_shieldImpactHandler;
-    [Space]
-    [Space]
-    [Space]
-    [Header("Character Stats")]
-    [SerializeField] private bool m_invulnerable = false;
-    [SerializeField] private bool m_infinteStamina = false;
-    [Space]
-    [SerializeField] private float m_energyRecoverySpeed = 1f;
-    [SerializeField] private float m_energyRecoveryPause = 1f;
-    [Space]
-    [SerializeField] private float m_specialEnergyRecoverySpeed = 1f;
-    [Space]
-    [SerializeField] private float m_PoiseRecoverySpeed = 1f;
-    [SerializeField] private float m_buildUpsRecoverySpeed = 1f;
-    [SerializeField] private float m_poiseRecoverPauseTime = 3f;
-
-    [Space]
-    [SerializeField] private float m_minRecoveredEnergyForAction = 40f;
-    [SerializeField] private float m_minRecoveredEnergyConstantForAction = 90f;
-
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isShielding = false;
     [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_hp = 1;
     [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_ep = 1;
@@ -51,29 +18,70 @@ public class CharacterStatus : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_contamination = 0;
 
     [Space]
+    [Header("ImportantData Stuff")]
+    [SerializeField][Required] private CharacterStatsData m_characterStatsData;
+    [SerializeField][Required] private CharacterMovesetData m_movesetData;
+    [SerializeField][Required] private CharacterActionAndMovementHandler m_playerMovement;
+    [SerializeField][Required] private HurtBoxManager m_hurtBoxManager;
+    [Space]
+    [Header("Set if its not the Player")]
+    [SerializeField] private HitAndHurtBoxManagerOfEquipment m_activeWeaponHitBoxManager = null;
+    [SerializeField] private WeaponInstanceData m_activeWeaponInstance;
+    [SerializeField] private HitAndHurtBoxManagerOfEquipment m_activeShieldHitBoxManager = null;
+    [SerializeField] private ShieldInstanceData m_activeShieldInstance;
+    private ShieldImpactHandler m_shieldImpactHandler;
+    [Space]
+    [Space]
+    [SerializeField] private bool m_invulnerable = false;
+    [SerializeField] private bool m_infinteStamina = false;
+    [Space]
+    [SerializeField][Required] private CharacterStatsSettingsData m_characterStatsSettingsData;
+    [Header("Character Stats")]
+    [Space]
+    [SerializeField] [ReadOnly] private float m_energyRecoverySpeed = 1f;
+    [SerializeField][ReadOnly] private float m_energyRecoveryPause = 1f;
+    [Space]
+    [SerializeField][ReadOnly] private float m_specialEnergyRecoverySpeed = 1f;
+    [Space]
+    [SerializeField][ReadOnly] private float m_poiseRecoverySpeed = 2f;
+    [SerializeField][ReadOnly] private float m_buildUpsRecoverySpeed = 1f;
+    [SerializeField][ReadOnly] private float m_poiseRecoverPauseTime = 3f;
+    [Space]
+    [SerializeField][ReadOnly] private float m_minRecoveredEnergyForAction = 40f;
+    [SerializeField][ReadOnly] private float m_minRecoveredEnergyConstantForAction = 90f;
+    [Space]
     [Tooltip("When below x% poise, AND when recieving poiseDamage which is more than y% of maxPoise, then get stun")]
-    [SerializeField] private Vector2 m_stunThreshhold = new Vector2(0.4f, 0.05f);
+    [SerializeField][ReadOnly] private Vector2 m_stunThreshhold = new Vector2(0.4f, 0.05f);
     [Tooltip("When below x% energy, AND when recieving energyDamage which is more than y% of maxEnergy, then get stun")]
-    [SerializeField] private Vector2 m_shieldStunThreshhold = new Vector2(0.4f, 0.1f);
+    [SerializeField][ReadOnly] private Vector2 m_shieldStunThreshhold = new Vector2(0.4f, 0.1f);
 
-
+    private bool m_isExpendingEnergyThisFrame = false;
     private bool m_isPauseEnergyRecoveryDueAction = false;
     private bool m_isPauseEnergyRecoveryDueEmpty = false;
     private bool m_isEnergyExhausted = false;
-    private bool m_thisFrameEnergyWasConsumed = false;
     private bool m_canRecoverPoise = true;
 
     private float m_healthLostOfFrame = 0;
     private float m_healthGainOfFrame = 0;
     private float m_energyCostsOfFrame = 0;
     private float m_energyGainOfFrame = 0;
+    private float m_specialEnergyCostOfFrame = 0;
     private float m_specialEnergyGainOfFrame = 0;
-    private float m_gainingHealthForTimeFactor = 0;
-    private float m_loosingHealthForTimeFactor = 0;
+    private float m_gainingHealthOverTimeFactor = 0;
+    private float m_loosingHealthOverTimeFactor = 0;
+    private float m_gainingEnergyOverTimeFactor = 0;
+    private float m_gainingSpecialEnergyOverTimeFactor = 0;
+    private float m_loosingSpecialEnergyOverTimeFactor = 0;
     private float m_energyRecoverFactorByShielding = 1;
 
     private Coroutine m_pauseEnergyRecoveryCoroutine;
     private Coroutine m_pausePoiseRecoveryCoroutine;
+
+    public event Action<float, float, bool> OnHPChanged;
+    public event Action<float, float, bool> OnEPChanged;
+    public event Action<float, float, bool> OnSEPChanged;
+
+
     public enum AilmentType
     {
         none = 0,
@@ -83,7 +91,9 @@ public class CharacterStatus : MonoBehaviour
         Contamination
     }
 
+    public CharacterStatsData StatsData { get => m_characterStatsData;  }
     public CharacterMovesetData MovesetData { get => m_movesetData; }
+    public ShieldImpactHandler ShieldImpactHandler { get => m_shieldImpactHandler; set => m_shieldImpactHandler = value; }
     public HurtBoxManager HurtBoxManager { get => m_hurtBoxManager; }
     public HitAndHurtBoxManagerOfEquipment HitBoxManagerWeapon { get => m_activeWeaponHitBoxManager; set => m_activeWeaponHitBoxManager = value; }
     public HitAndHurtBoxManagerOfEquipment HitBoxManagerShield { get => m_activeShieldHitBoxManager; set => m_activeShieldHitBoxManager = value; }
@@ -92,16 +102,18 @@ public class CharacterStatus : MonoBehaviour
 
 
 
-    private void Start()
+    private void Awake()
     {
+        SetStatsSettingsValues();
+
         if (m_characterStatsData == null)
         {
             m_characterStatsData = new CharacterStatsData();
             m_infinteStamina = true;
         }
 
-        m_playerMovement = GetComponent<CharacterActionAndMovementHandler>();
-        m_hurtBoxManager = GetComponent<HurtBoxManager>();
+        if (m_playerMovement == null) m_playerMovement = GetComponent<CharacterActionAndMovementHandler>();
+        if (m_hurtBoxManager == null) m_hurtBoxManager = GetComponent<HurtBoxManager>();
 
         m_characterStatsData.HealthPoints.x = m_characterStatsData.HealthPoints.y;
         m_characterStatsData.EnergyPoints.x = m_characterStatsData.EnergyPoints.y;
@@ -116,6 +128,22 @@ public class CharacterStatus : MonoBehaviour
         //m_activeWeaponInstance.DamageData = new DamageData( ); Here i stopped
     }
 
+    private void SetStatsSettingsValues(CharacterStatsSettingsData characterStatsSettingsData = null)
+    {
+        if (characterStatsSettingsData != null)
+            m_characterStatsSettingsData = characterStatsSettingsData;
+
+        m_energyRecoverySpeed = m_characterStatsSettingsData.EnergyRecoverySpeed;
+        m_specialEnergyRecoverySpeed = m_characterStatsSettingsData.SpecialEnergyRecoverySpeed;
+        m_buildUpsRecoverySpeed = m_characterStatsSettingsData.BuildUpsRecoverySpeed;
+        m_poiseRecoverySpeed = m_characterStatsSettingsData.PoiseRecoverySpeed;
+        m_poiseRecoverPauseTime = m_characterStatsSettingsData.PoiseRecoverPauseTime;
+        m_minRecoveredEnergyForAction = m_characterStatsSettingsData.MinRecoveredEnergyForAction;
+        m_minRecoveredEnergyConstantForAction = m_characterStatsSettingsData.MinRecoveredEnergyConstantForAction;
+        m_stunThreshhold = m_characterStatsSettingsData.StunThreshhold;
+        m_shieldStunThreshhold = m_characterStatsSettingsData.ShieldStunThreshhold;
+
+}
 
     private void Update()
     {
@@ -139,8 +167,8 @@ public class CharacterStatus : MonoBehaviour
     }
     public void StopAll()
     {
-        m_gainingHealthForTimeFactor = 0;
-        m_loosingHealthForTimeFactor = 0;
+        m_gainingHealthOverTimeFactor = 0;
+        m_loosingHealthOverTimeFactor = 0;
         StopAllCoroutines();
         m_pauseEnergyRecoveryCoroutine = null;
     }
@@ -169,7 +197,7 @@ public class CharacterStatus : MonoBehaviour
         if (m_playerMovement.IsShielding && Vector3.Angle(transform.forward, -damageData.Direction) <= m_activeShieldInstance.ShieldData.ShieldingAngle)
         {
             int energyValue = -(damageData.PhysicalSliceDamage + damageData.PhysicalBluntDamage + damageData.PhysicalPierceDamage);
-            energyValue += m_shieldImpactHandler.EvaluateImpactAbsorpstion(energyValue);
+            if (m_shieldImpactHandler != null) energyValue += m_shieldImpactHandler.EvaluateImpactAbsorpstion(energyValue);
             damageData = CombatUtils.CalculateNegatedDamageData(m_activeShieldInstance.ShieldData.DamageNegationTable, damageData);
             
             //apply energy
@@ -224,27 +252,42 @@ public class CharacterStatus : MonoBehaviour
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     #region HEALTH POINTS
     public void SetHealthEveryFrame()
     {
-        if (m_gainingHealthForTimeFactor != 0)
+        //gain Health
+        if ((m_gainingHealthOverTimeFactor != 0 || m_healthGainOfFrame >= 1) && m_characterStatsData.HealthPoints.x != m_characterStatsData.HealthPoints.y)
         {
-            m_healthGainOfFrame += m_gainingHealthForTimeFactor * Time.deltaTime;
-            if ((int)m_healthGainOfFrame > 0)
-            {
-                GainFixedHealthPoints((int)m_healthGainOfFrame);
-                m_healthGainOfFrame -= (int)m_healthGainOfFrame;
-            }
+            m_healthGainOfFrame += m_gainingHealthOverTimeFactor * Time.deltaTime;
+            m_characterStatsData.HealthPoints.x = Mathf.Min(m_characterStatsData.HealthPoints.x + (int)m_healthGainOfFrame, m_characterStatsData.HealthPoints.y);
+            OnHPChanged.Invoke(m_characterStatsData.HealthPoints.x, m_characterStatsData.HealthPoints.y, true);
+            m_healthGainOfFrame -= (int)m_healthGainOfFrame;
         }
-        if (m_loosingHealthForTimeFactor != 0)
+        //lose Health
+        if (m_loosingHealthOverTimeFactor != 0 || (int)m_healthLostOfFrame >= 1)
         {
-            m_healthLostOfFrame += m_loosingHealthForTimeFactor * Time.deltaTime;
-            if ((int)m_healthLostOfFrame > 0)
-            {
-                LooseFixedHealthPoints((int)m_healthLostOfFrame);
-                m_healthLostOfFrame -= (int)m_healthLostOfFrame;
-            }
+            m_healthLostOfFrame += m_loosingHealthOverTimeFactor * Time.deltaTime;
+            m_characterStatsData.HealthPoints.x = Mathf.Max(m_characterStatsData.HealthPoints.x - (int)m_healthLostOfFrame, 0);
+            OnHPChanged.Invoke(m_characterStatsData.HealthPoints.x, m_characterStatsData.HealthPoints.y, false);
+            m_healthLostOfFrame -= (int)m_healthLostOfFrame;
+            
         }
+
+        //health is zero
+        if (m_characterStatsData.HealthPoints.x == 0)
+            m_playerMovement.TriggerDie();
 
     }
 
@@ -252,10 +295,7 @@ public class CharacterStatus : MonoBehaviour
     {
         if (m_invulnerable) return;
 
-        m_characterStatsData.HealthPoints.x = Mathf.Max(m_characterStatsData.HealthPoints.x - loosePoints, 0);
-
-        if (m_characterStatsData.HealthPoints.x == 0)
-            m_playerMovement.TriggerDie();
+        m_healthLostOfFrame += loosePoints;
     }
 
     public void GainFixedHealthPoints(int gainPoints)
@@ -267,8 +307,8 @@ public class CharacterStatus : MonoBehaviour
 
     public void GainHealthForTime(float time, float healthByTime) //this is stackable
     {
-        m_gainingHealthForTimeFactor += healthByTime;
-        Action stopHealthRecovery = () => { m_gainingHealthForTimeFactor -= healthByTime; };
+        m_gainingHealthOverTimeFactor += healthByTime;
+        Action stopHealthRecovery = () => { m_gainingHealthOverTimeFactor -= healthByTime; };
         StartCoroutine(UtilityFunctions.Wait(time, stopHealthRecovery));
     }
 
@@ -277,36 +317,53 @@ public class CharacterStatus : MonoBehaviour
 
 
         if (!m_invulnerable) 
-            m_loosingHealthForTimeFactor += healthByTime;
-        Action stopHealthLost = () => { m_loosingHealthForTimeFactor -= healthByTime; };
+            m_loosingHealthOverTimeFactor += healthByTime;
+        Action stopHealthLost = () => { m_loosingHealthOverTimeFactor -= healthByTime; };
         StartCoroutine(UtilityFunctions.Wait(time, stopHealthLost));
     }
 
     #endregion
 
+
+
+
+
+
+
+
+
+
+
+
     #region ENERGY POINTS
     private void SetEnergyEveryFrame()
     {
-        if (m_thisFrameEnergyWasConsumed)
-        {
-            m_thisFrameEnergyWasConsumed = false;
-            m_characterStatsData.EnergyPoints.x = Mathf.Max(m_characterStatsData.EnergyPoints.x + (int)m_energyCostsOfFrame, 0);
-            m_energyCostsOfFrame -= (int)m_energyCostsOfFrame;
-        }
-        else if (!m_isPauseEnergyRecoveryDueAction && !m_isPauseEnergyRecoveryDueEmpty)
-        {
+        //gain energy
+        if (!m_isPauseEnergyRecoveryDueAction && !m_isPauseEnergyRecoveryDueEmpty && m_characterStatsData.EnergyPoints.x != m_characterStatsData.EnergyPoints.y)
             m_energyGainOfFrame += m_energyRecoverySpeed * Time.deltaTime * m_energyRecoverFactorByShielding;
+        if ((m_energyGainOfFrame >= 1 || m_gainingEnergyOverTimeFactor != 0) && m_characterStatsData.EnergyPoints.x != m_characterStatsData.EnergyPoints.y)
+        {
+            m_energyGainOfFrame += m_gainingEnergyOverTimeFactor * Time.deltaTime;
             m_characterStatsData.EnergyPoints.x = Mathf.Min(m_characterStatsData.EnergyPoints.x + (int)m_energyGainOfFrame, m_characterStatsData.EnergyPoints.y);
+            OnEPChanged.Invoke(m_characterStatsData.EnergyPoints.x, m_characterStatsData.EnergyPoints.y, true);
             m_energyGainOfFrame -= (int)m_energyGainOfFrame;
         }
+        //consume energy
+        else if (m_isExpendingEnergyThisFrame)
+        {
+            m_isExpendingEnergyThisFrame = false; // bc there is no coroutine wich consumes ep over time
+            m_characterStatsData.EnergyPoints.x = Mathf.Max(m_characterStatsData.EnergyPoints.x + (int)m_energyCostsOfFrame, 0);
+            /*if (Mathf.Abs(Mathf.Abs(m_energyCostsOfFrame)) >= 1) */OnEPChanged.Invoke(m_characterStatsData.EnergyPoints.x, m_characterStatsData.EnergyPoints.y, false);
+            m_energyCostsOfFrame -= (int)m_energyCostsOfFrame;
+        }
 
-
+        //energy is empty
         if (m_characterStatsData.EnergyPoints.x == 0 && !m_isEnergyExhausted)
         {
             m_isEnergyExhausted = true;
             m_isPauseEnergyRecoveryDueEmpty = true;
 
-            //if currently is action, the coroutine will be called at the end of the action anyways
+            //if currently is action, the coroutine "ContinueEnergyRegenerationInTime()" will be called at the end of the action, not here
             if (!m_isPauseEnergyRecoveryDueAction)
                 ContinueEnergyRegenerationInTime();
         }
@@ -314,8 +371,8 @@ public class CharacterStatus : MonoBehaviour
 
     public void ExpendEnergyPoints(float expensesNegativeValue)
     {
-        m_thisFrameEnergyWasConsumed = true;
-        m_energyCostsOfFrame += expensesNegativeValue;
+        m_isExpendingEnergyThisFrame = true; //i need this bc what if running consumes less ep than 1 per frame
+        if (!m_infinteStamina) m_energyCostsOfFrame += -Mathf.Abs(expensesNegativeValue);
     }
 
     public void GainEnergyPoints(int energyGain)
@@ -379,16 +436,46 @@ public class CharacterStatus : MonoBehaviour
 
     #endregion
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     #region SPECIAL ENERGY
 
     private void SetSpecialEnergyEveryFrame()
     {
-        if (m_characterStatsData.EnergyPoints.x == m_characterStatsData.EnergyPoints.y)
+        //special energy gain
+        if (!m_isPauseEnergyRecoveryDueAction && !m_isPauseEnergyRecoveryDueEmpty && m_characterStatsData.EnergyPoints.x == m_characterStatsData.EnergyPoints.y)
+            m_specialEnergyGainOfFrame += m_specialEnergyRecoverySpeed * Time.deltaTime * m_energyRecoverFactorByShielding;
+        if ((m_gainingSpecialEnergyOverTimeFactor != 0 || (int)m_specialEnergyGainOfFrame >= 1) && m_characterStatsData.SpecialEnergyPoints.x != m_characterStatsData.SpecialEnergyPoints.y)
         {
-            m_specialEnergyGainOfFrame += m_specialEnergyRecoverySpeed * Time.deltaTime;
+            m_specialEnergyGainOfFrame += m_gainingSpecialEnergyOverTimeFactor * Time.deltaTime;
             m_characterStatsData.SpecialEnergyPoints.x = Mathf.Min(m_characterStatsData.SpecialEnergyPoints.x + (int)m_specialEnergyGainOfFrame, m_characterStatsData.SpecialEnergyPoints.y);
+            OnSEPChanged.Invoke(m_characterStatsData.SpecialEnergyPoints.x, m_characterStatsData.SpecialEnergyPoints.y, true);
             m_specialEnergyGainOfFrame -= (int)m_specialEnergyGainOfFrame;
+
         }
+        //consume special energy
+        if (m_loosingSpecialEnergyOverTimeFactor != 0 || (int)m_specialEnergyCostOfFrame >= 1)
+        {
+            m_specialEnergyCostOfFrame += m_loosingSpecialEnergyOverTimeFactor * Time.deltaTime;
+            m_characterStatsData.SpecialEnergyPoints.x = Mathf.Max(m_characterStatsData.SpecialEnergyPoints.x - (int)m_specialEnergyCostOfFrame, 0);
+            OnSEPChanged.Invoke(m_characterStatsData.SpecialEnergyPoints.x, m_characterStatsData.SpecialEnergyPoints.y, false);
+            m_specialEnergyCostOfFrame -= (int)m_specialEnergyCostOfFrame;
+
+        }
+
     }
 
     public bool CheckIfCanExpendSpecialEnergy(int cost)
@@ -402,14 +489,30 @@ public class CharacterStatus : MonoBehaviour
     public void ExpendSpecialEnergyPoints(int expenses)
     {
         m_characterStatsData.SpecialEnergyPoints.x = Mathf.Max(m_characterStatsData.SpecialEnergyPoints.x - expenses, 0);
+        OnSEPChanged.Invoke(m_characterStatsData.SpecialEnergyPoints.x, m_characterStatsData.SpecialEnergyPoints.y, false);
     }
 
     public void GainSpecialEnergy(int specialEnergyGain)
     {
-        m_characterStatsData.SpecialEnergyPoints.x = Mathf.Min(m_characterStatsData.SpecialEnergyPoints.x + specialEnergyGain, m_characterStatsData.SpecialEnergyPoints.y);
+        m_specialEnergyGainOfFrame += specialEnergyGain;
     }
 
     #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     #region POISE
     private void RecoverPoise()
@@ -418,7 +521,7 @@ public class CharacterStatus : MonoBehaviour
             return;
 
         if (m_characterStatsData.PoisePoints.x != m_characterStatsData.PoisePoints.y)
-            m_characterStatsData.PoisePoints.x = Mathf.Min(m_characterStatsData.PoisePoints.x + m_PoiseRecoverySpeed * Time.deltaTime, m_characterStatsData.PoisePoints.y);
+            m_characterStatsData.PoisePoints.x = Mathf.Min(m_characterStatsData.PoisePoints.x + m_poiseRecoverySpeed * Time.deltaTime, m_characterStatsData.PoisePoints.y);
     }
 
     public void TakePoiseDamage(int poiseDamage, StaggerType staggerType, Vector3 direction)
@@ -446,6 +549,21 @@ public class CharacterStatus : MonoBehaviour
 
     #endregion
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     #region STAGGER
     private void DecideStagger(int poiseValue, StaggerType staggerType, Vector3 direction)
     {
@@ -515,6 +633,25 @@ public class CharacterStatus : MonoBehaviour
             m_playerMovement.TriggerShieldDeflect();
     }
     #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     #region BUILDUP

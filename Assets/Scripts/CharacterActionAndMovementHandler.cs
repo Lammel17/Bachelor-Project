@@ -13,6 +13,7 @@ using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.TextCore.Text;
+//using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 using Debug = UnityEngine.Debug;
 
 
@@ -23,32 +24,31 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 {
     public GameObject testMoveDirection;
     public GameObject testTurningDirection;
+    [Space]
 
-
-
-    [SerializeField] private CharacterController m_characterController;
-    [SerializeField] private CharacterStatus m_characterStatus;
-    [SerializeField] private GameObject m_chraracterMesh;
+    [SerializeField][Required] private CharacterController m_characterController;
+    [SerializeField][Required] private CharacterStatus m_characterStatus;
+    [SerializeField][Required] private GameObject m_chraracterMesh;
+    [SerializeField][Required] private Animator m_animator;
     private FootPlacing m_footPlacing;
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
-    [SerializeField] private Animator m_animator;
     private LookAt m_lookAtScript = null;
-    private CharacterMovesetData m_characterMovesetData;
-    private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
+    private CharacterMovesetData m_movesetData;
+    [SerializeField][EditorAttributes.ReadOnly] private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
 
+    private float m_inputFactor = 1f; //should stay 1
     [Space]
     [Header("")] //DONT CHANGE THEM HERE! DO IT IN INSPECTOR!
-    private float m_inputFactor = 1f; //should stay 1
-    [SerializeField] private Vector3 m_speedValues = new Vector3(2, 4, 6); //slow, walk, running
-    [SerializeField] private float m_moveAcceleration = 20f;
-    [SerializeField] private Vector3 m_turningStrenghtBaseValues = new Vector3(15, 15, 10); //slow, walk, running
-    [SerializeField] private float m_maxTurningSpeedBaseValue = 50f;
-    [SerializeField] private int m_evadeCosts = 30;
+    [SerializeField][Required] private CharacterSettingsData m_characterSettingsData;
+    [SerializeField][EditorAttributes.ReadOnly] private Vector3 m_speedValues = new Vector3(2, 4, 6); //slow, walk, running
+    [SerializeField][EditorAttributes.ReadOnly] private float m_moveAcceleration = 20f;
+    [SerializeField][EditorAttributes.ReadOnly] private Vector3 m_turningStrenghtBaseValues = new Vector3(15, 15, 10); //slow, walk, running
+    [SerializeField][EditorAttributes.ReadOnly] private float m_maxTurningSpeedBaseValue = 10f;
     //private const int m_runningMoveStrenght = 2;
     private Vector3 m_nowMoveDir = Vector3.forward;
-    [SerializeField] private float c_gravity = -9.81f;
-    [SerializeField][EditorAttributes.ReadOnly] private float m_gravity = -9.81f;
+    private float m_originalGravity = -9.81f;
+    [SerializeField][EditorAttributes.ReadOnly] private float m_currentGravity = -0f;
     private float m_velocityThroughGravity;
     private Vector3 m_controllerVelocity;
 
@@ -68,11 +68,11 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private Quaternion m_cameraYAxisRotationInWS = Quaternion.identity;
     private Transform m_target;
     private float m_targetDist = 0;
-    private enum Direction { Forward, Left, Right, Backward };
-    [SerializeField][EditorAttributes.ReadOnly] private Direction m_facingDirectionType = Direction.Forward;
-
+    private enum Orientation { Forward, Left, Right, Backward };
+    [Space]
+    [SerializeField][EditorAttributes.ReadOnly] private Orientation m_orientation = Orientation.Forward;
     //bools
-    [SerializeField][EditorAttributes.ReadOnly] private bool m_isAdditionalRotationForbidden = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isOrientationRotationForbidden = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isStandingStill = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isLockOn = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldRunning = false;
@@ -146,7 +146,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     #region PROPERTIES
     public Animator Animator { get => m_animator; }
-    public CharacterMovesetData MovesetData { get => m_characterMovesetData; }
+    public CharacterMovesetData MovesetData { get => m_movesetData; }
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
     public float InputStrenght //is already snapped by inputmanager
     { 
@@ -183,18 +183,18 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     }
     public float Gravity 
     { 
-        get => m_gravity; 
+        get => m_currentGravity; 
         set 
         { 
-            if (m_gravity == value) 
+            if (m_currentGravity == value) 
                 return;
 
-            if (m_footPlacing != null && m_gravity != 0 && value == 0) 
+            if (m_footPlacing != null && m_currentGravity != 0 && value == 0) 
                 m_footPlacing.SetWeightActive(false); 
-            else if (m_footPlacing != null && m_gravity == 0 && value != 0)
+            else if (m_footPlacing != null && m_currentGravity == 0 && value != 0)
                 m_footPlacing.SetWeightActive(true);
 
-            m_gravity = value; 
+            m_currentGravity = value; 
         } 
     }
     public Quaternion CameraYAxisRotation { get => m_cameraYAxisRotationInWS; set => m_cameraYAxisRotationInWS = Quaternion.Euler(0, value.eulerAngles.y, 0); }
@@ -206,7 +206,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             m_target = value; 
             m_isLockOn = (m_target != null); 
             if (!m_isAction || (m_currentActionAnimData != null && m_currentActionAnimData.actionUsesLookAtTargetData)) 
-                SetLookAtTarget(m_target);
+                SetBodyLookAtTarget(m_target);
 
         } 
     }
@@ -225,9 +225,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                 return;
 
             m_isRunning = value;
-            if (m_isRunning) { SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Running); SetLookAtTarget(null); }
-            else if (!m_isRunning && !m_isAction) { SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset); } 
-            if (!m_isRunning && !m_isAction && m_target != null) { SetLookAtTarget(m_target); }
+            if (m_isRunning) { SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Running); SetBodyLookAtTarget(null); }
+            else if (!m_isRunning && !m_isAction) 
+            { 
+                SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset); 
+                if (m_inputStrenght == 0) TriggerRunningSlide(); } 
+            if (!m_isRunning && !m_isAction && m_target != null) { SetBodyLookAtTarget(m_target); }
 
             Speed = m_inputStrenght;
 
@@ -265,10 +268,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     void Start()
     {
-
+        SetSettingsValues();
         if (m_characterController == null) m_characterController = GetComponent<CharacterController>();
         if (m_characterStatus == null) m_characterStatus = GetComponent<CharacterStatus>();
-        m_characterMovesetData = m_characterStatus.MovesetData;
+        m_movesetData = m_characterStatus.MovesetData;
 
 
 
@@ -291,22 +294,33 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_currentBaseLayerAnimation = AnimationTypes.Idle_1;
         m_currentUpperBodyAnimation = new Vector2(AnimationTypes.Empty_UpperBody, 0);
 
-        m_gravity = c_gravity;
+        m_currentGravity = m_originalGravity;
 
     }
 
+    private void SetSettingsValues(CharacterSettingsData charBehaviorData = null)
+    {
+        if (charBehaviorData != null)
+            m_characterSettingsData = charBehaviorData;
+
+        m_speedValues = m_characterSettingsData.SpeedValues;
+        m_moveAcceleration = m_characterSettingsData.MoveAcceleration;
+        m_turningStrenghtBaseValues = m_characterSettingsData.TurningStrenghtBaseValues;
+        m_maxTurningSpeedBaseValue = m_characterSettingsData.MaxTurningSpeedBaseValue;
+        m_originalGravity = m_characterSettingsData.Gravity;
+    }
 
     public void SetNextPossibleWeaponActions() 
     {
-        if (m_characterMovesetData == null || m_characterMovesetData.weapon == null)
+        if (m_movesetData == null || m_movesetData.weapon == null)
             return;
-        m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
+        m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_movesetData.weapon.LightAttack1, m_movesetData.weapon.HeavyAttack1, m_movesetData.weapon.SpecialLightAttack1, m_movesetData.weapon.SpecialHeavyAttack1);
     }
     public void SetNextPossibleShieldActions()
     {
-        if (m_characterMovesetData == null || m_characterMovesetData.shield == null)
+        if (m_movesetData == null || m_movesetData.shield == null)
             return;
-        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
+        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_movesetData.shield.shieldIdle, m_movesetData.shield.shieldingUpperBody, m_movesetData.shield.ShiledSpecialLight1, m_movesetData.shield.ShiledSpecialHeavy1);
     }
 
 
@@ -363,11 +377,11 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         //StandingStill
         m_isStandingPrev = m_isStandingStill;
-        m_isStandingStill = ((m_isWalkingLocked == false && m_inputStrenght == 0) || m_isWalkingLocked == true);
+        m_isStandingStill = m_inputStrenght == 0;
 
         //Running
         IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked) && m_characterStatus.CheckIfCanConsumeConstantEnergy();
-        if (m_isRunning) m_characterStatus.ExpendEnergyPoints(30 * Time.deltaTime);
+        if (m_isRunning && m_equipmentIsReady) m_characterStatus.ExpendEnergyPoints(30 * Time.deltaTime);
 
         //FreelyMoving
         bool prevFreelyMoving = m_isFreelyMoving;
@@ -387,7 +401,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         {
             // InputDirRelativeToCam is relative to cameraRotation, so it should not affect the InputDirRelativeToCam when for example standing still
             m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward; 
-            m_facingDirectionType = Direction.Forward;
+            m_orientation = Orientation.Forward;
             return;
         }
         else
@@ -411,17 +425,17 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         float distThreshhold = 10f;    //Ab diesem abstand werden die threshholds anfangen zu den Min Threshholds zu lerpen
         float additionalThreshhold = 5f; //Damit es keine flickerzone gibt, wo das überschreiten und unterschreiten des threshholds gleich ist
 
-        if (m_facingDirectionType == Direction.Left || m_facingDirectionType == Direction.Right) additionalThreshhold = -additionalThreshhold;
+        if (m_orientation == Orientation.Left || m_orientation == Orientation.Right) additionalThreshhold = -additionalThreshhold;
 
         m_forwardSidewardThreshholdAngle = Mathf.Lerp(firstThreshholdAngleMin, 45f, m_targetDist / distThreshhold) + additionalThreshhold; /////////////////Mathf.Min
         m_sidewardBackwardThreshholdAngle = Mathf.Lerp(secondThreshholdAngleMin, 135f, m_targetDist / distThreshhold) - additionalThreshhold;
 
         float inputAngleToForward = Vector3.Angle(Vector3.forward, m_inputDir);
 
-        if (inputAngleToForward < m_forwardSidewardThreshholdAngle)                                             m_facingDirectionType = Direction.Forward;
-        else if (inputAngleToForward < m_sidewardBackwardThreshholdAngle && Mathf.Sign(m_inputDir.x) >= 0)      m_facingDirectionType = Direction.Right;
-        else if (inputAngleToForward < m_sidewardBackwardThreshholdAngle)                                       m_facingDirectionType = Direction.Left;
-        else                                                                                                    m_facingDirectionType = Direction.Backward; 
+        if (inputAngleToForward < m_forwardSidewardThreshholdAngle)                                             m_orientation = Orientation.Forward;
+        else if (inputAngleToForward < m_sidewardBackwardThreshholdAngle && Mathf.Sign(m_inputDir.x) >= 0)      m_orientation = Orientation.Right;
+        else if (inputAngleToForward < m_sidewardBackwardThreshholdAngle)                                       m_orientation = Orientation.Left;
+        else                                                                                                    m_orientation = Orientation.Backward; 
 
 
     }
@@ -480,10 +494,29 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     }
 
+    void TriggerRunningSlide()
+    {
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+
+        AnimationInterruptableType slidingInterruptability = AnimationInterruptableType.Easily_Interruptable;
+        if ((int)m_currentInteruptability >= (int)slidingInterruptability) return;
+
+        AnimationData animData = m_movesetData.runningSliding;
+
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+
+        if (m_ActionCoroutine != null)
+            EndActionReset();
+
+        m_currentInteruptability = slidingInterruptability;
+
+        InitAction(AnimationTypes.Running_Sliding, animData.bodyParts, animData);
+    }
+
 
     void TriggerTurning()
     {
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
         if ((int)m_currentInteruptability >= (int)turningInterruptability) return;    
@@ -494,14 +527,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         if (!m_isRunning && !m_isLockOn && m_isFreelyMoving && (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90)
         {
-            if ( Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)     animData = m_characterMovesetData.turningLeft;
-            else                                                animData = m_characterMovesetData.turningRight;   
+            if ( Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)     animData = m_movesetData.turningLeft;
+            else                                                animData = m_movesetData.turningRight;   
             SetTriggerTurning();
         }
         if (m_isRunning && m_isFreelyMoving &&  (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)
         {
-            if (Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)      animData = m_characterMovesetData.turningRunningLeft;
-            else                                                animData = m_characterMovesetData.turningRunningRight;
+            if (Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)      animData = m_movesetData.turningRunningLeft;
+            else                                                animData = m_movesetData.turningRunningRight;
             SetTriggerTurning();
         }
 
@@ -524,7 +557,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     public void TriggerReadyOrRemoveEquipment()
     {
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
         if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
@@ -535,15 +568,15 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         AnimationData animDataShield = null;
         if (m_equipmentIsReady)
         {
-            animDataWeapon = m_characterMovesetData.weapon.RemoveWeapon;
-            animDataShield =  m_characterMovesetData.shield.RemoveShield;
+            animDataWeapon = m_movesetData.weapon.RemoveWeapon;
+            animDataShield =  m_movesetData.shield.RemoveShield;
             animHashWeapon = AnimationTypes.Ready_Weapon;
             animHashShield = AnimationTypes.Ready_Shield;
         }
         else
         {
-            animDataWeapon = m_characterMovesetData.weapon.ReadyWeapon;
-            animDataShield = m_characterMovesetData.shield.ReadyShield;
+            animDataWeapon = m_movesetData.weapon.ReadyWeapon;
+            animDataShield = m_movesetData.shield.ReadyShield;
             animHashWeapon = AnimationTypes.Remove_Weapon;
             animHashShield = AnimationTypes.Remove_Shield;
         }
@@ -576,12 +609,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             return;
         }
 
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
         if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) { return; }
 
-        AnimationData animData = m_characterMovesetData.weapon.SwitchWeapon;
+        AnimationData animData = m_movesetData.weapon.SwitchWeapon;
         if (animData == null) { Debug.Log("MISSING ANIMATION DATA of SwitchWeapon"); return; }
 
         m_currentInteruptability = switchEquipmentInterruptability;
@@ -601,12 +634,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             return;
         }
 
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         AnimationInterruptableType switchEquipmentInterruptability = AnimationInterruptableType.Easily_Interruptable;
         if ((int)m_currentInteruptability >= (int)switchEquipmentInterruptability) return;
 
-        AnimationData animData = m_characterMovesetData.shield.SwitchShield;
+        AnimationData animData = m_movesetData.shield.SwitchShield;
         if (animData == null) { Debug.Log("MISSING ANIMATION DATA of SwitchShield"); return; }
 
         m_currentInteruptability = switchEquipmentInterruptability;
@@ -622,19 +655,20 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public void TriggerEvading()
     {
         if (m_isActionLocked) return;
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
+        //Debug.Log(m_currentInteruptability);
         AnimationInterruptableType evadeInterruptability = AnimationInterruptableType.Not_Interruptable;
         if ((int)m_currentInteruptability >= (int)evadeInterruptability) return;
 
-        if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder
+        if (!m_isFreelyMoving) SetFacingDirectionType(); else m_orientation = Orientation.Forward; //just a reminder
 
         AnimationData animData;
         int animHash = 0;
-        if (m_facingDirectionType == Direction.Forward)             { animData = m_characterMovesetData.evadeForward; animHash = AnimationTypes.Evade_Forward; }
-        else if (m_facingDirectionType == Direction.Left)           { animData = m_characterMovesetData.evadeLeft; animHash = AnimationTypes.Evade_Left; }
-        else if (m_facingDirectionType == Direction.Right)          { animData = m_characterMovesetData.evadeRight; animHash = AnimationTypes.Evade_Right; }
-        else                                                        { animData = m_characterMovesetData.evadeBackwards; animHash = AnimationTypes.Evade_Backwards; }
+        if (m_orientation == Orientation.Forward)             { animData = m_movesetData.evadeForward; animHash = AnimationTypes.Evade_Forward; }
+        else if (m_orientation == Orientation.Left)           { animData = m_movesetData.evadeLeft; animHash = AnimationTypes.Evade_Left; }
+        else if (m_orientation == Orientation.Right)          { animData = m_movesetData.evadeRight; animHash = AnimationTypes.Evade_Right; }
+        else                                                        { animData = m_movesetData.evadeBackwards; animHash = AnimationTypes.Evade_Backwards; }
 
         if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
@@ -646,10 +680,9 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             EndActionReset();
         
         SetNextPossibleWeaponAttacks(currentAction: animHash);
-
         m_currentInteruptability = evadeInterruptability;
 
-        InitAction(animHash, animData.bodyParts, animData, m_evadeCosts);
+        InitAction(animHash, animData.bodyParts, animData, m_movesetData.evadeCosts);
 
         }
 
@@ -657,7 +690,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     {
         if (m_isActionLocked) return;
         if (!m_equipmentIsReady) return;
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.light; 
         if (thisAction == null) { Debug.Log("MISSING ANIMATION DATA of a Light Attack"); return;}
@@ -687,7 +720,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     {
         if (m_isActionLocked) return;
         if (!m_equipmentIsReady) return;
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.specialLight;
         if (thisAction == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
@@ -717,7 +750,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     {
         if (m_isActionLocked) return;
         if (!m_equipmentIsReady) return;
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
 
         WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.heavy;
         if (thisAction == null) { Debug.Log("MISSING ATTACK DATA of a Heavy Attack"); return; }
@@ -748,7 +781,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     {
         if (m_isActionLocked) return;
         if (!m_equipmentIsReady) return;
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
 
         WeaponData.WeaponAttack thisAction = m_nextPossibleWeaponActions.specialHeavy;
         if (thisAction == null) { Debug.Log("MISSING ATTACK DATA of a Heavy Attack"); return; }
@@ -777,7 +810,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     public void TriggerShielding(bool isHoldShielding)
     {
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
         
         IsHoldShielding = isHoldShielding;
 
@@ -801,7 +834,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     {
         if (m_isActionLocked) return;
         if (!m_equipmentIsReady) return;
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         ShieldData.ShieldAction thisAction = m_nextPossibleShieldActions.specialShieldLight;
         if (thisAction == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
@@ -830,7 +863,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     {
         if (m_isActionLocked) return;
         if (!m_equipmentIsReady) return;
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA of a Light Attack"); return; }
 
         ShieldData.ShieldAction thisAction = m_nextPossibleShieldActions.specialShieldHeavy;
         if (thisAction == null) { Debug.Log("MISSING ANIMATION DATA of a Special Light Attack"); return; }
@@ -860,10 +893,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public void TriggerItemUse()
     {
         if (m_isActionLocked) return;
-        if (m_characterMovesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA of a Heavy Attack"); return; }
 
-        if (m_characterMovesetData.item == null) { Debug.Log("MISSING Item DATA"); return; }
-        ItemData.ItemAction thisAction = m_characterMovesetData.item.ItemUse;
+        if (m_movesetData.item == null) { Debug.Log("MISSING Item DATA"); return; }
+        ItemData.ItemAction thisAction = m_movesetData.item.ItemUse;
         if (thisAction == null) { Debug.Log("MISSING ACTION DATA of a Item Action"); return; }
         if (thisAction.AnimData == null) { Debug.Log("MISSING ANIMATION DATA of a Item Action"); return; }
 
@@ -909,7 +942,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             SetUpperBodyAnimation(AnimationTypes.Empty_UpperBody, 0, crossFadeDuration: 0.1f);
         }
 
-        SetLookAtTarget(animData.actionUsesLookAtTargetData ? m_target : null);
+        SetBodyLookAtTarget(animData.actionUsesLookAtTargetData ? m_target : null);
 
         SetAnimation(animationHash, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
         m_nextCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
@@ -931,37 +964,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             actionList.Add(effect);
 
 
-        if (animData.IsPausingGravity && animData.PauseGravityTime != Vector2.zero)
-        {
-            Action noGravity = () =>
-            {
-                Gravity = 0;
-                m_gravityPauseCoroutine = null;
-                m_footPlacing.SetWeightActive(false);
-
-                Action yesGravity = () => 
-                {
-                    Gravity = c_gravity;
-                    m_gravityPauseCoroutine = null;
-                };
-                m_gravityPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseGravityTime.y, yesGravity));
-            };
-            m_gravityPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseGravityTime.x, noGravity));
-        }
-        if (animData.IsPausingMidAir)
-        {
-            Action pauseMidAir = () => 
-            { 
-                if (m_isGrounded) return;
-                //Contin m_actionChangesInterruptabilityCoroutine
-                m_isMidAirPause = true;
-                m_animationSpeed = 0;
-                m_animator.speed = m_animationSpeed;
-                m_actionPauseCoroutine = null;
-            };
-            m_actionPauseCoroutine = StartCoroutine(UtilityFunctions.Wait(animationDuration * animData.PauseMidAirTime, pauseMidAir));
-        }
-
         SetActionValues(animData, actionList.Count == 0 ? null : actionList);
     }
 
@@ -971,7 +973,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isActionUpperBody = true;
         IsRunning = false;
 
-        SetLookAtTarget(animData.actionUsesLookAtTargetData ? m_target : null);
+        SetBodyLookAtTarget(animData.actionUsesLookAtTargetData ? m_target : null);
 
         if (animData.useLookAtForwardData)
             SetLookAtForward(true, animData.lookAtData);
@@ -1001,13 +1003,13 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private void SetNextPossibleWeaponAttacks(WeaponData.WeaponAttack currentAttackData = null, int currentAction = 0)
     {
         if (currentAction == AnimationTypes.Evade_Forward || currentAction == AnimationTypes.Evade_Left || currentAction == AnimationTypes.Evade_Right || currentAction == AnimationTypes.Evade_Backwards)
-            m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.EvadeLightAttack, m_characterMovesetData.weapon.EvadeHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
+            m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_movesetData.weapon.EvadeLightAttack, m_movesetData.weapon.EvadeHeavyAttack, m_movesetData.weapon.SpecialLightAttack1, m_movesetData.weapon.SpecialHeavyAttack1);
 
         else if (currentAction == AnimationTypes.Running)
-            m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.SprintLightAttack, m_characterMovesetData.weapon.SprintHeavyAttack, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
+            m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_movesetData.weapon.SprintLightAttack, m_movesetData.weapon.SprintHeavyAttack, m_movesetData.weapon.SpecialLightAttack1, m_movesetData.weapon.SpecialHeavyAttack1);
 
         else if (currentAction == AnimationTypes.Reset)
-            m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_characterMovesetData.weapon.LightAttack1, m_characterMovesetData.weapon.HeavyAttack1, m_characterMovesetData.weapon.SpecialLightAttack1, m_characterMovesetData.weapon.SpecialHeavyAttack1);
+            m_nextPossibleWeaponActions = new NextPossibleWeaponActions(m_movesetData.weapon.LightAttack1, m_movesetData.weapon.HeavyAttack1, m_movesetData.weapon.SpecialLightAttack1, m_movesetData.weapon.SpecialHeavyAttack1);
 
         else if (currentAttackData != null)
             m_nextPossibleWeaponActions = new NextPossibleWeaponActions(GetNextAttackLight(currentAttackData.nextLight), GetNextAttackHeavy(currentAttackData.nextHeavy), GetNextAttackSpecialLight(currentAttackData.nextSpecialLight), GetNextAttackSpecialHeavy(currentAttackData.nextSpecialHeavy));
@@ -1017,51 +1019,51 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         {
             switch (light)
             {
-                case WeaponData.LightAttack.Light_Attack_1: if (m_characterMovesetData.weapon.LightAttack1.AnimData != null) return m_characterMovesetData.weapon.LightAttack1; break;
-                case WeaponData.LightAttack.Light_Attack_2: if (m_characterMovesetData.weapon.LightAttack2.AnimData != null) return m_characterMovesetData.weapon.LightAttack2; break;
-                case WeaponData.LightAttack.Light_Attack_3: if (m_characterMovesetData.weapon.LightAttack3.AnimData != null) return m_characterMovesetData.weapon.LightAttack3; break;
-                case WeaponData.LightAttack.Light_Attack_4: if (m_characterMovesetData.weapon.LightAttack4.AnimData != null) return m_characterMovesetData.weapon.LightAttack4; break;
-                case WeaponData.LightAttack.Light_Attack_5: if (m_characterMovesetData.weapon.LightAttack5.AnimData != null) return m_characterMovesetData.weapon.LightAttack5; break;
-                case WeaponData.LightAttack.Light_Attack_6: if (m_characterMovesetData.weapon.LightAttack6.AnimData != null) return m_characterMovesetData.weapon.LightAttack6; break;
-                case WeaponData.LightAttack.Sprint_Light_Attack: if (m_characterMovesetData.weapon.SprintLightAttack.AnimData != null) return m_characterMovesetData.weapon.SprintLightAttack; break;
-                case WeaponData.LightAttack.Evade_Light_Attack: if (m_characterMovesetData.weapon.EvadeLightAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeLightAttack; break;
+                case WeaponData.LightAttack.Light_Attack_1: if (m_movesetData.weapon.LightAttack1.AnimData != null) return m_movesetData.weapon.LightAttack1; break;
+                case WeaponData.LightAttack.Light_Attack_2: if (m_movesetData.weapon.LightAttack2.AnimData != null) return m_movesetData.weapon.LightAttack2; break;
+                case WeaponData.LightAttack.Light_Attack_3: if (m_movesetData.weapon.LightAttack3.AnimData != null) return m_movesetData.weapon.LightAttack3; break;
+                case WeaponData.LightAttack.Light_Attack_4: if (m_movesetData.weapon.LightAttack4.AnimData != null) return m_movesetData.weapon.LightAttack4; break;
+                case WeaponData.LightAttack.Light_Attack_5: if (m_movesetData.weapon.LightAttack5.AnimData != null) return m_movesetData.weapon.LightAttack5; break;
+                case WeaponData.LightAttack.Light_Attack_6: if (m_movesetData.weapon.LightAttack6.AnimData != null) return m_movesetData.weapon.LightAttack6; break;
+                case WeaponData.LightAttack.Sprint_Light_Attack: if (m_movesetData.weapon.SprintLightAttack.AnimData != null) return m_movesetData.weapon.SprintLightAttack; break;
+                case WeaponData.LightAttack.Evade_Light_Attack: if (m_movesetData.weapon.EvadeLightAttack.AnimData != null) return m_movesetData.weapon.EvadeLightAttack; break;
             }
             //Debug.Log("Warning: Next Possible Light Attack in line has no AnimationData, so the next will be the first one again");
-            return m_characterMovesetData.weapon.LightAttack1;
+            return m_movesetData.weapon.LightAttack1;
         }
         WeaponData.WeaponAttack GetNextAttackHeavy(WeaponData.HeavyAttack heavy)
         {
             switch (heavy)
             {
-                case WeaponData.HeavyAttack.Heavy_Attack_1: if (m_characterMovesetData.weapon.HeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack1; break;
-                case WeaponData.HeavyAttack.Heavy_Attack_2: if (m_characterMovesetData.weapon.HeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack2; break;
-                case WeaponData.HeavyAttack.Heavy_Attack_3: if (m_characterMovesetData.weapon.HeavyAttack3.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack3; break;
-                case WeaponData.HeavyAttack.Heavy_Attack_4: if (m_characterMovesetData.weapon.HeavyAttack4.AnimData != null) return m_characterMovesetData.weapon.HeavyAttack4; break;
-                case WeaponData.HeavyAttack.Sprint_Heavy_Attack: if (m_characterMovesetData.weapon.SprintHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.SprintHeavyAttack; break;
-                case WeaponData.HeavyAttack.Evade_Heavy_Attack: if (m_characterMovesetData.weapon.EvadeHeavyAttack.AnimData != null) return m_characterMovesetData.weapon.EvadeHeavyAttack; break;
+                case WeaponData.HeavyAttack.Heavy_Attack_1: if (m_movesetData.weapon.HeavyAttack1.AnimData != null) return m_movesetData.weapon.HeavyAttack1; break;
+                case WeaponData.HeavyAttack.Heavy_Attack_2: if (m_movesetData.weapon.HeavyAttack2.AnimData != null) return m_movesetData.weapon.HeavyAttack2; break;
+                case WeaponData.HeavyAttack.Heavy_Attack_3: if (m_movesetData.weapon.HeavyAttack3.AnimData != null) return m_movesetData.weapon.HeavyAttack3; break;
+                case WeaponData.HeavyAttack.Heavy_Attack_4: if (m_movesetData.weapon.HeavyAttack4.AnimData != null) return m_movesetData.weapon.HeavyAttack4; break;
+                case WeaponData.HeavyAttack.Sprint_Heavy_Attack: if (m_movesetData.weapon.SprintHeavyAttack.AnimData != null) return m_movesetData.weapon.SprintHeavyAttack; break;
+                case WeaponData.HeavyAttack.Evade_Heavy_Attack: if (m_movesetData.weapon.EvadeHeavyAttack.AnimData != null) return m_movesetData.weapon.EvadeHeavyAttack; break;
             }
             //Debug.Log("Warning: Next Possible Heavy Attack in line has no AnimationData, so the next will be the first one again");
-            return m_characterMovesetData.weapon.HeavyAttack1;
+            return m_movesetData.weapon.HeavyAttack1;
         }
         WeaponData.WeaponAttack GetNextAttackSpecialLight(WeaponData.LightAttackSpecial specialLight)
         {
             switch (specialLight)
             {
-                case WeaponData.LightAttackSpecial.Special_Light_Attack_1: if (m_characterMovesetData.weapon.SpecialLightAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack1; break;
-                case WeaponData.LightAttackSpecial.Special_Light_Attack_2: if (m_characterMovesetData.weapon.SpecialLightAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialLightAttack2; break;
+                case WeaponData.LightAttackSpecial.Special_Light_Attack_1: if (m_movesetData.weapon.SpecialLightAttack1.AnimData != null) return m_movesetData.weapon.SpecialLightAttack1; break;
+                case WeaponData.LightAttackSpecial.Special_Light_Attack_2: if (m_movesetData.weapon.SpecialLightAttack2.AnimData != null) return m_movesetData.weapon.SpecialLightAttack2; break;
             }
             //Debug.Log("Warning: Next Possible Special Light Attack in line has no AnimationData, so the next will be the first one again");
-            return m_characterMovesetData.weapon.SpecialLightAttack1;
+            return m_movesetData.weapon.SpecialLightAttack1;
         }
         WeaponData.WeaponAttack GetNextAttackSpecialHeavy(WeaponData.HeavyAttackSpecial specialHeavy)
         {
             switch (specialHeavy)
             {
-                case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_1: if (m_characterMovesetData.weapon.SpecialHeavyAttack1.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack1; break;
-                case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_2: if (m_characterMovesetData.weapon.SpecialHeavyAttack2.AnimData != null) return m_characterMovesetData.weapon.SpecialHeavyAttack2; break;
+                case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_1: if (m_movesetData.weapon.SpecialHeavyAttack1.AnimData != null) return m_movesetData.weapon.SpecialHeavyAttack1; break;
+                case WeaponData.HeavyAttackSpecial.Special_Heavy_Attack_2: if (m_movesetData.weapon.SpecialHeavyAttack2.AnimData != null) return m_movesetData.weapon.SpecialHeavyAttack2; break;
             }
             //Debug.Log("Warning: Next Possible Special Heavy Attack in line has no AnimationData, so the next will be the first one again");
-            return m_characterMovesetData.weapon.SpecialHeavyAttack1;
+            return m_movesetData.weapon.SpecialHeavyAttack1;
         }
     }
     public int GetInterruptabilityLight()
@@ -1087,30 +1089,30 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private void SetNextPossibleShieldActions(ShieldData.ShieldAction currentActionData = null, int currentAction = 0)
     {
         if (currentAction == AnimationTypes.Reset)
-            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, m_characterMovesetData.shield.ShiledSpecialLight1, m_characterMovesetData.shield.ShiledSpecialHeavy1);
+            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_movesetData.shield.shieldIdle, m_movesetData.shield.shieldingUpperBody, m_movesetData.shield.ShiledSpecialLight1, m_movesetData.shield.ShiledSpecialHeavy1);
 
         else if (currentActionData != null)
-            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_characterMovesetData.shield.shieldIdle, m_characterMovesetData.shield.shieldingUpperBody, GetNextShieldSpecialLight(currentActionData.nextSpecialLight), GetNextShieldSpecialHeavy(currentActionData.nextSpecialHeavy));
+            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_movesetData.shield.shieldIdle, m_movesetData.shield.shieldingUpperBody, GetNextShieldSpecialLight(currentActionData.nextSpecialLight), GetNextShieldSpecialHeavy(currentActionData.nextSpecialHeavy));
 
         ShieldData.ShieldAction GetNextShieldSpecialLight(ShieldData.ShieldSpecialLight specialLight)
         {
             switch (specialLight)
             {
-                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_1: if (m_characterMovesetData.shield.ShiledSpecialLight1.AnimData != null) return m_characterMovesetData.shield.ShiledSpecialLight1; break;
-                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_2: if (m_characterMovesetData.shield.ShiledSpecialLight2.AnimData != null) return m_characterMovesetData.shield.ShiledSpecialLight2; break;
+                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_1: if (m_movesetData.shield.ShiledSpecialLight1.AnimData != null) return m_movesetData.shield.ShiledSpecialLight1; break;
+                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_2: if (m_movesetData.shield.ShiledSpecialLight2.AnimData != null) return m_movesetData.shield.ShiledSpecialLight2; break;
             }
             //Debug.Log("Warning: Next Possible Special Light Attack in line has no AnimationData, so the next will be the first one again");
-            return m_characterMovesetData.shield.ShiledSpecialLight1;
+            return m_movesetData.shield.ShiledSpecialLight1;
         }
         ShieldData.ShieldAction GetNextShieldSpecialHeavy(ShieldData.ShieldSpecialHeavy specialHeavy)
         {
             switch (specialHeavy)
             {
-                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_1: if (m_characterMovesetData.shield.ShiledSpecialHeavy1.AnimData != null) return m_characterMovesetData.shield.ShiledSpecialHeavy1; break;
-                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_2: if (m_characterMovesetData.shield.ShiledSpecialHeavy2.AnimData != null) return m_characterMovesetData.shield.ShiledSpecialHeavy2; break;
+                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_1: if (m_movesetData.shield.ShiledSpecialHeavy1.AnimData != null) return m_movesetData.shield.ShiledSpecialHeavy1; break;
+                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_2: if (m_movesetData.shield.ShiledSpecialHeavy2.AnimData != null) return m_movesetData.shield.ShiledSpecialHeavy2; break;
             }
             //Debug.Log("Warning: Next Possible Special Heavy Attack in line has no AnimationData, so the next will be the first one again");
-            return m_characterMovesetData.shield.ShiledSpecialHeavy1;
+            return m_movesetData.shield.ShiledSpecialHeavy1;
         }
     }
     public int GetInterruptabilityShieldLightSpecial()
@@ -1134,7 +1136,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     #region MOVING AND ROTATING
 
-    private void SetLookAtTarget(Transform transform)
+    private void SetBodyLookAtTarget(Transform transform)
     {
         if (m_lookAtScript != null)
             m_lookAtScript.SetTarget(transform);
@@ -1148,14 +1150,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         else m_lookAtScript.SetForwardDeactive();
 
     }
-    private Quaternion AdditionalFacingRotation()
+    private Quaternion OrientationRotation()
     {
-        if (m_isAdditionalRotationForbidden)
+        if (m_isOrientationRotationForbidden)
             return Quaternion.identity;
 
-        if (m_facingDirectionType == Direction.Forward) return Quaternion.identity;
-        if (m_facingDirectionType == Direction.Right) return Quaternion.Euler(0, -90, 0);
-        else if (m_facingDirectionType == Direction.Left) return Quaternion.Euler(0, 90, 0);
+        if (m_orientation == Orientation.Forward) return Quaternion.identity;
+        if (m_orientation == Orientation.Right) return Quaternion.Euler(0, -90, 0);
+        else if (m_orientation == Orientation.Left) return Quaternion.Euler(0, 90, 0);
         else return Quaternion.Euler(0, 180, 0);
     }
     private void RotatingPlayer()
@@ -1163,7 +1165,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         //if no input, then it should not recalculate the desired facing direction, because what if i stand still and then lock on something behind me, it should not affect any calculation as long as i dont move
         // also, actions like evading set their initial m_desiredFacingRotationDirInWS in their own Trigger function
         if (!m_isStandingStill)
-            m_desiredFacingRotationDirInWS = AdditionalFacingRotation() * m_inputDirInWS;
+            m_desiredFacingRotationDirInWS = OrientationRotation() * m_inputDirInWS;
         else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && !m_isRunning)
             m_desiredFacingRotationDirInWS = PlayerToTargetXZVector;
         else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && m_isRunning)
@@ -1226,11 +1228,11 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, m_nowMoveDir * nowSpeed, Time.deltaTime * nowMoveAcceleration);
 
-        if (m_gravity == 0)
+        if (m_currentGravity == 0)
             m_velocityThroughGravity = 0;
         else if (m_characterController.isGrounded && m_velocityThroughGravity < 0)
             m_velocityThroughGravity = -2f; // small downward force to keep grounded
-        m_velocityThroughGravity += m_gravity * Time.deltaTime;
+        m_velocityThroughGravity += m_currentGravity * Time.deltaTime;
         Vector3 gravity = new Vector3(0, m_velocityThroughGravity, 0);
 
         m_characterController.Move((nowMove + gravity) * Time.deltaTime);
@@ -1259,7 +1261,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
 
-
+    
 
     #region ACTION CALCULATIONS
 
@@ -1267,7 +1269,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private Vector3 m_directionByAction = Vector3.forward;
     private float m_actionInfluenceOverMoveDirection = 0;
 
-    private float m_speedByAction = 0;
+    [SerializeField]private float m_speedByAction = 0;
     private float m_actionInfluenceOverMoveSpeed = 0;
 
     private float m_moveAccelerationByAction = 0;
@@ -1288,14 +1290,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private AnimationMovementData.TargetRelations m_actionTargetRelations = 0;
     private AnimationMovementData.TurningRelations m_actionTurningRelations = 0;
 
-
+    private float m_actionTimeTillNextChange = 0f;
 
     private void SetActionValues(AnimationData animData, List<Action> effectList = null)
     {
         AnimationMovementData animMoveData = animData.AnimationMovementData;
         float animationDuration = animData.animationClip.length;
         float crossfadeOutTime = animData.crossfadeOutTime;
-        float crossfadeStartBeforeEndTime = Mathf.Max(0, 1f, animData.crossfadeBeginn);
+        float crossfadeStartBeforeEndTime = Mathf.Max(0, 1f, animData.crossfadeOutBeginn);
 
         if (m_ActionCoroutine != null)
         {
@@ -1309,7 +1311,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (animMoveData == null)
         {
             Debug.Log("ANIMATION_Moveset_DATA IS NULL");
-            animMoveData = m_characterMovesetData.emptyFallbackAnimation.AnimationMovementData;
+            animMoveData = m_movesetData.emptyFallbackAnimation.AnimationMovementData;
         }
 
 
@@ -1320,7 +1322,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         m_actionTargetRelations = animMoveData.targetRelations;
         m_actionTurningRelations = animMoveData.turningRelations;
-        m_isAdditionalRotationForbidden = animMoveData.forbidAdditinalRotation;
+        m_isOrientationRotationForbidden = animMoveData.forbidAdditinalRotation;
 
 
         //initial moveDir
@@ -1383,7 +1385,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             {
              //MOVING
                 case AnimationMovementData.ValueName.Move_Direction_Angle:
-                    if (valueTypeIsConstant)                m_directionByAction = Quaternion.Euler(0, valueData.value, 0) * m_directionByActionBaseValue; 
+                    if (valueTypeIsConstant)            m_directionByAction = Quaternion.Euler(0, valueData.value, 0) * m_directionByActionBaseValue; 
                     else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
                     else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
                     
@@ -1451,16 +1453,13 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             }
         }
 
-
         m_currentActionAnimData = animData;
         ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, animData, effectList); //This could be saved somewhere in future!
 
         m_ActionCoroutine = StartCoroutine(PerformAction(processedData));
-
     }
 
 
-    private float m_actionTimeTillNextChange = 0f;
     private IEnumerator PerformAction(ProcessedAnimationMovementData processedData)
     {
         float elapsedTime = 0;
@@ -1473,8 +1472,18 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         DamageData actionDamageData = null;
         List<int> activeHitBoxActiveDataList = new List<int>();
         if (processedData.AnimationData.hitBoxActiveData.Count != 0)
-            actionDamageData = m_currentWeaponAttackData != null ? m_characterStatus.GetActionDamageData(m_currentWeaponAttackData, transform.forward, m_characterMovesetData.weapon.BasePhysicalType) 
-                                                                 : m_characterStatus.GetActionDamageData(m_currentShieldActionData, transform.forward, m_characterMovesetData.shield.PhysicalType);
+            actionDamageData = m_currentWeaponAttackData != null ? m_characterStatus.GetActionDamageData(m_currentWeaponAttackData, transform.forward, m_movesetData.weapon.BasePhysicalType) 
+                                                                 : m_characterStatus.GetActionDamageData(m_currentShieldActionData, transform.forward, m_movesetData.shield.PhysicalType);
+        Action pauseMidAirAction = null;
+        if (processedData.AnimationData.IsPausingMidAir) pauseMidAirAction = () => 
+        {
+            if (!m_isGrounded)
+            {
+                m_isMidAirPause = true;
+                m_animationSpeed = 0;
+                m_animator.speed = m_animationSpeed;
+            }
+        };
 
         void SetValueByName(ProcessedAnimationMovementData.ValueName name, float newValue)
         {
@@ -1500,13 +1509,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             }
         }
 
-
-        while (elapsedTime <= duration - processedData.AnimationData.crossfadeBeginn)
+        while (elapsedTime <= duration - processedData.AnimationData.crossfadeOutBeginn)
         {
 
             if (m_actionTimeTillNextChange <= 0)
             {
-                float timeTillEnd = ((duration - processedData.AnimationData.crossfadeBeginn) - elapsedTime);
+                float timeTillEnd = ((duration - processedData.AnimationData.crossfadeOutBeginn) - elapsedTime);
                 float waitTime = timeTillEnd;
                 float relativeElapsedTime = elapsedTime / duration;
 
@@ -1515,24 +1523,28 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                 //INTERRUPTABILITY this is if a action is earlier interruptable than the lenght of the animation
                 if (m_currentInteruptability != processedData.AnimationData.ChangedInterruptability)
                 {
-                    float timetillChangeInteruptability = timeTillEnd - processedData.AnimationData.crossfadeBeginn;
+                    //processedData.AnimationData.InterruptabilityChangeBeforeEndTime;
+                    float timetillChangeInteruptability = timeTillEnd - processedData.AnimationData.InterruptabilityChangeBeforeEndTime;
                     if (timetillChangeInteruptability <= 0)
                     {
                         m_characterStatus.ContinueEnergyRegenerationInTime();
                         m_currentInteruptability = processedData.AnimationData.ChangedInterruptability;
                         m_actionChangesInterruptabilityCoroutine = null;
                         if (m_playerInputManager.CheckRecallLatestBufferedInput())
+                        {
                             EndActionReset();
+                            yield break;
+                        }
                     }
                     else
                         waitTime = Mathf.Min(timetillChangeInteruptability, waitTime);
                 }
-
+                
                 //EFFECT LIST //effects like pay stamina cost or switch weapons
                 if (processedData.Effects != null)
                 {
                     //float timetillEffectTime = timeTillEnd - duration * (1 - processedData.AnimationData.MainActionMomentTime);
-                    float timetillEffectTime = (duration * processedData.AnimationData.MainActionMomentTime) - ((duration - processedData.AnimationData.crossfadeBeginn) - timeTillEnd)  ;
+                    float timetillEffectTime = (duration * processedData.AnimationData.MainActionMomentTime) - ((duration - processedData.AnimationData.crossfadeOutBeginn) - timeTillEnd)  ;
                     if (timetillEffectTime <= 0)
                     {
                         foreach (Action effect in processedData.Effects)
@@ -1544,6 +1556,43 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                     else
                         waitTime = Mathf.Min(timetillEffectTime, waitTime);
                 }
+
+                //PAUSE GRAVITY On and Off
+                if (processedData.AnimationData.IsPausingMidAir)
+                {
+                    float timeTillGravityChange = waitTime;
+                    if (relativeElapsedTime >= processedData.AnimationData.PauseGravityTime.x && relativeElapsedTime < processedData.AnimationData.PauseGravityTime.y &&  Gravity != 0)
+                    {
+                        Gravity = 0;
+                        m_footPlacing.SetWeightActive(false);
+                    }
+                    else if ( relativeElapsedTime > processedData.AnimationData.PauseGravityTime.y && Gravity == 0)
+                    {
+                        Gravity = m_originalGravity;
+                    }
+
+                    if (relativeElapsedTime < processedData.AnimationData.PauseGravityTime.x)
+                        timeTillGravityChange = (processedData.AnimationData.PauseGravityTime.x - relativeElapsedTime) * duration;
+                    else if (relativeElapsedTime < processedData.AnimationData.PauseGravityTime.y)
+                        timeTillGravityChange = (processedData.AnimationData.PauseGravityTime.y - relativeElapsedTime) * duration;
+
+                    waitTime = Mathf.Min(timeTillGravityChange, waitTime);
+
+                }
+
+                //PAUSE Animation when MidAir 
+                if (processedData.AnimationData.IsPausingMidAir)
+                {
+                    if (pauseMidAirAction != null && relativeElapsedTime >= processedData.AnimationData.PauseMidAirTime)
+                    {
+                        pauseMidAirAction.Invoke();
+                        pauseMidAirAction = null;
+                    }
+
+                    if (relativeElapsedTime < processedData.AnimationData.PauseMidAirTime)
+                        waitTime = Mathf.Min((processedData.AnimationData.PauseMidAirTime - relativeElapsedTime) * duration, waitTime);
+                }
+
 
                 //HITBOXES On and Off
                 if (processedData.AnimationData.hitBoxActiveData.Count != 0)
@@ -1588,8 +1637,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
                     //this calculates how long to wait for the next necessary canculation
                     float waitForTimeByRangeValues = timeTillEnd;
-                    if (relativeElapsedTime < rangeData.startEnd.x) waitForTimeByRangeValues = (rangeData.startEnd.x * duration) - elapsedTime; //wait till range start
-                    else if (relativeElapsedTime < rangeData.startEnd.y) waitForTimeByRangeValues = (rangeData.startEnd.y * duration) - elapsedTime; //wait till range end
+                    if (relativeElapsedTime < rangeData.startEnd.x) { waitForTimeByRangeValues = (rangeData.startEnd.x * duration) - elapsedTime;}//wait till range start
+                    else if (relativeElapsedTime < rangeData.startEnd.y) { waitForTimeByRangeValues = (rangeData.startEnd.y * duration) - elapsedTime;  }//wait till range end
 
                     waitTime = Math.Min(waitTime, waitForTimeByRangeValues);
                     SetValueByName(rangeData.name, valueInRange);
@@ -1612,6 +1661,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
                 m_actionTimeTillNextChange = waitTime;
             }
+            //if (processedData.AnimationData.AnimationMovementData.ActionDescription == "long") Debug.Log("U");
 
             yield return null;
 
@@ -1647,10 +1697,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_actionInfluenceOverTurningStrenght = 0;
         m_actionInfluenceOverMaxTurningSpeed = 0;
 
-        m_isAdditionalRotationForbidden = false;
+        m_isOrientationRotationForbidden = false;
         m_actionTargetRelations = 0;
         m_actionTurningRelations = 0;
-        m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
+        m_currentInteruptability = AnimationInterruptableType.Always_Interruptable; 
         m_isAction = false;
         m_isActionUpperBody = false;
         //IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked);  //this is funny, many stab attacks haha
@@ -1663,7 +1713,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         
 
         if (m_isHoldShielding) IsShielding = true;
-        SetLookAtTarget(m_target);
+        SetBodyLookAtTarget(m_target);
         SetLookAtForward(!m_isShielding ? false : m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.useLookAtForwardData, m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData);
 
 
@@ -1697,14 +1747,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_gravityPauseCoroutine != null)
         {
             StopCoroutine(m_gravityPauseCoroutine);
-            Gravity = c_gravity;
+            Gravity = m_originalGravity;
             m_gravityPauseCoroutine = null;
         }
 
         //Set Values
         m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
-        if (!m_isFreelyMoving) SetFacingDirectionType(); else m_facingDirectionType = Direction.Forward; //just a reminder, in the past here was a issue, but it should not anymore
-        m_desiredFacingRotationDirInWS = !m_isStandingStill ? AdditionalFacingRotation() * m_inputDirInWS : transform.forward;
+        if (!m_isFreelyMoving) SetFacingDirectionType(); else m_orientation = Orientation.Forward; //just a reminder, in the past here was a issue, but it should not anymore
+        m_desiredFacingRotationDirInWS = !m_isStandingStill ? OrientationRotation() * m_inputDirInWS : transform.forward;
 
         m_playerInputManager.RecallLatestBufferedInput();
     }
@@ -1740,9 +1790,9 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         m_animator.SetFloat("MoveMag", MoveStrength, animationDampTime, Time.deltaTime);
 
-        if (m_facingDirectionType == Direction.Forward) horAndVerMovement = new Vector2(0, 1);
-        else if (m_facingDirectionType == Direction.Right) horAndVerMovement = new Vector2(1, 0);
-        else if (m_facingDirectionType == Direction.Left) horAndVerMovement = new Vector2(-1, 0);
+        if (m_orientation == Orientation.Forward) horAndVerMovement = new Vector2(0, 1);
+        else if (m_orientation == Orientation.Right) horAndVerMovement = new Vector2(1, 0);
+        else if (m_orientation == Orientation.Left) horAndVerMovement = new Vector2(-1, 0);
         else horAndVerMovement = new Vector2(0, -1);
 
         m_animator.SetFloat("Vertical", horAndVerMovement.y, animationDampTime, Time.deltaTime);

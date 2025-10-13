@@ -16,8 +16,6 @@ MonoBehaviour:
   emptyFallbackAnimation: {fileID: 11400000, guid: bec7d88e0a0ec7c47ae0187d53ca0549, type: 2}
   idle: {fileID: 11400000, guid: bd873a9b7c9548248b3a1c0524ec5853, type: 2}
   idle1: []
-  turningLeft: {fileID: 11400000, guid: f9c2c11629752c347aba8503c086def6, type: 2}
-  turningRight: {fileID: 11400000, guid: 95db6e0cc4d8b094fa8b32982401a1fb, type: 2}
   slowWalkingForward: {fileID: 11400000, guid: 60dc3966b2e51a14abd6ed8fce7c54da, type: 2}
   slowWalkingLeft: {fileID: 11400000, guid: c3603c90e45085b428e4f8a7f821fbb6, type: 2}
   slowWalkingRight: {fileID: 11400000, guid: 390246d7cf3c4c7418593dacda9bf1ea, type: 2}
@@ -27,8 +25,12 @@ MonoBehaviour:
   walkingRight: {fileID: 11400000, guid: 9681b7b5b2afa574999adc826b790f2e, type: 2}
   walkingBackwards: {fileID: 11400000, guid: 945ad26acfbab0843b1bf9266b2df81b, type: 2}
   running: {fileID: 11400000, guid: 59bc3e6062a8b70459f2a488225feaad, type: 2}
+  runningSliding: {fileID: 11400000, guid: 302acad46b4a9ce48a2cfa02e68bcc83, type: 2}
+  turningLeft: {fileID: 11400000, guid: f9c2c11629752c347aba8503c086def6, type: 2}
+  turningRight: {fileID: 11400000, guid: 95db6e0cc4d8b094fa8b32982401a1fb, type: 2}
   turningRunningLeft: {fileID: 11400000, guid: c63d5c21a69e5b041b7fba2fc5efbd01, type: 2}
   turningRunningRight: {fileID: 11400000, guid: 4c75238676e04d844bbcbe866b1d85b9, type: 2}
+  evadeCosts: 30
   evadeForward: {fileID: 11400000, guid: 28d26864f7fab4544b837fb085131c13, type: 2}
   evadeLeft: {fileID: 11400000, guid: 12da3b88f27fada418cd62a4dd217cf7, type: 2}
   evadeRight: {fileID: 11400000, guid: 82b6a1e8bfbf54545a41c7766554a1ef, type: 2}

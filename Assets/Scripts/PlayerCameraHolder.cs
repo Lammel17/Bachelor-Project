@@ -11,20 +11,30 @@ public class PlayerCameraHolder : MonoBehaviour
 {
     public static PlayerCameraHolder Instance { get; private set; }
     private PlayerInputManager m_playerInputManager;
-    [SerializeField] private CharacterActionAndMovementHandler m_playerMovement;
-    [SerializeField] private GameObject m_camera;
-    [SerializeField] private Transform m_playerTransform;
+    [SerializeField][Required] private CharacterActionAndMovementHandler m_playerMovement;
+    [SerializeField][Required] private GameObject m_camera;
+    [SerializeField][Required] private Transform m_playerTransform;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isLockOn = false;
     [Space]
-    [Header("Camera Holder")]
-    [SerializeField] private Vector3 m_camHolderLocalCenter = new Vector3(0, 1.5f, 0);
-    [SerializeField] private Vector3 m_camHolderRestDirection = new Vector3(0, -2, 4f);
-    [SerializeField] private float m_distCenterToCam = 4f;
+    [SerializeField] private Transform m_chosenLockOnTransform;
     [Space]
-    [SerializeField] private float m_camHolderClampAngleXAxisMax = 75f;
-    [SerializeField] private Vector2 m_horAndVerInputStrenght = new Vector2(250,250);
-    [SerializeField] private float m_accelerationOfCamHolderFollowPlayer = 5f;
-    [SerializeField] private float m_accelerationOfCamHolderRotation = 6f;
+    [Header("-----------------------")]
+    [Space]
+    [Space]
+
+    [SerializeField][Required] private CameraSettingData m_camSettingsData;
+
+    [Header("Camera Holder")]
+    [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_horAndVerInputStrenght = new Vector2(250,250);
+    [SerializeField][EditorAttributes.ReadOnly] private Vector3 m_camHolderRestDirection = new Vector3(0, -2, 4f);
+    [SerializeField][EditorAttributes.ReadOnly] private float m_camHolderClampAngleXAxisMax = 75f;
+    [Space]
+    [SerializeField][EditorAttributes.ReadOnly] private Vector3 m_camHolderLocalCenter = new Vector3(0, 1.5f, 0);
+    [SerializeField][EditorAttributes.ReadOnly] private float m_distCenterToCam = 4f;
+    [Space]
+    [SerializeField][EditorAttributes.ReadOnly] private float m_rotationForceByDrag = 0.13f; 
+    [SerializeField][EditorAttributes.ReadOnly] private float m_accelerationOfCamHolderFollowPlayer = 5f;
+    [SerializeField][EditorAttributes.ReadOnly] private float m_accelerationOfCamHolderRotation = 6f; 
     [Space]
 
     private float m_camHolderClampAngleXAxis;
@@ -38,11 +48,10 @@ public class PlayerCameraHolder : MonoBehaviour
     private Quaternion m_camHolderRotationHorY;
 
     [Header("Camera itfelf")]
-    [SerializeField] private Transform m_chosenLockOnTransform;
-    [SerializeField] [Range(0,1)]private float m_lookToPlayerOrTargetFactor = 0.6f;
-    [SerializeField] private Vector2 m_additionalCamHeightLockOn = new Vector2(0.5f, 2);
     [SerializeField][EditorAttributes.ReadOnly][Range(0,1)]private float m_lockOnApplyance = 0;
-    [SerializeField] private float m_camLockOnSpeed = 4f;
+    [SerializeField][EditorAttributes.ReadOnly][Range(0,1)]private float m_lookToPlayerOrTargetFactor = 0.6f;
+    [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_additionalCamHeightLockOn = new Vector2(0.5f, 2);
+    [SerializeField][EditorAttributes.ReadOnly] private float m_camLockOnSpeed = 4f;
 
     private Transform m_target;
     private Vector3 m_lastTargetPos = Vector3.zero;
@@ -70,6 +79,7 @@ public class PlayerCameraHolder : MonoBehaviour
     void Start()
     {
         m_playerInputManager = PlayerInputManager.Instance;
+        SetCameraSettingValues();
 
         gameObject.transform.SetLocalPositionAndRotation(m_camHolderLocalCenter, Quaternion.LookRotation(m_camHolderRestDirection, Vector3.up));
         m_camera.transform.localPosition = new Vector3(0, 0, -m_distCenterToCam);
@@ -84,6 +94,24 @@ public class PlayerCameraHolder : MonoBehaviour
         m_WIP_camHolderRotationVerX = Quaternion.Euler(transform.rotation.eulerAngles.x, 0, 0);
         m_WIP_camHolderRotationHorY = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
     }
+    private void SetCameraSettingValues(CameraSettingData cameraBehaviorData = null)
+    {
+        if (cameraBehaviorData != null)
+            m_camSettingsData = cameraBehaviorData;
+
+        m_camHolderLocalCenter = m_camSettingsData.CamHolder_LocalCenter;
+        m_camHolderRestDirection = m_camSettingsData.CamHolder_RestDirection;
+        m_distCenterToCam = m_camSettingsData.DistCenterToCam;
+        m_camHolderClampAngleXAxisMax = m_camSettingsData.CamHolder_ClampAngleXAxisMax;
+        m_horAndVerInputStrenght = m_camSettingsData.HorAndVerInputStrenght;
+        m_accelerationOfCamHolderFollowPlayer = m_camSettingsData.CamHolder_AccelerationOfFollowPlayer;
+        m_accelerationOfCamHolderRotation = m_camSettingsData.CamHolder_AccelerationOfRotation; 
+        m_rotationForceByDrag = m_camSettingsData.CamHolder_RotationForceByDrag; 
+        m_lookToPlayerOrTargetFactor = m_camSettingsData.LookToPlayerOrTargetFactor;
+        m_additionalCamHeightLockOn = m_camSettingsData.AdditionalCamHeightLockOn;
+        m_camLockOnSpeed = m_camSettingsData.Cam_LockOnSpeed;
+
+    }
 
 
     void Update()
@@ -96,6 +124,8 @@ public class PlayerCameraHolder : MonoBehaviour
         //CameraLookAt();
         //ControlCameraDistance();
     }
+
+
 
 
     private void CalculateCameraHolderCenter()
@@ -159,11 +189,9 @@ public class PlayerCameraHolder : MonoBehaviour
         }
         else 
         {
-            return;/////////////////////////////////////////////////Just for test
-            float m_desiredDirForceFactor = 0.25f;
             Vector3 camRestDir = m_camHolderRestDirection;
             //here, abhängig nur vom seitwärts laufen, weil beim seitswärts laufen die kamera gedreht wird
-            desiredRotationForceVerX = desiredRotationForceHorY = m_desiredDirForceFactor * Mathf.Abs((Quaternion.Inverse(CameraHolderForwardYAxis) * m_playerMovement.PreviousMove).x); 
+            desiredRotationForceVerX = desiredRotationForceHorY = m_rotationForceByDrag * Mathf.Abs((Quaternion.Inverse(CameraHolderForwardYAxis) * m_playerMovement.PreviousMove).x); 
             //Die Gewünschte End-Drehung von der Aktuellen Dreh-Richtung aus
             desiredRotation = m_playerTransform.transform.rotation * Quaternion.LookRotation(camRestDir);
         }

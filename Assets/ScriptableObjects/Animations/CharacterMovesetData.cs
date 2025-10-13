@@ -8,7 +8,7 @@ public class CharacterMovesetData : ScriptableObject
 
     public string Description = "";
     public AnimationData emptyFallbackAnimation;
-    [Header("Action Animations")]
+    //[Header("Action Animations")]
 
     [Header("Non-Action Animations")]
     public AnimationData idle;
@@ -28,11 +28,13 @@ public class CharacterMovesetData : ScriptableObject
     [Space]
     [Header("Action Animations")]
     [Space]
+    public AnimationData runningSliding;
     public AnimationData turningLeft;
     public AnimationData turningRight;
     public AnimationData turningRunningLeft;
     public AnimationData turningRunningRight;
     [Space]
+    public int evadeCosts = 30;
     public AnimationData evadeForward;
     public AnimationData evadeLeft;
     public AnimationData evadeRight;

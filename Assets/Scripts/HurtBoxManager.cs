@@ -1,11 +1,12 @@
 using NUnit.Framework;
 using UnityEngine;
+using EditorAttributes;
 
 
 [RequireComponent(typeof(CharacterStatus))]
 public class HurtBoxManager : MonoBehaviour
 {
-    [SerializeField] private CharacterStatus m_characterStatus;
+    [SerializeField][Required] private CharacterStatus m_characterStatus;
     [SerializeField] private HurtBoxCollection[] m_hurtBoxCollection;
 
     [System.Serializable]

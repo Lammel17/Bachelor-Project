@@ -9,7 +9,7 @@ using GD.MinMaxSlider;
 [CreateAssetMenu(fileName = "MovementData", menuName = "Scriptable Objects/MovementData")]
 public class AnimationMovementData : ScriptableObject
 {
-    [SerializeField] public string ActionDescription = "";
+    [SerializeField] public string MovementDescription = "";
 
     [Space]
     [Tooltip("sets if the initial Influence value of dir, speed and acc is set to 0 or 1")]
