@@ -18,7 +18,7 @@ MonoBehaviour:
   bodyParts: 2
   crossfadeInTime: 0.08
   crossfadeOutTime: 0.29
-  crossfadeBeginn: 0
+  crossfadeOutBeginn: 0.2
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0
   ChangedInterruptability: 1

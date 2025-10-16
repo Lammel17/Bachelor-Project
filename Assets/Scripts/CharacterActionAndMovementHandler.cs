@@ -108,6 +108,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private Coroutine m_actionPauseCoroutine;
     private Coroutine m_gravityPauseCoroutine;
     private Coroutine m_ActionCoroutine = null;
+    private Coroutine m_slowDownAnimSpeedCoroutine = null;
 
     private NextPossibleWeaponActions m_nextPossibleWeaponActions = null;
     private NextPossibleShieldActions m_nextPossibleShieldActions = null;
@@ -175,7 +176,13 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             m_isGrounded = value; 
             if (m_isMidAirPause && m_isGrounded)
             {
+                Debug.Log("Grounded");
                 m_isMidAirPause = false;
+                if (m_slowDownAnimSpeedCoroutine != null)
+                {
+                    StopCoroutine(m_slowDownAnimSpeedCoroutine);
+                    m_slowDownAnimSpeedCoroutine = null;
+                }
                 m_animationSpeed = 1;
                 m_animator.speed = m_animationSpeed;
             }
@@ -229,7 +236,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             else if (!m_isRunning && !m_isAction) 
             { 
                 SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset); 
-                if (m_inputStrenght == 0) TriggerRunningSlide(); } 
+                if (m_inputStrenght == 0) TriggerRunningSlide();
+            } 
             if (!m_isRunning && !m_isAction && m_target != null) { SetBodyLookAtTarget(m_target); }
 
             Speed = m_inputStrenght;
@@ -519,7 +527,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
         AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
-        if ((int)m_currentInteruptability >= (int)turningInterruptability) return;    
+        if ((int)m_currentInteruptability > (int)turningInterruptability) return;    
 
         AnimationData animData = null;
         // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
@@ -529,29 +537,26 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         {
             if ( Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)     animData = m_movesetData.turningLeft;
             else                                                animData = m_movesetData.turningRight;   
-            SetTriggerTurning();
         }
-        if (m_isRunning && m_isFreelyMoving &&  (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)
-        {
+        else if (m_isRunning && m_isFreelyMoving &&  (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)
+        { 
             if (Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)      animData = m_movesetData.turningRunningLeft;
             else                                                animData = m_movesetData.turningRunningRight;
-            SetTriggerTurning();
         }
+        else 
+            return;
 
-        void SetTriggerTurning()
-        {
-            if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
-        
-            m_isTurning = true;
-            
-            if (m_ActionCoroutine != null)
-                EndActionReset();
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
-            m_animator.SetFloat("TurningDir", Mathf.Sign(angleMoveDirToPrevMoveDir));
-            m_currentInteruptability = turningInterruptability;
+        m_isTurning = true;
 
-            InitAction(!m_isRunning ? AnimationTypes.Turning : AnimationTypes.Turning_Running, animData.bodyParts, animData);
-        }
+        if (m_ActionCoroutine != null)
+            EndActionReset();
+
+        m_animator.SetFloat("TurningDir", Mathf.Sign(angleMoveDirToPrevMoveDir));
+        m_currentInteruptability = turningInterruptability;
+
+        InitAction(!m_isRunning ? AnimationTypes.Turning : AnimationTypes.Turning_Running, animData.bodyParts, animData);
     }
 
 
@@ -1269,7 +1274,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private Vector3 m_directionByAction = Vector3.forward;
     private float m_actionInfluenceOverMoveDirection = 0;
 
-    [SerializeField]private float m_speedByAction = 0;
+    private float m_speedByAction = 0;
     private float m_actionInfluenceOverMoveSpeed = 0;
 
     private float m_moveAccelerationByAction = 0;
@@ -1480,8 +1485,9 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             if (!m_isGrounded)
             {
                 m_isMidAirPause = true;
-                m_animationSpeed = 0;
-                m_animator.speed = m_animationSpeed;
+                m_slowDownAnimSpeedCoroutine = StartCoroutine(SlowDownAnimSpeed());
+                //m_animationSpeed = 0;
+                //m_animator.speed = m_animationSpeed;
             }
         };
 
@@ -1583,14 +1589,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                 //PAUSE Animation when MidAir 
                 if (processedData.AnimationData.IsPausingMidAir)
                 {
-                    if (pauseMidAirAction != null && relativeElapsedTime >= processedData.AnimationData.PauseMidAirTime)
+                    if (pauseMidAirAction != null && relativeElapsedTime >= (processedData.AnimationData.PauseMidAirTime - (m_animSlowDownDuration/2) / duration))
                     {
                         pauseMidAirAction.Invoke();
                         pauseMidAirAction = null;
                     }
 
-                    if (relativeElapsedTime < processedData.AnimationData.PauseMidAirTime)
-                        waitTime = Mathf.Min((processedData.AnimationData.PauseMidAirTime - relativeElapsedTime) * duration, waitTime);
+                    if (relativeElapsedTime < (processedData.AnimationData.PauseMidAirTime - (m_animSlowDownDuration / 2) / duration))
+                        waitTime = Mathf.Min(((processedData.AnimationData.PauseMidAirTime - (m_animSlowDownDuration / 2) / duration) - relativeElapsedTime) * duration, waitTime);
                 }
 
 
@@ -1781,6 +1787,24 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
     #region ANIMATION
+
+    public float m_animSlowDownDuration = 0.2f;
+    private IEnumerator SlowDownAnimSpeed()
+    {
+        float t = m_animSlowDownDuration;
+
+        while ((t > 0 && m_slowDownAnimSpeedCoroutine != null) || t == m_animSlowDownDuration)
+        {
+            t = Mathf.Max( t - Time.deltaTime, 0);
+            Debug.Log(t);
+            m_animationSpeed = t/ m_animSlowDownDuration;
+            m_animator.speed = m_animationSpeed;
+            yield return null;
+        }
+        m_slowDownAnimSpeedCoroutine = null;
+    }
+
+
 
     private void SetAnimatorMoveValues()
     {

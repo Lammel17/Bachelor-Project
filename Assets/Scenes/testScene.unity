@@ -1690,6 +1690,7 @@ MonoBehaviour:
   m_camHolderClampAngleXAxisMax: 75
   m_camHolderLocalCenter: {x: 0, y: 1.5, z: 0}
   m_distCenterToCam: 4
+  m_rotationForceByDrag: 0.13
   m_accelerationOfCamHolderFollowPlayer: 5
   m_accelerationOfCamHolderRotation: 6
   m_lockOnApplyance: 0
@@ -4058,14 +4059,15 @@ MonoBehaviour:
   m_characterStatus: {fileID: 1756236767}
   m_chraracterMesh: {fileID: 422825766}
   m_animator: {fileID: 1060078877}
+  m_currentInteruptability: 0
   m_characterSettingsData: {fileID: 11400000, guid: 4593781a1969c944bb8badd437663ea0, type: 2}
   m_speedValues: {x: 2, y: 4, z: 6}
   m_moveAcceleration: 20
   m_turningStrenghtBaseValues: {x: 15, y: 15, z: 10}
   m_maxTurningSpeedBaseValue: 10
   m_currentGravity: -0
-  m_facingDirectionType: 0
-  m_isAdditionalRotationForbidden: 0
+  m_orientation: 0
+  m_isOrientationRotationForbidden: 0
   m_isStandingStill: 1
   m_isLockOn: 0
   m_isHoldRunning: 0
@@ -4083,7 +4085,7 @@ MonoBehaviour:
   m_equipmentIsReady: 1
   m_currentBaseLayerAnimation: 0
   m_currentUpperBodyAnimation: {x: 0, y: 0}
-  m_speedByAction: 0
+  m_animSlowDownDuration: 0.2
 --- !u!114 &1756236771
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4110,7 +4112,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dab079f37e69a004b8363e5de0c8788b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_shieldPoints: {x: 1, y: 1}
   m_absorption: 1
   m_state: 0
 --- !u!114 &1802233188 stripped

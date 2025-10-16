@@ -18,7 +18,7 @@ MonoBehaviour:
   moveDirPredefinition: 1
   turningDirPredefinition: 1
   targetRelations: 2
-  turningRelations: 2
+  turningRelations: 1
   forbidAdditinalRotation: 0
   variableValue:
   - valueName: 1

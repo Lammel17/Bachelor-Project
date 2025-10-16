@@ -25,15 +25,24 @@ MonoBehaviour:
     ignore: 0
     settings:
       valueType: 2
-      value: 20
+      value: 60
       valueSettings:
-        startEnd: {x: 0, y: 0.5420294}
+        startEnd: {x: 0, y: 0.32558817}
         curveValue:
           serializedVersion: 2
           m_Curve:
           - serializedVersion: 3
             time: 0
             value: 0
+            inSlope: 6.0840173
+            outSlope: 6.0840173
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.17444041
+          - serializedVersion: 3
+            time: 0.10114464
+            value: 0.9860064
             inSlope: 0
             outSlope: 0
             tangentMode: 136
@@ -41,19 +50,19 @@ MonoBehaviour:
             inWeight: 0.33333334
             outWeight: 0.33333334
           - serializedVersion: 3
-            time: 0.12220177
-            value: 0.87049735
-            inSlope: 1.0360212
-            outSlope: 1.0360212
+            time: 0.5966797
+            value: 0.8199997
+            inSlope: -0.86647123
+            outSlope: -0.86647123
             tangentMode: 136
             weightedMode: 0
             inWeight: 0.33333334
             outWeight: 0.33333334
           - serializedVersion: 3
-            time: 0.5
-            value: 1
-            inSlope: 0
-            outSlope: 0
+            time: 0.86750215
+            value: 0.09337018
+            inSlope: -0.9260153
+            outSlope: -0.9260153
             tangentMode: 136
             weightedMode: 0
             inWeight: 0.33333334
@@ -128,6 +137,30 @@ MonoBehaviour:
     settings:
       valueType: 0
       value: 360.8
+      valueSettings:
+        startEnd: {x: 0, y: 0.10157486}
+        curveValue:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 0
+          m_PostInfinity: 0
+          m_RotationOrder: 4
+      customInfluenceOverInput:
+        influenceType: 0
+        influence: 1
+        influenceSettings:
+          startEnd: {x: 0, y: 0.99999994}
+          curveValue:
+            serializedVersion: 2
+            m_Curve: []
+            m_PreInfinity: 0
+            m_PostInfinity: 0
+            m_RotationOrder: 4
+  - valueName: 2
+    ignore: 0
+    settings:
+      valueType: 0
+      value: 30
       valueSettings:
         startEnd: {x: 0, y: 0.10157486}
         curveValue:

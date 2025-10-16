@@ -19,7 +19,7 @@ MonoBehaviour:
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
   crossfadeOutBeginn: 0.2
-  CustomInterruptability: 5
+  CustomInterruptability: 0
   InterruptabilityChangeBeforeEndTime: 0
   ChangedInterruptability: 1
   MainActionMomentTime: 0
