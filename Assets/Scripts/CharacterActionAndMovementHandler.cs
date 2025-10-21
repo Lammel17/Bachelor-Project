@@ -37,14 +37,13 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private CharacterMovesetData m_movesetData;
     [SerializeField][EditorAttributes.ReadOnly] private AnimationInterruptableType m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
 
-    private float m_inputFactor = 1f; //should stay 1
     [Space]
     [Header("")] //DONT CHANGE THEM HERE! DO IT IN INSPECTOR!
     [SerializeField][Required] private CharacterSettingsData m_characterSettingsData;
     [SerializeField][EditorAttributes.ReadOnly] private Vector3 m_speedValues = new Vector3(2, 4, 6); //slow, walk, running
     [SerializeField][EditorAttributes.ReadOnly] private float m_moveAcceleration = 20f;
-    [SerializeField][EditorAttributes.ReadOnly] private Vector3 m_turningStrenghtBaseValues = new Vector3(15, 15, 10); //slow, walk, running
-    [SerializeField][EditorAttributes.ReadOnly] private float m_maxTurningSpeedBaseValue = 10f;
+    [SerializeField][EditorAttributes.ReadOnly] private Vector3 m_maxTurningSpeedBaseValues = new Vector3(12, 12, 12); //slow, walk, running
+    [SerializeField][EditorAttributes.ReadOnly] private float m_turningStrenghtBaseValue = 15f;
     //private const int m_runningMoveStrenght = 2;
     private Vector3 m_nowMoveDir = Vector3.forward;
     private float m_originalGravity = -9.81f;
@@ -59,9 +58,9 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private float m_forwardSidewardThreshholdAngle = 45f;
     private float m_sidewardBackwardThreshholdAngle = 135f;
     private float m_turningAngle = 0;
-    private float m_turningStrenght;
-    private float m_maxTurningSpeed;
-    private float m_speed = 0; //slow, walk, running
+    [SerializeField][EditorAttributes.ReadOnly] private float m_maxTurningSpeed;
+    [SerializeField][EditorAttributes.ReadOnly] private float m_turningStrenght;
+    private float m_currentBaseSpeed = 0; //standing, slow, walk, running
     private float m_animationSpeed = 1; //slow, walk, running
 
     //Values Depending on Camera
@@ -78,10 +77,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldRunning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isRunning = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isFreelyMoving = true;
-    [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurning = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurningApplied = false;
+    [SerializeField][EditorAttributes.ReadOnly] private bool m_isSlidingApplied = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionUpperBody = false;
-    [SerializeField][EditorAttributes.ReadOnly] private bool m_isWalkingLocked = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionLocked = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldShielding = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isShielding = false;
@@ -149,20 +148,20 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public Animator Animator { get => m_animator; }
     public CharacterMovesetData MovesetData { get => m_movesetData; }
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
-    public float InputStrenght //is already snapped by inputmanager
+    public float InputStrenght //is already snapped by inputmanager to either 0, 0.5 or 1
     { 
         get => m_inputStrenght; 
-        set { m_inputStrenght = value; Speed = m_inputStrenght; } 
+        set { m_inputStrenght = value; BaseSpeed = m_inputStrenght; } 
     } 
-    public float Speed //is already snapped by inputmanager
+    public float BaseSpeed //is already snapped by inputmanager
     { 
-        get => m_speed; 
+        get => m_currentBaseSpeed; 
         set 
         { 
-            if          (value == 0)        { m_speed = 0;                  m_turningStrenght = m_turningStrenghtBaseValues.x; }
-            else if     (m_isRunning)       { m_speed = m_speedValues.z;    m_turningStrenght = m_turningStrenghtBaseValues.z; }
-            else if     (value == 0.5f)     { m_speed = m_speedValues.x;    m_turningStrenght = m_turningStrenghtBaseValues.x; }
-            else /*if   (value == 1) */     { m_speed = m_speedValues.y;    m_turningStrenght = m_turningStrenghtBaseValues.y; }
+            if          (value == 0)        { m_currentBaseSpeed = 0;                  /*m_maxTurningSpeed = m_maxTurningSpeedBaseValues.x;*/ }
+            else if     (m_isRunning)       { m_currentBaseSpeed = m_speedValues.z;    /*m_maxTurningSpeed = m_maxTurningSpeedBaseValues.z;*/ }
+            else if     (value == 0.5f)     { m_currentBaseSpeed = m_speedValues.x;    /*m_maxTurningSpeed = m_maxTurningSpeedBaseValues.x;*/ }
+            else /*if   (value == 1) */     { m_currentBaseSpeed = m_speedValues.y;    /*m_maxTurningSpeed = m_maxTurningSpeedBaseValues.y;*/ }
         } 
     } 
     public bool IsGrounded 
@@ -235,12 +234,17 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             if (m_isRunning) { SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Running); SetBodyLookAtTarget(null); }
             else if (!m_isRunning && !m_isAction) 
             { 
-                SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset); 
-                if (m_inputStrenght == 0) TriggerRunningSlide();
+                SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
+                if (m_inputStrenght == 0 && m_prevMove.magnitude > m_speedValues.z - 0.5f)
+                {
+                    m_animator.CrossFadeInFixedTime(AnimationTypes.Running_Sliding, m_baseCrossFadeDuration);
+                    m_isSlidingApplied = true;
+                    Debug.Log("SLIDING");
+                }
             } 
             if (!m_isRunning && !m_isAction && m_target != null) { SetBodyLookAtTarget(m_target); }
 
-            Speed = m_inputStrenght;
+            BaseSpeed = m_inputStrenght;
 
             if (m_isRunning) m_characterStatus.PauseEnergyRegenerationByAction();
             else m_characterStatus.ContinueEnergyRegenerationInTime();
@@ -293,8 +297,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (TryGetComponent<FootPlacing>(out FootPlacing footPlace))
             m_footPlacing = footPlace;
 
-        m_turningStrenght = m_turningStrenghtBaseValues[1];
-        m_maxTurningSpeed = m_maxTurningSpeedBaseValue;
+        m_maxTurningSpeed = m_maxTurningSpeedBaseValues[0];
+        m_turningStrenght = m_turningStrenghtBaseValue;
 
         SetNextPossibleWeaponActions();
         SetNextPossibleShieldActions();
@@ -313,8 +317,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         m_speedValues = m_characterSettingsData.SpeedValues;
         m_moveAcceleration = m_characterSettingsData.MoveAcceleration;
-        m_turningStrenghtBaseValues = m_characterSettingsData.TurningStrenghtBaseValues;
-        m_maxTurningSpeedBaseValue = m_characterSettingsData.MaxTurningSpeedBaseValue;
+        m_turningStrenghtBaseValue = m_characterSettingsData.TurningStrenghtBaseValues;
+        m_maxTurningSpeedBaseValues = m_characterSettingsData.MaxTurningSpeedBaseValue;
         m_originalGravity = m_characterSettingsData.Gravity;
     }
 
@@ -342,7 +346,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     {
 
         SetValues();
-        TriggerTurning();
 
         testMoveDirection.transform.localScale = new Vector3(0.07f, 0.07f, Mathf.Min(Mathf.Max(m_inputStrenght, 0.2f), 1.5f));
 
@@ -357,9 +360,24 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             RotatingPlayer();
         }
 
-
         SetAnimatorMoveValues();
         CheckAnimation();
+
+        if (!m_isTurningApplied && Mathf.Abs(m_turningAngle) >= 100 && /*m_prevMove.magnitude != 0 &&*/ m_prevInputStrength == 0 && (m_currentBaseLayerAnimation == AnimationTypes.Locomotion || m_currentBaseLayerAnimation == AnimationTypes.Idle_1))
+        {
+            //m_animator.SetTrigger("Turning");
+            m_animator.SetFloat("TurningDir", Mathf.Sign(m_turningAngle));
+            m_animator.CrossFadeInFixedTime(IsRunning && m_prevMove.magnitude > m_speedValues.x ? AnimationTypes.Turning_Running : AnimationTypes.Turning, m_baseCrossFadeDuration);
+            m_isTurningApplied = true;
+            m_isSlidingApplied = false;
+            //Debug.Log("AYA");
+        }
+        if (m_isTurningApplied && Mathf.Abs(m_turningAngle) <= 20)
+            m_isTurningApplied = false;
+        if (m_isSlidingApplied && (m_inputStrenght != 0 || m_prevMove.magnitude < 1f))
+            m_isSlidingApplied = false;
+
+        Debug.Log(m_prevMove.magnitude);
 
         m_prevPrevInputStrength = m_prevInputStrength; 
         m_prevInputStrength = m_inputStrenght;
@@ -388,16 +406,16 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isStandingStill = m_inputStrenght == 0;
 
         //Running
-        IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked) && m_characterStatus.CheckIfCanConsumeConstantEnergy();
+        IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction) && m_characterStatus.CheckIfCanConsumeConstantEnergy();
         if (m_isRunning && m_equipmentIsReady) m_characterStatus.ExpendEnergyPoints(30 * Time.deltaTime);
 
         //FreelyMoving
         bool prevFreelyMoving = m_isFreelyMoving;
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         if (prevFreelyMoving != m_isFreelyMoving) //Only for one thing, that when locked on and then start running, that the movement is for 0.2s set to input instead of forward
-        { 
-            m_isAboutSwitchDirectionType = true; 
-            SwitchFreelyMoving = StartCoroutine(UtilityFunctions.Wait(0.2f, () => { m_isAboutSwitchDirectionType = false; /*Debug.Log*/ })); 
+        {
+            m_isAboutSwitchDirectionType = true;
+            SwitchFreelyMoving = StartCoroutine(UtilityFunctions.Wait(0.2f, () => { m_isAboutSwitchDirectionType = false; /*Debug.Log*/ }));
         }
 
         //TargetDist
@@ -502,62 +520,62 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     }
 
-    void TriggerRunningSlide()
-    {
-        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+    //void TriggerRunningSlide()
+    //{
+    //    if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
-        AnimationInterruptableType slidingInterruptability = AnimationInterruptableType.Easily_Interruptable;
-        if ((int)m_currentInteruptability >= (int)slidingInterruptability) return;
+    //    AnimationInterruptableType slidingInterruptability = AnimationInterruptableType.Easily_Interruptable;
+    //    if ((int)m_currentInteruptability >= (int)slidingInterruptability) return;
 
-        AnimationData animData = m_movesetData.runningSliding;
+    //    AnimationData animData = m_movesetData.runningSliding;
 
-        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+    //    if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
-        if (m_ActionCoroutine != null)
-            EndActionReset();
+    //    if (m_ActionCoroutine != null)
+    //        EndActionReset();
 
-        m_currentInteruptability = slidingInterruptability;
+    //    m_currentInteruptability = slidingInterruptability;
 
-        InitAction(AnimationTypes.Running_Sliding, animData.bodyParts, animData);
-    }
+    //    InitAction(AnimationTypes.Running_Sliding, animData.bodyParts, animData);
+    //}
 
 
-    void TriggerTurning()
-    {
-        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+    //void TriggerTurning()
+    //{
+    //    if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
 
-        AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
-        if ((int)m_currentInteruptability > (int)turningInterruptability) return;    
+    //    AnimationInterruptableType turningInterruptability = AnimationInterruptableType.Easily_Interruptable;
+    //    if ((int)m_currentInteruptability > (int)turningInterruptability) return;    
 
-        AnimationData animData = null;
-        // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
-        float angleMoveDirToPrevMoveDir = m_turningAngle;
+    //    AnimationData animData = null;
+    //    // if the input differs too much, its will trigger an turn. Therefore we need the current and pevious frame latestProcessedDir
+    //    float angleMoveDirToPrevMoveDir = m_turningAngle;
 
-        if (!m_isRunning && !m_isLockOn && m_isFreelyMoving && (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90)
-        {
-            if ( Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)     animData = m_movesetData.turningLeft;
-            else                                                animData = m_movesetData.turningRight;   
-        }
-        else if (m_isRunning && m_isFreelyMoving &&  (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)
-        { 
-            if (Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)      animData = m_movesetData.turningRunningLeft;
-            else                                                animData = m_movesetData.turningRunningRight;
-        }
-        else 
-            return;
+    //    if (!m_isRunning && !m_isLockOn && m_isFreelyMoving && (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 90)
+    //    {
+    //        if ( Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)     animData = m_movesetData.turningLeft;
+    //        else                                                animData = m_movesetData.turningRight;   
+    //    }
+    //    else if (m_isRunning && m_isFreelyMoving &&  (m_prevInputStrength == 0 || m_prevPrevInputStrength == 0) && Mathf.Abs(angleMoveDirToPrevMoveDir) > 150)
+    //    { 
+    //        if (Mathf.Sign(angleMoveDirToPrevMoveDir) < 0)      animData = m_movesetData.turningRunningLeft;
+    //        else                                                animData = m_movesetData.turningRunningRight;
+    //    }
+    //    else 
+    //        return;
 
-        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+    //    if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
-        m_isTurning = true;
+    //    m_isTurning = true;
 
-        if (m_ActionCoroutine != null)
-            EndActionReset();
+    //    if (m_ActionCoroutine != null)
+    //        EndActionReset();
 
-        m_animator.SetFloat("TurningDir", Mathf.Sign(angleMoveDirToPrevMoveDir));
-        m_currentInteruptability = turningInterruptability;
+    //    m_animator.SetFloat("TurningDir", Mathf.Sign(angleMoveDirToPrevMoveDir));
+    //    m_currentInteruptability = turningInterruptability;
 
-        InitAction(!m_isRunning ? AnimationTypes.Turning : AnimationTypes.Turning_Running, animData.bodyParts, animData);
-    }
+    //    InitAction(!m_isRunning ? AnimationTypes.Turning : AnimationTypes.Turning_Running, animData.bodyParts, animData);
+    //}
 
 
     public void TriggerReadyOrRemoveEquipment()
@@ -828,7 +846,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         AnimationInterruptableType shieldingInterruptabilityLimit = AnimationInterruptableType.Hardly_Interruptable;
         if ((int)m_currentInteruptability >= (int)shieldingInterruptabilityLimit) return;
 
-        if (m_ActionCoroutine != null && !m_isTurning) //stop current animation if its not those: turning
+        if (m_ActionCoroutine != null ) //stop current animation if its not those: turning
             EndActionReset();
 
         IsShielding = true;
@@ -912,7 +930,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         //if (!m_characterStatus.CheckIfCanExpendEnergy()) return;
         //if (!m_characterStatus.CheckIfCanExpendSpecialEnergy(thisAction.EnergyCost)) return;
 
-        if (m_ActionCoroutine != null && (!m_isTurning || thisAction.AnimData.bodyParts == AnimationData.BodyParts.WholeBody))
+        if (m_ActionCoroutine != null && (thisAction.AnimData.bodyParts == AnimationData.BodyParts.WholeBody))
             EndActionReset();
 
         m_currentInteruptability = itemUseInterruptability;
@@ -941,7 +959,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isAction = true;
         IsRunning = false;
 
-        if (!m_isTurning) //stop upperbody animations
+        if (true) //stop upperbody animations
         {
             IsShielding = false;
             SetUpperBodyAnimation(AnimationTypes.Empty_UpperBody, 0, crossFadeDuration: 0.1f);
@@ -1184,22 +1202,28 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         else if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/)        desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up), 0) * m_nowMoveDir;
         Vector3 nowdesiredFacingRotationDirInWS = Vector3.Slerp(desiredFacingRotationDirInWSByInput.normalized, desiredFacingRotationDirInWSByAction.normalized, m_actionInfluenceOverDesiredFacingRotationDirInWS);
 
-        //Speed
-        float turningStrenghtByInput = m_turningStrenght;
-        float turningStrenghtByAction = m_turningStrenghtByAction;
-        float nowTurningStrenght = Mathf.Lerp(turningStrenghtByInput, turningStrenghtByAction, m_actionInfluenceOverTurningStrenght);
+        //turningSpeedBy by movementSpeed
+        m_maxTurningSpeed = ((m_currentBaseSpeed <= m_speedValues.y) ?
+            UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.x, m_speedValues.y, m_maxTurningSpeedBaseValues.x, m_maxTurningSpeedBaseValues.y) :
+            !m_isTurningApplied ? UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.y, m_speedValues.z, m_maxTurningSpeedBaseValues.y, m_maxTurningSpeedBaseValues.z) : m_maxTurningSpeedBaseValues.z);
 
-        //acceleration
+
+        //speed
         float maxTurningSpeedByInput = m_maxTurningSpeed;
         float maxTurningSpeedByAction = m_maxTurningSpeedByInputByAction;
         float nowMaxTurningSpeed = Mathf.Lerp(maxTurningSpeedByInput, maxTurningSpeedByAction, m_actionInfluenceOverMaxTurningSpeed) * 60 * Time.deltaTime; //60 als faktor, damit maxspeed nicht so groß sein muss
+
+        //acceleration
+        float turningStrenghtByInput = m_turningStrenght;
+        float turningStrenghtByAction = m_turningStrenghtByAction;
+        float nowTurningStrenght = Mathf.Lerp(turningStrenghtByInput, turningStrenghtByAction, m_actionInfluenceOverTurningStrenght);
 
         float angle = Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up); 
         float newAngle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up) * Time.deltaTime * nowTurningStrenght, -nowMaxTurningSpeed, nowMaxTurningSpeed); //Only ever 90° steps max per seconds, the turning speed
         m_turningAngle = angle;
 
 
-        //this makes the car rotate not around it center when walking and turning, but rotates around a pont slightly to the side
+        //this makes the char rotate not around it center when walking and turning, but rotates around a pont slightly to the side
         //float turnRotationPointOffsetXAxis = !m_isAction && !m_isIgnoreTurningOffset ? (Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f) : 0;
         //Vector3 rotationCenterOffset = new Vector3(turnRotationPointOffsetXAxis, 0, 0);
 
@@ -1220,19 +1244,26 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         Vector3 nowMoveDirection = Vector3.Lerp(directionByInput.normalized, directionByAction.normalized, m_actionInfluenceOverMoveDirection);
         if (nowMoveDirection != Vector3.zero) m_nowMoveDir = nowMoveDirection.normalized;
 
+        //speedFactor by turningangle
+        float speedFactorByAngle = ((m_isTurningApplied) ? Mathf.Lerp(1, 0, (Mathf.Max(Mathf.Abs(m_turningAngle) - 20, 0) / 50)) : 1);
+        //speedFactor by turningangle
+        float accelerationFactorByTurning = ((m_currentBaseSpeed > m_speedValues.y && m_isTurningApplied) || m_isSlidingApplied ? 0.2f : 1f);
+
+
         //speed
-        float speedByInput = (!m_isWalkingLocked) ? m_inputFactor * m_speed : 0;
+        float speedByInput = m_currentBaseSpeed * speedFactorByAngle;
         float speedByAction = m_speedByAction;
         float nowSpeed = Mathf.Lerp(speedByInput, speedByAction, m_actionInfluenceOverMoveSpeed);
 
         //acceleration
-        float moveAccelerationByInput = m_moveAcceleration;
+        float moveAccelerationByInput = m_moveAcceleration * accelerationFactorByTurning;
         float moveAccelerationByAction = m_moveAccelerationByAction;
         float nowMoveAcceleration = Mathf.Lerp(moveAccelerationByInput, moveAccelerationByAction, m_actionInfluenceOverMoveAcceleration);
 
 
         Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, m_nowMoveDir * nowSpeed, Time.deltaTime * nowMoveAcceleration);
 
+        //Gravity
         if (m_currentGravity == 0)
             m_velocityThroughGravity = 0;
         else if (m_characterController.isGrounded && m_velocityThroughGravity < 0)
@@ -1240,11 +1271,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_velocityThroughGravity += m_currentGravity * Time.deltaTime;
         Vector3 gravity = new Vector3(0, m_velocityThroughGravity, 0);
 
+        //Apply
         m_characterController.Move((nowMove + gravity) * Time.deltaTime);
         m_prevMove = nowMove;
 
 
-
+        //Display
         if (nowMove != Vector3.zero) testMoveDirection.transform.rotation = Quaternion.LookRotation(nowMove, Vector3.up);
         else testMoveDirection.transform.localScale = new Vector3(0.5f, 0.07f, Mathf.Min(Mathf.Max(nowSpeed/2, 0.2f), 1.5f));
 
@@ -1711,7 +1743,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isActionUpperBody = false;
         //IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked);  //this is funny, many stab attacks haha
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
-        m_isTurning = false;
+        m_isTurningApplied = false;
         m_characterStatus.ContinueEnergyRegenerationInTime();
         m_currentActionAnimData = null;
         if (m_currentWeaponAttackData != null && m_characterStatus.HitBoxManagerWeapon != null) { m_currentWeaponAttackData = null; m_characterStatus.HitBoxManagerWeapon.DeactivateAllHitboxCollections();}
@@ -1832,7 +1864,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_isAction && !m_isActionUpperBody)
             if (!forceNewAnim) return;
         
-        if (m_isStandingStill)
+        if (m_isStandingStill )
         {
             if (m_isShielding)
             {
@@ -1842,12 +1874,11 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                     m_nextCrossfadeOutTime = m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeOutTime;
                 }
             }
-            else if (m_currentBaseLayerAnimation != AnimationTypes.Idle_1)
+            else if (m_currentBaseLayerAnimation != AnimationTypes.Idle_1 && !m_isTurningApplied && !m_isSlidingApplied)
                 SetAnimation(AnimationTypes.Idle_1, m_nextCrossfadeOutTime);
         }
-        if (!m_isStandingStill && m_currentBaseLayerAnimation != AnimationTypes.Locomotion)
+        else if (!m_isStandingStill && m_currentBaseLayerAnimation != AnimationTypes.Locomotion)
             SetAnimation(AnimationTypes.Locomotion, m_nextCrossfadeOutTime, 0.25f);
-
 
 
 

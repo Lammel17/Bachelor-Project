@@ -64,6 +64,13 @@ public static class UtilityFunctions
         return Mathf.Lerp(newMin, newMax, relativeValue);
     }
 
+    public static float RefitToNewRangeUnclamped(float value, float startRange, float endRange, float newMin, float newMax)
+    {
+        //float relativeValue = Mathf.InverseLerp(startRange, endRange, value);
+        float relativeValue = (value - startRange) / (endRange - startRange);
+        return Mathf.LerpUnclamped(newMin, newMax, relativeValue);
+    }
+
     /// <summary>
     /// This is like Vector3.Lerp, but when the changes are too small, it snaps to the end. (Only needed when t contains Time)
     /// </summary>

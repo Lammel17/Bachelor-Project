@@ -4063,9 +4063,11 @@ MonoBehaviour:
   m_characterSettingsData: {fileID: 11400000, guid: 4593781a1969c944bb8badd437663ea0, type: 2}
   m_speedValues: {x: 2, y: 4, z: 6}
   m_moveAcceleration: 20
-  m_turningStrenghtBaseValues: {x: 15, y: 15, z: 10}
-  m_maxTurningSpeedBaseValue: 10
+  m_maxTurningSpeedBaseValues: {x: 12, y: 12, z: 12}
+  m_turningStrenghtBaseValue: 15
   m_currentGravity: -0
+  m_maxTurningSpeed: 0
+  m_turningStrenght: 0
   m_orientation: 0
   m_isOrientationRotationForbidden: 0
   m_isStandingStill: 1

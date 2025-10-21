@@ -74,8 +74,8 @@ public class AnimationMovementData : ScriptableObject
         Move_Speed,
         Move_Acceleration,
         Turning_Direction_Angle,
-        Turning_Strenght,
         Max_Turning_Speed,
+        Turning_Strenght,
     }
     public enum ValueType
     {

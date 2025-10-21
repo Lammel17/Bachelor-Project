@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SpeedValues: {x: 2, y: 4, z: 6}
   MoveAcceleration: 20
-  TurningStrenghtBaseValues: {x: 15, y: 15, z: 10}
-  MaxTurningSpeedBaseValue: 10
+  MaxTurningSpeedBaseValue: {x: 16, y: 14, z: 7}
+  TurningStrenghtBaseValues: 15
   Gravity: -15
