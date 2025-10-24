@@ -8,8 +8,10 @@ using UnityEngine;
 public class FootPlacing : MonoBehaviour
 {
     [Tooltip("turn foot rotation on and off, because this takes the most calculations")]
+    [SerializeField] private bool m_stopAll = false;
     [SerializeField] private bool m_applyFootRot = true;
     [SerializeField] private bool m_applyHipHeight = true;
+    [SerializeField] private bool m_applyInverserseKinematics = true;
     [Space]
     [SerializeField] private Transform m_player;
     [Space] 
@@ -80,7 +82,11 @@ public class FootPlacing : MonoBehaviour
 
     private Quaternion m_initialFootRot;
 
+    [Space]
+    [SerializeField] private SimpleRetargeting m_retargetingScript;
 
+
+    //FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF for the future to implement: make the script stop for entitys far away,since its not needed when they far away
 
     void Awake()
     {
@@ -119,10 +125,12 @@ public class FootPlacing : MonoBehaviour
 
 
 
-
-
     void LateUpdate()
     {
+        if (m_retargetingScript != null) m_retargetingScript.DoTheRetargeting();
+
+        if (m_stopAll)
+            return;
         m_leftAnkleHeight = Mathf.Abs(m_footBoneLeft.position.y - (m_player.position.y - m_skinWidth) + 0.003f);
         m_rightAnkleHeight = Mathf.Abs(m_footBoneRight.position.y - (m_player.position.y - m_skinWidth) + 0.003f);
 
@@ -191,19 +199,13 @@ public class FootPlacing : MonoBehaviour
         float weighting = Mathf.Min(m_overallWeight, m_weightByLayingOnGround);
         
         CalculateAndSetHipHeight();
-
         m_rootBone.position = Vector3.Lerp(rootPosByAnim, m_rootBone.position, m_weightByLayingOnGround);
 
         CalculateDesiredFootPosAndRotationOnGround(ref hitL, ref hitR, ref hasGroundL, ref hasGroundR);
-
         m_desiredLeftFootPos = Vector3.Lerp(m_footBoneLeft.position, m_desiredLeftFootPos, m_weightByLayingOnGround);
         m_desiredRightFootPos = Vector3.Lerp(m_footBoneRight.position, m_desiredRightFootPos, m_weightByLayingOnGround);
 
         CalculateAndSetThightAndShinRotations();
-
-        SetFootPositionAndRotation();
-
-
 
     }
 
@@ -275,6 +277,9 @@ public class FootPlacing : MonoBehaviour
         m_desiredLeftFootRot = Quaternion.Slerp(m_lastLeftFootRot, m_desiredLeftFootRot, m_footRotationAdjustSpeed * Time.deltaTime);
         m_desiredRightFootRot = Quaternion.Slerp(m_lastRightFootRot, m_desiredRightFootRot, m_footRotationAdjustSpeed * Time.deltaTime);
 
+        //SetFootRotation
+        m_footBoneLeft.rotation = m_desiredLeftFootRot;
+        m_footBoneRight.rotation = m_desiredRightFootRot;
 
         m_lastLeftFootRot = m_desiredLeftFootRot;
         m_lastRightFootRot = m_desiredRightFootRot;
@@ -288,6 +293,13 @@ public class FootPlacing : MonoBehaviour
 
     private void CalculateAndSetThightAndShinRotations()
     {
+        if (!m_applyInverserseKinematics)
+        {
+            m_footBoneLeft.position = m_desiredLeftFootPos;
+            m_footBoneRight.position = m_desiredRightFootPos;
+            return;
+        }
+
         Vector3 leftKneeNormal = Vector3.Cross(m_shinBoneLeft.position - m_thighBoneLeft.position, m_shinBoneLeft.position - m_footBoneLeft.position).normalized;
         Vector3 leftThightUp = -Vector3.Cross(m_shinBoneLeft.position - m_thighBoneLeft.position, leftKneeNormal).normalized;
         Vector3 leftShinUp = -Vector3.Cross(m_footBoneLeft.position - m_shinBoneLeft.position, leftKneeNormal).normalized;
@@ -307,38 +319,20 @@ public class FootPlacing : MonoBehaviour
         m_thighBoneRight.RotateAround(m_thighBoneRight.position, rightKneeNormal, CalculateAngle(m_thighLenght, m_shinLenght, rightHipFootDist));
         m_shinBoneRight.rotation = Quaternion.LookRotation(m_desiredRightFootPos - m_shinBoneRight.position, rightShinUp) * Quaternion.LookRotation(Vector3.down);
 
+
+        float CalculateAngle(float boneLenght, float otherBoneLenght, float hipFootDist)
+        {
+            float semiPerimeter = (boneLenght + otherBoneLenght + hipFootDist) / 2;
+            if (boneLenght + otherBoneLenght <= hipFootDist) { /*Debug.Log(boneLenght + otherBoneLenght); Debug.Log(hipFootDist);*/ return 0.01f; }
+
+            float area = Mathf.Sqrt(semiPerimeter * (semiPerimeter - boneLenght) * (semiPerimeter - otherBoneLenght) * (semiPerimeter - hipFootDist));
+            float triangleHeight = area * 2 * (1 / hipFootDist);
+
+            return Mathf.Asin(triangleHeight / boneLenght) * Mathf.Rad2Deg;
+
+        }
     }
 
-
-
-
-
-    private void SetFootPositionAndRotation()
-    {
-        //unnecessary
-        //m_footBoneLeft.position = m_desiredLeftFootPos; 
-        //m_footBoneRight.position = m_desiredRightFootPos;
-
-        m_footBoneLeft.rotation = m_desiredLeftFootRot;
-        m_footBoneRight.rotation = m_desiredRightFootRot;
-    }
-
-
-
-
-
-
-    private float CalculateAngle( float boneLenght, float otherBoneLenght, float hipFootDist)
-    {
-        float semiPerimeter = (boneLenght + otherBoneLenght + hipFootDist)/2;
-        if (boneLenght + otherBoneLenght <= hipFootDist) { /*Debug.Log(boneLenght + otherBoneLenght); Debug.Log(hipFootDist);*/ return 0.01f; } 
-
-        float area = Mathf.Sqrt( semiPerimeter * (semiPerimeter - boneLenght) * (semiPerimeter - otherBoneLenght) * (semiPerimeter - hipFootDist));
-        float triangleHeight = area * 2 * (1/hipFootDist);
-
-        return Mathf.Asin(triangleHeight / boneLenght) * Mathf.Rad2Deg;
-
-    }
 
 
 

@@ -189,6 +189,7 @@ public class PlayerCameraHolder : MonoBehaviour
         }
         else 
         {
+            return;
             Vector3 camRestDir = m_camHolderRestDirection;
             //here, abhängig nur vom seitwärts laufen, weil beim seitswärts laufen die kamera gedreht wird
             desiredRotationForceVerX = desiredRotationForceHorY = m_rotationForceByDrag * Mathf.Abs((Quaternion.Inverse(CameraHolderForwardYAxis) * m_playerMovement.PreviousMove).x); 

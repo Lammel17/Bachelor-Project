@@ -14,21 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: aeb99471015188a43ad65f33b85a33e3, type: 2}
-  AnimationMovementData: {fileID: 0}
+  AnimationMovementData: {fileID: 11400000, guid: 0f4e81993651eed46bdf15ef236f1fa2, type: 2}
   bodyParts: 0
   crossfadeInTime: 0.2
-  crossfadeOutTime: 0.2
-  crossfadeBeginn: 0.4
+  crossfadeOutTime: 0.3
+  crossfadeOutBeginn: 0.63
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0
   ChangedInterruptability: 1
-  CostsPayTime: 0
-  IsPausingMidAir: 0
-  PauseMidAirTime: 0
-  IsPausingGravity: 0
-  PauseGravityTime: {x: 0, y: 0}
-  useLookAtData: 0
+  MainActionMomentTime: 0
+  hitBoxActiveData: []
+  IsPausingMidAir: 1
+  PauseMidAirTime: 0.18
+  IsPausingGravity: 1
+  PauseGravityTime: {x: 0, y: 0.13353868}
+  actionUsesLookAtTargetData: 0
+  useLookAtForwardData: 0
   lookAtData:
     m_applyAddRot: 1
-    m_addRotEuler: {x: 0, y: 0, z: 0}
     m_forwardCorrections: []
