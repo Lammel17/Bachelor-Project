@@ -27,7 +27,7 @@ MonoBehaviour:
   IsPausingMidAir: 1
   PauseMidAirTime: 0.433
   IsPausingGravity: 1
-  PauseGravityTime: {x: 0.04, y: 0.2456851}
+  PauseGravityTime: {x: 0, y: 0.25}
   actionUsesLookAtTargetData: 0
   useLookAtForwardData: 0
   lookAtData:

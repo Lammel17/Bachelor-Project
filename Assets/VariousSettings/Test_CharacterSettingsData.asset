@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43826eedce7d6c3468a1614ce3f1a742, type: 3}
   m_Name: Test_CharacterSettingsData
   m_EditorClassIdentifier: 
-  SpeedValues: {x: 2, y: 4, z: 6}
+  SpeedValues: {x: 1.2, y: 4, z: 6}
   MoveAcceleration: 20
   MaxTurningSpeedBaseValue: {x: 16, y: 14, z: 7}
   TurningStrenghtBaseValues: 15

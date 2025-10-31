@@ -22,7 +22,7 @@ MonoBehaviour:
   forbidAdditinalRotation: 0
   variableValue:
   - valueName: 4
-    ignore: 0
+    ignore: 1
     settings:
       valueType: 0
       value: 50

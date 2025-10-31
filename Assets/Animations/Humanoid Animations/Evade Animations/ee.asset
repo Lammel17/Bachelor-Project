@@ -136,7 +136,7 @@ MonoBehaviour:
     ignore: 0
     settings:
       valueType: 0
-      value: 180
+      value: 30
       valueSettings:
         startEnd: {x: 0, y: 1}
         curveValue:
@@ -175,7 +175,7 @@ MonoBehaviour:
             m_PostInfinity: 0
             m_RotationOrder: 0
   - valueName: 5
-    ignore: 0
+    ignore: 1
     settings:
       valueType: 0
       value: 20

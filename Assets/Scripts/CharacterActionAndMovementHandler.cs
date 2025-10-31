@@ -172,7 +172,12 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             if (value == m_isGrounded)
                 return;
 
-            m_isGrounded = value; 
+            if (m_footPlacing != null && m_isGrounded && value == false)
+                m_footPlacing.SetWeightActive(false);
+            else if (m_footPlacing != null && !m_isGrounded && value == true)
+                m_footPlacing.SetWeightActive(true);
+
+            m_isGrounded = value;
             if (m_isMidAirPause && m_isGrounded)
             {
                 Debug.Log("Grounded");
@@ -195,10 +200,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             if (m_currentGravity == value) 
                 return;
 
-            if (m_footPlacing != null && m_currentGravity != 0 && value == 0) 
-                m_footPlacing.SetWeightActive(false); 
-            else if (m_footPlacing != null && m_currentGravity == 0 && value != 0)
-                m_footPlacing.SetWeightActive(true);
+            //if (m_footPlacing != null && m_currentGravity != 0 && value == 0) 
+            //    m_footPlacing.SetWeightActive(false); 
+            //else if (m_footPlacing != null && m_currentGravity == 0 && value != 0)
+            //    m_footPlacing.SetWeightActive(true);
 
             m_currentGravity = value; 
         } 
@@ -240,6 +245,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                     m_animator.CrossFadeInFixedTime(AnimationTypes.Running_Sliding, m_baseCrossFadeDuration);
                     m_isSlidingApplied = true;
                     Debug.Log("SLIDING");
+                    Debug.Log("AYA Dont forget Bug");
                 }
             } 
             if (!m_isRunning && !m_isAction && m_target != null) { SetBodyLookAtTarget(m_target); }
@@ -370,14 +376,13 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             m_animator.CrossFadeInFixedTime(IsRunning && m_prevMove.magnitude > m_speedValues.x ? AnimationTypes.Turning_Running : AnimationTypes.Turning, m_baseCrossFadeDuration);
             m_isTurningApplied = true;
             m_isSlidingApplied = false;
-            //Debug.Log("AYA");
         }
         if (m_isTurningApplied && Mathf.Abs(m_turningAngle) <= 20)
             m_isTurningApplied = false;
         if (m_isSlidingApplied && (m_inputStrenght != 0 || m_prevMove.magnitude < 1f))
             m_isSlidingApplied = false;
 
-        Debug.Log(m_prevMove.magnitude);
+        //Debug.Log(m_prevMove.magnitude);
 
         m_prevPrevInputStrength = m_prevInputStrength; 
         m_prevInputStrength = m_inputStrenght;

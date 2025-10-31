@@ -9,13 +9,17 @@ public class FootPlacing : MonoBehaviour
 {
     [Tooltip("turn foot rotation on and off, because this takes the most calculations")]
     [SerializeField] private bool m_stopAll = false;
+    [Tooltip("this makes the raycast be casted in front of the feet according to current speed")]
+    [SerializeField] private bool m_applyStepLooksAhead = true;
     [SerializeField] private bool m_applyFootRot = true;
     [SerializeField] private bool m_applyHipHeight = true;
     [SerializeField] private bool m_applyInverserseKinematics = true;
     [Space]
     [SerializeField] private Transform m_player;
-    [Space] 
+    [Space]
+    [Tooltip("a object needs to be perfectly placed on sole/ground level underneath the ankle, so its distance to ground at rest can be calculated")]
     [SerializeField] private Transform m_leftFootUpHelper;
+    [Tooltip("a object needs to be perfectly placed on sole/ground level underneath the ankle, so its distance to ground at rest can be calculated")]
     [SerializeField] private Transform m_rightFootUpHelper;
     [Space]
     [SerializeField] private Transform m_footBoneLeft;
@@ -29,40 +33,57 @@ public class FootPlacing : MonoBehaviour
     [SerializeField] private Transform m_rootBone;
     [Space]
     [Space]
-
-    [SerializeField] private float m_raycastLenght = 2.5f; //beware, if its too short, m_isHightDifferenceOfGroundsIsTooBig will be not correct
-
-    [SerializeField] private LayerMask m_environmentLayer;
+    [Header("Ankle and root height correction")]
+    [SerializeField] private float m_ankleHeightCorrection = 0.00f;
+    [SerializeField] private float m_rootHeightCorrection = 0.00f;
     [Space]
+    [Header("Raycast")]
+    [SerializeField] private float m_raycastLenght = 2.5f; //beware, if its too short, m_isHightDifferenceOfGroundsIsTooBig will be not correct
+    [SerializeField] private LayerMask m_environmentLayer;
+    [SerializeField] private float m_lookingAheadStep = 0.0375f;
+    [SerializeField] private float m_lookingAheadSmoothening = 15;
+    [Space]
+    [Space]
+    [Header("Ankle")]
+    [SerializeField] private float m_footHeightAdjustSpeed = 60f;
+    [SerializeField] private float m_footRotationAdjustSpeed = 30f;
     [Space]
     [Tooltip("[Y Axis Dist of original ground to original Ankle heigh] Dist below x threshhold: considered to snap to ground normal. Dist above y threshhold: considered not snapped to ground normal. (best case: (0, 0.01f))")]
-    [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 1)] private Vector2 m_minFootDistToOrigHight = new Vector2(0, 0.05f);
+    [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 1)] private Vector2 m_minFootDistToOrigHight = new Vector2(0.005f, 0.05f);
     [Tooltip("[Angle in degree to World.up] Angle below x threshhold: considered to snap to ground normal. Angle above y threshhold: considered not snapped to ground normal. (best case: (1, 7f))")]
     [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 90)] private Vector2 m_minFootAngleToOrigAngle = new Vector2(1, 7f);
     [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_leftFootIsGroundedWeight = 1;
     [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_rightFootIsGroundedWeight = 1;
     [Space]
+    [Header("Hip")]
+    [SerializeField] private float m_rootHeightAdjustSpeed = 30f;
     [Space]
-    [Tooltip("this is the distance between the footBone origin (the ankle) and the ground when the foot is perfectly standing")]
-    [SerializeField] private float m_baseOffsetGroundToAnkleY = 0;
     [Tooltip("[Y Axis Dist between the hip and the highest ground] Dist below x threshhold: considered as hip is too close to the new higher ground. Dist above y threshhold: considered as hip is far enough away of the higher ground. (best case: (0.3f, 0.5f))")]
     [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 1)] private Vector2 m_minDistHipGround = new Vector2(0.3f, 0.5f);
-    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_overallWeight = 1;
-    [SerializeField][EditorAttributes.ReadOnly] [Range(0, 1)] private float m_weightByLayingOnGround = 1;
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 0.5f)] private float m_rootYAdjustment = 0;
     [Space]
     [Space]
-    [SerializeField] private float m_footHeightAdjustSpeed = 60f;
-    [SerializeField] private float m_footRotationAdjustSpeed = 30f;
-    [SerializeField] private float m_rootHeightAdjustSpeed = 30f;
+    [Header("Overall Weighting")]
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_weightByGrounded = 1;
+    [SerializeField][EditorAttributes.ReadOnly] [Range(0, 1)] private float m_weightByLayingOnGroundScript = 1;
+    [Space]
+    [Space]
+    [Space]
+    [Header("Optional Retargeting")]
+    [SerializeField] private SimpleRetargeting m_retargetingScript;
 
+    private Vector3 m_lastPlanarFootDirL = Vector3.zero;
+    private Vector3 m_lastPlanarFootDirR = Vector3.zero;
+
+    private float m_baseOffsetGroundToAnkleY = 0;
     private float m_skinWidth = 0;
     private float m_maxStepHeight = 0;
     private Vector2 m_footTooHighAboveGroundToMatterThreshhold = Vector2.zero;
 
     private float m_raycastHeightOffset = 0.6f;
 
-    private float m_lastLeftFootY;
-    private float m_lastRightFootY;
+    private Vector3 m_lastLeftFootPos;
+    private Vector3 m_lastRightFootPos;
     Quaternion m_lastLeftFootRot;
     Quaternion m_lastRightFootRot;
     private float m_lastRootY;
@@ -82,8 +103,6 @@ public class FootPlacing : MonoBehaviour
 
     private Quaternion m_initialFootRot;
 
-    [Space]
-    [SerializeField] private SimpleRetargeting m_retargetingScript;
 
 
     //FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF for the future to implement: make the script stop for entitys far away,since its not needed when they far away
@@ -96,12 +115,14 @@ public class FootPlacing : MonoBehaviour
         m_thighLenght = (m_shinBoneLeft.position - m_thighBoneLeft.position).magnitude;
         m_shinLenght = (m_shinBoneLeft.position - m_footBoneLeft.position).magnitude;
 
-        m_lastLeftFootY = m_footBoneLeft.position.y;
-        m_lastRightFootY = m_footBoneRight.position.y;
+        m_lastLeftFootPos = m_footBoneLeft.position;
+        m_lastRightFootPos = m_footBoneRight.position;
         m_lastLeftFootRot = m_footBoneLeft.rotation;
         m_lastRightFootRot = m_footBoneRight.rotation;
 
         m_footTooHighAboveGroundToMatterThreshhold = new Vector2(m_maxStepHeight, m_maxStepHeight * 2);
+
+        m_baseOffsetGroundToAnkleY = m_footBoneLeft.position.y - m_leftFootUpHelper.position.y;
     }
 
 
@@ -109,18 +130,18 @@ public class FootPlacing : MonoBehaviour
 
     public void SetWeightActive(bool active)
     {
+        // this is provisorical!!!!!!!!!!!!!!!!!!!
         if (active) 
-            m_overallWeight  = 1;
+            m_weightByGrounded  = 1;
         else
-            m_overallWeight = 0;
+            m_weightByGrounded = 0;
 
     }
 
     public void SetWeightByLayingOnGround(float weight)
     {
-        m_weightByLayingOnGround = weight;
+        m_weightByLayingOnGroundScript = weight;
     }
-
 
 
 
@@ -131,8 +152,8 @@ public class FootPlacing : MonoBehaviour
 
         if (m_stopAll)
             return;
-        m_leftAnkleHeight = Mathf.Abs(m_footBoneLeft.position.y - (m_player.position.y - m_skinWidth) + 0.003f);
-        m_rightAnkleHeight = Mathf.Abs(m_footBoneRight.position.y - (m_player.position.y - m_skinWidth) + 0.003f);
+        m_leftAnkleHeight = Mathf.Abs(m_footBoneLeft.position.y - (m_player.position.y - m_skinWidth) + m_ankleHeightCorrection);
+        m_rightAnkleHeight = Mathf.Abs(m_footBoneRight.position.y - (m_player.position.y - m_skinWidth) + m_ankleHeightCorrection);
 
         m_desiredLeftFootPos = m_footBoneLeft.position;
         m_desiredRightFootPos = m_footBoneRight.position;
@@ -147,8 +168,23 @@ public class FootPlacing : MonoBehaviour
         bool hasGroundR = false;
         RaycastHit hitL;
         RaycastHit hitR;
-        Vector3 raycastOriginL = new Vector3(m_footBoneLeft.position.x, transform.position.y + m_raycastHeightOffset, m_footBoneLeft.position.z);
-        Vector3 raycastOriginR = new Vector3(m_footBoneRight.position.x, transform.position.y + m_raycastHeightOffset, m_footBoneRight.position.z);
+
+
+        Vector3 planarFootDirL = Vector3.zero;
+        Vector3 planarFootDirR = Vector3.zero;
+        if (m_applyStepLooksAhead)
+        {
+            planarFootDirL = Vector3.Lerp(m_lastPlanarFootDirL, UtilityFunctions.VectorXZ(m_footBoneLeft.position - m_lastLeftFootPos) / Time.deltaTime, Time.deltaTime * m_lookingAheadSmoothening) ;
+            planarFootDirR = Vector3.Lerp(m_lastPlanarFootDirR, UtilityFunctions.VectorXZ(m_footBoneRight.position - m_lastRightFootPos) / Time.deltaTime, Time.deltaTime * m_lookingAheadSmoothening);
+            m_lastPlanarFootDirL = planarFootDirL;
+            m_lastPlanarFootDirR = planarFootDirR;
+
+            planarFootDirL *= m_lookingAheadStep * (1 - m_leftFootIsGroundedWeight);
+            planarFootDirR *= m_lookingAheadStep * (1 - m_rightFootIsGroundedWeight);
+        }
+
+        Vector3 raycastOriginL = new Vector3(m_footBoneLeft.position.x + planarFootDirL.x, transform.position.y + m_raycastHeightOffset, m_footBoneLeft.position.z + planarFootDirL.z);
+        Vector3 raycastOriginR = new Vector3(m_footBoneRight.position.x + planarFootDirR.x, transform.position.y + m_raycastHeightOffset, m_footBoneRight.position.z + planarFootDirR.z);
         if (Physics.Raycast(raycastOriginL, Vector3.down, out hitL, m_raycastHeightOffset * m_raycastLenght, m_environmentLayer))
             hasGroundL = true;
         if (Physics.Raycast(raycastOriginR, Vector3.down, out hitR, m_raycastHeightOffset * m_raycastLenght, m_environmentLayer))
@@ -196,16 +232,22 @@ public class FootPlacing : MonoBehaviour
 
 
         Vector3 rootPosByAnim = m_rootBone.position;
-        float weighting = Mathf.Min(m_overallWeight, m_weightByLayingOnGround);
+        float weighting = Mathf.Min(m_weightByGrounded, m_weightByLayingOnGroundScript);
         
         CalculateAndSetHipHeight();
-        m_rootBone.position = Vector3.Lerp(rootPosByAnim, m_rootBone.position, m_weightByLayingOnGround);
+        m_rootBone.position = Vector3.Lerp(rootPosByAnim, m_rootBone.position, weighting);
 
         CalculateDesiredFootPosAndRotationOnGround(ref hitL, ref hitR, ref hasGroundL, ref hasGroundR);
-        m_desiredLeftFootPos = Vector3.Lerp(m_footBoneLeft.position, m_desiredLeftFootPos, m_weightByLayingOnGround);
-        m_desiredRightFootPos = Vector3.Lerp(m_footBoneRight.position, m_desiredRightFootPos, m_weightByLayingOnGround);
+        m_desiredLeftFootPos = Vector3.Lerp(m_footBoneLeft.position, m_desiredLeftFootPos, weighting);
+        m_desiredRightFootPos = Vector3.Lerp(m_footBoneRight.position, m_desiredRightFootPos, weighting);
 
         CalculateAndSetThightAndShinRotations();
+
+        //SetFootRotation must be applied after inverse kinematics but calculated before
+        m_footBoneLeft.rotation = m_desiredLeftFootRot;
+        m_footBoneRight.rotation = m_desiredRightFootRot;
+        m_lastLeftFootRot = m_desiredLeftFootRot;
+        m_lastRightFootRot = m_desiredRightFootRot;
 
     }
 
@@ -232,13 +274,13 @@ public class FootPlacing : MonoBehaviour
             ankleHightOflowerGround = m_rightAnkleHeight;
         }
 
-        float rootY =  m_rootBone.position.y;
+        float rootY =  m_rootBone.position.y + m_rootHeightCorrection;
         if (lowerGround <= m_rootBone.position.y)
             rootY = Mathf.Lerp(m_rootBone.position.y, lowerGround, Mathf.InverseLerp(m_footTooHighAboveGroundToMatterThreshhold.y * 2, m_footTooHighAboveGroundToMatterThreshhold.x, ankleHightOflowerGround));
 
         rootY = Mathf.Lerp(m_lastRootY, rootY, Time.deltaTime * m_rootHeightAdjustSpeed);
+        m_rootYAdjustment = -(rootY - m_rootBone.position.y);
         m_rootBone.position = new Vector3(m_rootBone.position.x, rootY, m_rootBone.position.z);
-
         m_lastRootY = m_rootBone.position.y;
     }
 
@@ -249,42 +291,41 @@ public class FootPlacing : MonoBehaviour
 
     private void CalculateDesiredFootPosAndRotationOnGround(ref RaycastHit hitL, ref RaycastHit hitR, ref bool hasGroundL, ref bool hasGroundR)
     {
-        float leftY = Mathf.Lerp(m_lastLeftFootY, m_leftGroundHeight + m_leftAnkleHeight, Time.deltaTime * m_footHeightAdjustSpeed);
-        float rightY = Mathf.Lerp(m_lastRightFootY, m_rightGroundHeight + m_rightAnkleHeight, Time.deltaTime * m_footHeightAdjustSpeed);
+        float leftY = Mathf.Lerp(m_lastLeftFootPos.y, m_leftGroundHeight + m_leftAnkleHeight, Time.deltaTime * m_footHeightAdjustSpeed);
+        float rightY = Mathf.Lerp(m_lastRightFootPos.y, m_rightGroundHeight + m_rightAnkleHeight, Time.deltaTime * m_footHeightAdjustSpeed);
 
         m_desiredLeftFootPos = new Vector3(m_footBoneLeft.position.x, leftY, m_footBoneLeft.position.z);
         m_desiredRightFootPos = new Vector3(m_footBoneRight.position.x, rightY, m_footBoneRight.position.z);
 
-        m_lastLeftFootY = leftY;
-        m_lastRightFootY = rightY;
+        m_lastLeftFootPos = new Vector3(m_footBoneLeft.position.x, leftY, m_footBoneLeft.position.z);
+        m_lastRightFootPos = new Vector3(m_footBoneRight.position.x, rightY, m_footBoneRight.position.z); ;
 
 
 
 
         if (!m_applyFootRot) return; ////IDEA: maybe only when moving
 
-        Quaternion leftFootRotOfAnim = Quaternion.LookRotation(-new Vector3(m_footBoneLeft.forward.x, 0, m_footBoneLeft.forward.z), Vector3.up) * m_initialFootRot;
-        Quaternion rightFootRotOfAnim = Quaternion.LookRotation(-new Vector3(m_footBoneRight.forward.x, 0, m_footBoneRight.forward.z), Vector3.up) * m_initialFootRot;
+        Quaternion leftFootRotOfAnim = Quaternion.LookRotation(- UtilityFunctions.VectorXZ(m_footBoneLeft.forward), Vector3.up) * m_initialFootRot;
+        Quaternion rightFootRotOfAnim = Quaternion.LookRotation(-UtilityFunctions.VectorXZ(m_footBoneRight.forward), Vector3.up) * m_initialFootRot;
         Quaternion desiredGroundRotL = Quaternion.FromToRotation(Vector3.up, hasGroundL ?  hitL.normal : Vector3.up) * leftFootRotOfAnim;
         Quaternion desiredGroundRotR = Quaternion.FromToRotation(Vector3.up, hasGroundR ? hitR.normal : Vector3.up) * rightFootRotOfAnim;
 
-        m_leftFootIsGroundedWeight =  Mathf.Max(Mathf.InverseLerp(m_minFootDistToOrigHight.x, m_minFootDistToOrigHight.y, (m_leftAnkleHeight  - m_baseOffsetGroundToAnkleY)),       Mathf.InverseLerp(m_minFootAngleToOrigAngle.x, m_minFootAngleToOrigAngle.y, Vector3.Angle(Vector3.up, m_leftFootUpHelper.up)));
-        m_rightFootIsGroundedWeight = Mathf.Max(Mathf.InverseLerp(m_minFootDistToOrigHight.x, m_minFootDistToOrigHight.y, (m_rightAnkleHeight - m_baseOffsetGroundToAnkleY)),       Mathf.InverseLerp(m_minFootAngleToOrigAngle.x, m_minFootAngleToOrigAngle.y, Vector3.Angle(Vector3.up, m_rightFootUpHelper.up)));
+        m_leftFootIsGroundedWeight =    Mathf.Min(Mathf.InverseLerp(m_minFootDistToOrigHight.y, m_minFootDistToOrigHight.x, (m_leftAnkleHeight - m_baseOffsetGroundToAnkleY)),
+                                            Mathf.InverseLerp(m_minFootAngleToOrigAngle.y, m_minFootAngleToOrigAngle.x, Vector3.Angle(Vector3.up, m_leftFootUpHelper.up)));
 
-        m_desiredLeftFootRot = Quaternion.Slerp(desiredGroundRotL, m_footBoneLeft.rotation , m_leftFootIsGroundedWeight);
-        m_desiredRightFootRot = Quaternion.Slerp(desiredGroundRotR, m_footBoneRight.rotation , m_rightFootIsGroundedWeight);
+        m_rightFootIsGroundedWeight =  Mathf.Min(Mathf.InverseLerp(m_minFootDistToOrigHight.y, m_minFootDistToOrigHight.x, (m_rightAnkleHeight - m_baseOffsetGroundToAnkleY)),       
+                                            Mathf.InverseLerp(m_minFootAngleToOrigAngle.y, m_minFootAngleToOrigAngle.x, Vector3.Angle(Vector3.up, m_rightFootUpHelper.up)));
+
+        m_desiredLeftFootRot = Quaternion.Slerp(m_footBoneLeft.rotation, desiredGroundRotL, m_leftFootIsGroundedWeight);
+        m_desiredRightFootRot = Quaternion.Slerp(m_footBoneRight.rotation, desiredGroundRotR, m_rightFootIsGroundedWeight);
 
         m_desiredLeftFootRot = Quaternion.Slerp(m_lastLeftFootRot, m_desiredLeftFootRot, m_footRotationAdjustSpeed * Time.deltaTime);
         m_desiredRightFootRot = Quaternion.Slerp(m_lastRightFootRot, m_desiredRightFootRot, m_footRotationAdjustSpeed * Time.deltaTime);
 
-        //SetFootRotation
-        m_footBoneLeft.rotation = m_desiredLeftFootRot;
-        m_footBoneRight.rotation = m_desiredRightFootRot;
-
-        m_lastLeftFootRot = m_desiredLeftFootRot;
-        m_lastRightFootRot = m_desiredRightFootRot;
 
     }
+
+
 
 
 

@@ -172,7 +172,15 @@ public static class UtilityFunctions
         return Quaternion.LookRotation(f, u);
     }
 
+    public static Vector3 VectorXZ(Vector3 vector)
+    {
+        return new Vector3(vector.x, 0, vector.z);
+    }
 
+    public static Vector3 VectorXZ_normalized(Vector3 vector)
+    {
+        return new Vector3(vector.x, 0, vector.z).normalized;
+    }
 
 
 
