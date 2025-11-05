@@ -45,25 +45,25 @@ public class LayingOnGround : MonoBehaviour
         float startHeightOffset = 0.25f;
         float hits = 0;
 
-        RaycastHit hit0;
-        bool hasHit0 = false;
-        Vector3 raycastOrigin0 = new Vector3(m_centerBone.position.x, m_centerBone.position.y + startHeightOffset, m_centerBone.position.z);
-        if (Physics.Raycast(raycastOrigin0, Vector3.down, out hit0, m_raycastLenght + startHeightOffset, m_environmentLayer))
-        { hasHit0 = true; hits++; }
 
+        RaycastHit hit0;
         RaycastHit hit1;
         RaycastHit hit2;
         RaycastHit hit3;
         RaycastHit hit4;
+        bool hasHit0 = false;
         bool hasHit1 = false;
         bool hasHit2 = false;
         bool hasHit3 = false;
         bool hasHit4 = false;
+        Vector3 raycastOrigin0 = new Vector3(m_centerBone.position.x, m_centerBone.position.y + startHeightOffset, m_centerBone.position.z);
         Vector3 raycastOrigin1 = new Vector3(m_centerBone.position.x, m_centerBone.position.y + startHeightOffset, m_centerBone.position.z + 0.2f);
         Vector3 raycastOrigin2 = new Vector3(m_centerBone.position.x + 0.2f, m_centerBone.position.y + startHeightOffset, m_centerBone.position.z);
         Vector3 raycastOrigin3 = new Vector3(m_centerBone.position.x, m_centerBone.position.y + startHeightOffset, m_centerBone.position.z - 0.2f);
         Vector3 raycastOrigin4 = new Vector3(m_centerBone.position.x - 0.2f, m_centerBone.position.y + startHeightOffset, m_centerBone.position.z);
 
+        if (Physics.Raycast(raycastOrigin0, Vector3.down, out hit0, m_raycastLenght + startHeightOffset, m_environmentLayer))
+        { hasHit0 = true; hits++; }
         if (Physics.Raycast(raycastOrigin1, Vector3.down, out hit1, m_raycastLenght + startHeightOffset, m_environmentLayer))
         { hasHit1 = true; hits++; }
         if (Physics.Raycast(raycastOrigin2, Vector3.down, out hit2, m_raycastLenght + startHeightOffset, m_environmentLayer))
@@ -81,10 +81,9 @@ public class LayingOnGround : MonoBehaviour
         Debug.DrawLine(raycastOrigin3, raycastOrigin3 + Vector3.down * (m_raycastLenght + startHeightOffset), Color.red);
         Debug.DrawLine(raycastOrigin4, raycastOrigin4 + Vector3.down * (m_raycastLenght + startHeightOffset), Color.red);
 
-        if (hits < 2) return;
 
         Vector3 v = Vector3.zero;
-        if (hits == 5) 
+        if (hits >= 5) 
         {
             v = Vector3.Cross(hit1.point - hit0.point, hit2.point - hit0.point);
             m_averageNormal += v.y > 0 ? v : v.y < 0 ? -v : Vector3.zero;
@@ -204,6 +203,10 @@ public class LayingOnGround : MonoBehaviour
             }
 
         }
+        else if (hits <= 2)
+        {
+            m_averageNormal = Vector3.up;
+        }
 
         m_averageNormal = m_averageNormal.normalized;
 
@@ -212,7 +215,7 @@ public class LayingOnGround : MonoBehaviour
         test.rotation = desiredRootRot;
 
         float weight = Mathf.InverseLerp(m_minDistToGround.x, m_minDistToGround.y, ((m_chest.position.y + m_pelvis.position.y) / 2) - m_root.position.y);
-        
+
         if(m_affectFootPlacing) 
             m_footPlacing.SetWeightByLayingOnGround(weight);
 

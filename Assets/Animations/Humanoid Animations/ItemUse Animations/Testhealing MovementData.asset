@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
   m_Name: Testhealing MovementData
   m_EditorClassIdentifier: 
-  ActionDescription: 
+  MovementDescription: 
   moveInfluence: 2
   turningInfluence: 2
   moveDirPredefinition: 1

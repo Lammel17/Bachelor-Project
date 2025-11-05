@@ -17,7 +17,7 @@ MonoBehaviour:
   turningInfluence: 1
   moveDirPredefinition: 1
   turningDirPredefinition: 1
-  targetRelations: 1
+  targetRelations: 0
   turningRelations: 2
   forbidAdditinalRotation: 0
   variableValue:
@@ -27,52 +27,43 @@ MonoBehaviour:
       valueType: 2
       value: 10
       valueSettings:
-        startEnd: {x: 0, y: 0.57506984}
+        startEnd: {x: 0.03, y: 0.79538774}
         curveValue:
           serializedVersion: 2
           m_Curve:
           - serializedVersion: 3
             time: 0
             value: 0
-            inSlope: 6.0840173
-            outSlope: 6.0840173
+            inSlope: 0
+            outSlope: 0
             tangentMode: 0
             weightedMode: 0
             inWeight: 0.33333334
-            outWeight: 0.17444041
+            outWeight: 0.33333334
           - serializedVersion: 3
-            time: 0.10114464
-            value: 0.9860064
+            time: 0.21307595
+            value: 0.99529535
             inSlope: 0
             outSlope: 0
-            tangentMode: 136
+            tangentMode: 0
             weightedMode: 0
             inWeight: 0.33333334
             outWeight: 0.33333334
           - serializedVersion: 3
-            time: 0.5966797
-            value: 0.8199997
-            inSlope: -0.86647123
-            outSlope: -0.86647123
-            tangentMode: 136
+            time: 0.7810733
+            value: 0.95725656
+            inSlope: -0.36242893
+            outSlope: -0.36242893
+            tangentMode: 0
             weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 0.86750215
-            value: 0.09337018
-            inSlope: -0.9260153
-            outSlope: -0.9260153
-            tangentMode: 136
-            weightedMode: 0
-            inWeight: 0.33333334
+            inWeight: 0.09225065
             outWeight: 0.33333334
           - serializedVersion: 3
             time: 1
             value: 0
             inSlope: 0
             outSlope: 0
-            tangentMode: 136
+            tangentMode: 0
             weightedMode: 0
             inWeight: 0.33333334
             outWeight: 0.33333334
@@ -96,12 +87,39 @@ MonoBehaviour:
       valueType: 1
       value: 90
       valueSettings:
-        startEnd: {x: 0.2991129, y: 0.86}
+        startEnd: {x: 0.5049565, y: 1}
         curveValue:
           serializedVersion: 2
-          m_Curve: []
-          m_PreInfinity: 0
-          m_PostInfinity: 0
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 136
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 0.5
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 136
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 136
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.33333334
+          m_PreInfinity: 2
+          m_PostInfinity: 2
           m_RotationOrder: 4
       customInfluenceOverInput:
         influenceType: 0

@@ -18,11 +18,12 @@ MonoBehaviour:
   bodyParts: 1
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
-  crossfadeBeginn: 0.2
+  crossfadeOutBeginn: 0.3
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0
   ChangedInterruptability: 1
   MainActionMomentTime: 0
+  hitBoxActiveData: []
   IsPausingMidAir: 0
   PauseMidAirTime: 0
   IsPausingGravity: 0
@@ -30,16 +31,19 @@ MonoBehaviour:
   actionUsesLookAtTargetData: 1
   useLookAtForwardData: 1
   lookAtData:
-    m_applyAddRot: 0
-    m_addRotEuler: {x: 0, y: 0, z: 0}
+    m_applyAddRot: 1
     m_forwardCorrections:
-    - Element: 2
-      IsUsingOrigRot: 1
-      Weight: 1
-      IgnoreAxis: 4
-      Ignore: 0
-    - Element: 6
-      IsUsingOrigRot: 1
-      Weight: 1
-      IgnoreAxis: 0
-      Ignore: 0
+    - Ignore: 0
+      Element: 2
+      IgnoreInfluence: 1
+      m_newDirection: {x: 32.7, y: 0, z: 0}
+      Weight_X: 0.705
+      Weight_Y: 0.597
+      Weight_Z: 0.682
+    - Ignore: 0
+      Element: 6
+      IgnoreInfluence: 0
+      m_newDirection: {x: 0, y: 0, z: 0}
+      Weight_X: 0
+      Weight_Y: 0
+      Weight_Z: 0

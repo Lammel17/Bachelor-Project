@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
 using TMPro;
 using Unity.Collections;
@@ -13,6 +14,8 @@ using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.TextCore.Text;
+//using static UnityEditor.Experimental.GraphView.GraphView;
+
 //using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 using Debug = UnityEngine.Debug;
 
@@ -79,8 +82,8 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isFreelyMoving = true;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isTurningApplied = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isSlidingApplied = false;
-    [SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
-    [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionUpperBody = false;
+    //[SerializeField][EditorAttributes.ReadOnly] private bool m_isAction = false;
+    //[SerializeField][EditorAttributes.ReadOnly] private bool m_isActionUpperBody = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isActionLocked = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isHoldShielding = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isShielding = false;
@@ -88,8 +91,9 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     [SerializeField][EditorAttributes.ReadOnly] private bool m_isMidAirPause = false;
     [SerializeField][EditorAttributes.ReadOnly] private bool m_equipmentIsReady = true;
     [Space]
-    [SerializeField][EditorAttributes.ReadOnly] private int m_currentBaseLayerAnimation;
-    [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_currentUpperBodyAnimation; // (AnimHash, Layer)
+    [SerializeField][EditorAttributes.ReadOnly] private Vector2 m_currentActionAndLayer;
+    [SerializeField][EditorAttributes.ReadOnly] private int[] m_currentAnimationStates;
+    [SerializeField][EditorAttributes.ReadOnly] private Vector2 c_emptyAction = new Vector2(AnimationTypes.Empty,0);
 
     //Previous Frame Values
     private Vector3 m_prevMove = Vector3.zero;
@@ -216,7 +220,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         { 
             m_target = value; 
             m_isLockOn = (m_target != null); 
-            if (!m_isAction || (m_currentActionAnimData != null && m_currentActionAnimData.actionUsesLookAtTargetData)) 
+            if (m_currentActionAndLayer == c_emptyAction || (m_currentActionAnimData != null && m_currentActionAnimData.actionUsesLookAtTargetData)) 
                 SetBodyLookAtTarget(m_target);
 
         } 
@@ -237,7 +241,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
             m_isRunning = value;
             if (m_isRunning) { SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Running); SetBodyLookAtTarget(null); }
-            else if (!m_isRunning && !m_isAction) 
+            else if (!m_isRunning && m_currentActionAndLayer == c_emptyAction) 
             { 
                 SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
                 if (m_inputStrenght == 0 && m_prevMove.magnitude > m_speedValues.z - 0.5f)
@@ -248,7 +252,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                     Debug.Log("AYA Dont forget Bug");
                 }
             } 
-            if (!m_isRunning && !m_isAction && m_target != null) { SetBodyLookAtTarget(m_target); }
+            if (!m_isRunning && m_currentActionAndLayer == c_emptyAction && m_target != null) { SetBodyLookAtTarget(m_target); }
 
             BaseSpeed = m_inputStrenght;
 
@@ -269,13 +273,18 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             {
                 m_characterStatus.IsShielding(true);
                 SetLookAtForward(m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.useLookAtForwardData, m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData);
+
+                SetUpperBodyAnimation(AnimationTypes.Shielding, (int)m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.bodyParts, crossFadeDuration: m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeInTime);
+                m_nextUpperBodyCrossfadeOutTime = m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeOutTime;
             }
             else
             {
                 m_characterStatus.IsShielding(false);
                 SetLookAtForward(false);
+
+                SetUpperBodyAnimation(AnimationTypes.Empty, 0, m_nextUpperBodyCrossfadeOutTime);
             }
-        } 
+        }
     }
     public Vector3 PreviousMove { get => m_prevMove; }
     public AnimationInterruptableType CurrentInteruptability { get => m_currentInteruptability;  }
@@ -309,11 +318,13 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         SetNextPossibleWeaponActions();
         SetNextPossibleShieldActions();
 
-        m_currentBaseLayerAnimation = AnimationTypes.Idle_1;
-        m_currentUpperBodyAnimation = new Vector2(AnimationTypes.Empty_UpperBody, 0);
+        m_currentAnimationStates = new int[m_animator.layerCount];
+        for(int i = 1; i < m_currentAnimationStates.Length; i++) { m_currentAnimationStates[i] = AnimationTypes.Empty; }
+        m_currentAnimationStates[0] = AnimationTypes.Idle_1;
+        m_currentActionAndLayer = c_emptyAction;
 
         m_currentGravity = m_originalGravity;
-
+        m_nextCrossfadeOutTime = m_baseCrossFadeDuration;
     }
 
     private void SetSettingsValues(CharacterSettingsData charBehaviorData = null)
@@ -369,7 +380,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         SetAnimatorMoveValues();
         CheckAnimation();
 
-        if (!m_isTurningApplied && Mathf.Abs(m_turningAngle) >= 100 && /*m_prevMove.magnitude != 0 &&*/ m_prevInputStrength == 0 && (m_currentBaseLayerAnimation == AnimationTypes.Locomotion || m_currentBaseLayerAnimation == AnimationTypes.Idle_1))
+        if (!m_isTurningApplied && Mathf.Abs(m_turningAngle) >= 100 && /*m_prevMove.magnitude != 0 &&*/ m_prevInputStrength == 0 && (m_currentActionAndLayer == c_emptyAction))
         {
             //m_animator.SetTrigger("Turning");
             m_animator.SetFloat("TurningDir", Mathf.Sign(m_turningAngle));
@@ -411,7 +422,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isStandingStill = m_inputStrenght == 0;
 
         //Running
-        IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction) && m_characterStatus.CheckIfCanConsumeConstantEnergy();
+        IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && m_currentActionAndLayer == c_emptyAction) && m_characterStatus.CheckIfCanConsumeConstantEnergy();
         if (m_isRunning && m_equipmentIsReady) m_characterStatus.ExpendEnergyPoints(30 * Time.deltaTime);
 
         //FreelyMoving
@@ -442,7 +453,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             Quaternion playerToTargetAndCameraForwardSlerp = Quaternion.Slerp(m_cameraYAxisRotationInWS, playerToTargetLookRotation, 0.5f);
             m_inputDirInWS = playerToTargetAndCameraForwardSlerp * m_inputDir;
 
-            if (!(m_isAction && !m_isActionUpperBody)) //if action started, the facingType should stay, since its needed for the SetAnimatorMoveValues()
+            if (m_currentActionAndLayer.y >= 1 || m_currentActionAndLayer == c_emptyAction) //if action started, the facingType should stay, since its needed for the SetAnimatorMoveValues()
                 SetFacingDirectionType();
             return;
         }
@@ -617,13 +628,13 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         if(animDataWeapon.animationClip.length >= animDataShield.animationClip.length)
         {
-            InitAction(animHashWeapon, animDataWeapon.bodyParts, animDataWeapon, Effect: readyOrRemoveEffect);
-            SetUpperBodyAnimation(animHashShield, (int)AnimationData.BodyParts.LeftArm, animDataShield.crossfadeInTime, exeptionForMultipleLayerAnimation: true);
+            InitAction(animHashWeapon, animDataWeapon.bodyParts, animDataWeapon, effect: readyOrRemoveEffect);
+            //SetUpperBodyAnimation(animHashShield, (int)AnimationData.BodyParts.LeftArm, animDataShield.crossfadeInTime, exeptionForMultipleLayerAnimation: true);
         }
         else
         {
-            InitAction(animHashShield, animDataShield.bodyParts, animDataShield, Effect: readyOrRemoveEffect);
-            SetUpperBodyAnimation(animHashWeapon, (int)AnimationData.BodyParts.RightArm, animDataWeapon.crossfadeInTime, exeptionForMultipleLayerAnimation: true);
+            InitAction(animHashShield, animDataShield.bodyParts, animDataShield, effect: readyOrRemoveEffect);
+            //SetUpperBodyAnimation(animHashWeapon, (int)AnimationData.BodyParts.RightArm, animDataWeapon.crossfadeInTime, exeptionForMultipleLayerAnimation: true);
         }
 
     }
@@ -650,7 +661,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveWeapon(); Debug.Log("action"); };
 
         //Debug.Log("remember switch weapon spam bug");
-        InitAction(AnimationTypes.Switch_Weapon, animData.bodyParts, animData, Effect: switchEffect);
+        InitAction(AnimationTypes.Switch_Weapon, animData.bodyParts, animData, effect: switchEffect);
 
     }
 
@@ -675,7 +686,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         Action switchEffect = EquipmentHandler.Instance == null ? null : () => { EquipmentHandler.Instance.SwitchActiveShield(); };
 
         Debug.Log("remember switch weapon spam bug");
-        InitAction(AnimationTypes.Switch_Shield, animData.bodyParts, animData, Effect: switchEffect);
+        InitAction(AnimationTypes.Switch_Shield, animData.bodyParts, animData, effect: switchEffect);
 
     }
 
@@ -693,10 +704,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         AnimationData animData;
         int animHash = 0;
-        if (m_orientation == Orientation.Forward)             { animData = m_movesetData.evadeForward; animHash = AnimationTypes.Evade_Forward; }
-        else if (m_orientation == Orientation.Left)           { animData = m_movesetData.evadeLeft; animHash = AnimationTypes.Evade_Left; }
-        else if (m_orientation == Orientation.Right)          { animData = m_movesetData.evadeRight; animHash = AnimationTypes.Evade_Right; }
-        else                                                        { animData = m_movesetData.evadeBackwards; animHash = AnimationTypes.Evade_Backwards; }
+        if (m_orientation == Orientation.Backward || m_inputStrenght == 0)      { animData = m_movesetData.evadeBackwards; animHash = AnimationTypes.Evade_Backwards; }
+        else if (m_orientation == Orientation.Left)                             { animData = m_movesetData.evadeLeft; animHash = AnimationTypes.Evade_Left; }
+        else if (m_orientation == Orientation.Right)                            { animData = m_movesetData.evadeRight; animHash = AnimationTypes.Evade_Right; }
+        else                                                                    { animData = m_movesetData.evadeForward; animHash = AnimationTypes.Evade_Forward; }
 
         if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
 
@@ -949,67 +960,26 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
     #region SET ACTIONS
-    private void InitAction(int animHash, AnimationData.BodyParts animLayer, AnimationData animData, int staminaCost = 0, int specialEnergyCost = 0, Action Effect = null)
+    private void InitAction(int animHash, AnimationData.BodyParts animLayer, AnimationData animData, int staminaCost = 0, int specialEnergyCost = 0, Action effect = null)
     {
-        if (animLayer == AnimationData.BodyParts.WholeBody)
-            InitBaseAction(animHash, animData, staminaCost, specialEnergyCost, effect: Effect);
-        else if (animLayer == AnimationData.BodyParts.UpperBody)
-            InitActionUpperBody(animHash, animData, 1, effect: Effect);
-        else if (animLayer == AnimationData.BodyParts.Arms)
-            InitActionUpperBody(animHash, animData, 2, effect: Effect);
-    }
-
-    private void InitBaseAction(int animationHash, AnimationData animData, int staminaCost = 0, int specialEnergyCost = 0, Action effect = null)
-    {
-        m_isAction = true;
+        m_currentActionAndLayer = new Vector2(animHash, (int)animLayer);
         IsRunning = false;
-
-        if (true) //stop upperbody animations
-        {
-            IsShielding = false;
-            SetUpperBodyAnimation(AnimationTypes.Empty_UpperBody, 0, crossFadeDuration: 0.1f);
-        }
-
+        IsShielding = false;
         SetBodyLookAtTarget(animData.actionUsesLookAtTargetData ? m_target : null);
 
-        SetAnimation(animationHash, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
-        m_nextCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
-
-        SetValues(); //needed, because what if it jumps from one action directly into another
-
-        float animationDuration = animData.animationClip.length;
-
-        m_characterStatus.PauseEnergyRegenerationByAction();
-        
-        //effects like pay stamina cost at that moment
-        List<Action> actionList = new List<Action>();
-        if (staminaCost != 0)
+        if ((int)animLayer == 0)
         {
-            Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_characterStatus.ExpendSpecialEnergyPoints(specialEnergyCost); m_actionPayCostCouroutine = null; };
-            actionList.Add(payActionCostsAction);
+            SetAnimation(animHash, animData.crossfadeInTime, 0); //this sets and activates the animation with given crossfadeInTime
+            m_nextCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
         }
-        if (effect != null)
-            actionList.Add(effect);
-
-
-        SetActionValues(animData, actionList.Count == 0 ? null : actionList);
-    }
-
-    private void InitActionUpperBody(int animationHash, AnimationData animData, int layer, int staminaCost = 0, int specialEnergyCost = 0, Action effect = null)
-    {
-        m_isAction = true;
-        m_isActionUpperBody = true;
-        IsRunning = false;
-
-        SetBodyLookAtTarget(animData.actionUsesLookAtTargetData ? m_target : null);
-
-        if (animData.useLookAtForwardData)
-            SetLookAtForward(true, animData.lookAtData);
-
-        //SetLookAtTarget(null); //????? Depends on animation and if AddTurning
-
-        SetUpperBodyAnimation(animationHash, layer, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
-        m_nextUpperBodyCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
+        else
+        {
+            if (animData.useLookAtForwardData)
+                SetLookAtForward(true, animData.lookAtData);
+            //SetLookAtTarget(null); //????? Depends on animation and if AddTurning
+            SetUpperBodyAnimation(animHash, (int)animLayer, animData.crossfadeInTime); //this sets and activates the animation with given crossfadeInTime
+            m_nextUpperBodyCrossfadeOutTime = animData.crossfadeOutTime; //this is set and stored for end of action for the case the animation fades out normally and is not interrupted by an action with its own fadeInTime
+        }
 
         SetValues(); //needed, because what if it jumps from one action directly into another
 
@@ -1027,6 +997,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
         SetActionValues(animData, actionList.Count == 0 ? null : actionList);
     }
+
+
+
+    #region Weapon Shield
 
     private void SetNextPossibleWeaponAttacks(WeaponData.WeaponAttack currentAttackData = null, int currentAction = 0)
     {
@@ -1153,6 +1127,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_nextPossibleShieldActions.specialShieldHeavy.AnimData == null || m_nextPossibleShieldActions.specialShieldHeavy.AnimData.CustomInterruptability == AnimationInterruptableType.SetByButton) return (int)AnimationInterruptableType.Not_Interruptable;
         else return (int)m_nextPossibleShieldActions.specialShieldHeavy.AnimData.CustomInterruptability;
     }
+    #endregion
     #endregion
 
 
@@ -1743,9 +1718,9 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isOrientationRotationForbidden = false;
         m_actionTargetRelations = 0;
         m_actionTurningRelations = 0;
-        m_currentInteruptability = AnimationInterruptableType.Always_Interruptable; 
-        m_isAction = false;
-        m_isActionUpperBody = false;
+        m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
+        if (m_currentActionAndLayer.y >= 1) SetUpperBodyAnimation(AnimationTypes.Empty, 0, m_nextUpperBodyCrossfadeOutTime); 
+        m_currentActionAndLayer = c_emptyAction;
         //IsRunning = (m_isHoldRunning && m_inputStrenght != 0 && !m_isAction && !m_isWalkingLocked);  //this is funny, many stab attacks haha
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         m_isTurningApplied = false;
@@ -1845,7 +1820,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     private void SetAnimatorMoveValues()
     {
-        float animationDampTime = !m_isAction ? 0.12f : 0.12f; //smaller is faster transition
+        float animationDampTime = m_currentActionAndLayer == c_emptyAction ? 0.12f : 0.12f; //smaller is faster transition
         float MoveStrength = m_isRunning ? 2 : m_inputStrenght; //is already snapped in inputmanager
         Vector2 horAndVerMovement = new Vector2(0, 1);
 
@@ -1864,45 +1839,23 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
 
-    private void CheckAnimation(bool forceNewAnim = false)
+    private void CheckAnimation()
     {
-        if (m_isAction && !m_isActionUpperBody)
-            if (!forceNewAnim) return;
+        if (m_currentActionAndLayer.x != AnimationTypes.Empty && m_currentActionAndLayer.y == 0)
+            return;
         
         if (m_isStandingStill )
         {
-            if (m_isShielding)
+            if (m_isShielding && m_currentAnimationStates[0] != AnimationTypes.Shielding)
             {
-                if (m_currentBaseLayerAnimation != AnimationTypes.Shielding)
-                {
-                    SetAnimation(AnimationTypes.Shielding, crossFadeDuration: m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeInTime);
-                    m_nextCrossfadeOutTime = m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeOutTime;
-                }
+                SetAnimation(AnimationTypes.Shielding, crossFadeDuration: m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeInTime, 0);
+                m_nextCrossfadeOutTime = m_nextPossibleShieldActions.shieldIdle.AnimData.crossfadeOutTime;
             }
-            else if (m_currentBaseLayerAnimation != AnimationTypes.Idle_1 && !m_isTurningApplied && !m_isSlidingApplied)
-                SetAnimation(AnimationTypes.Idle_1, m_nextCrossfadeOutTime);
+            else if (!m_isShielding && m_currentAnimationStates[0] != AnimationTypes.Idle_1 && !m_isTurningApplied && !m_isSlidingApplied)
+                SetAnimation(AnimationTypes.Idle_1, m_nextCrossfadeOutTime, 0);
         }
-        else if (!m_isStandingStill && m_currentBaseLayerAnimation != AnimationTypes.Locomotion)
-            SetAnimation(AnimationTypes.Locomotion, m_nextCrossfadeOutTime, 0.25f);
-
-
-
-        //UpperBody
-        if (m_isActionUpperBody)
-            return;
-
-        if (m_isShielding)
-        {
-            if(m_currentUpperBodyAnimation.x != AnimationTypes.Shielding)
-            {
-                SetUpperBodyAnimation(AnimationTypes.Shielding, (int)m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.bodyParts, crossFadeDuration: m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeInTime);
-                m_nextUpperBodyCrossfadeOutTime = m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.crossfadeOutTime;
-            }
-        }
-        else if (!m_isShielding && m_currentUpperBodyAnimation.x != AnimationTypes.Empty_UpperBody)
-        {
-            SetUpperBodyAnimation(AnimationTypes.Empty_UpperBody, 0, m_nextUpperBodyCrossfadeOutTime); 
-        }
+        else if (!m_isStandingStill && m_currentAnimationStates[0] != AnimationTypes.Locomotion)
+            SetAnimation(AnimationTypes.Locomotion, m_nextCrossfadeOutTime, 0, 0.25f);
 
     }
 
@@ -1914,40 +1867,29 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private float m_nextCrossfadeOutTime = 0; //crossfadeOut is set by an animation and stored only for the next crossfadeOut if its not interrupted by an crossfade in of another anim
     private float m_nextUpperBodyCrossfadeOutTime = 0; //crossfadeOut is set by an animation and stored only for the next crossfadeOut if its not interrupted by an crossfade in of another anim
 
-    private void SetAnimation(int animation, float crossFadeDuration, float timeOffset = 0)
+    private void SetAnimation(int animation,  float crossFadeDuration, int layer, float timeOffset = 0)
     {
-        m_animator.CrossFadeInFixedTime(animation, crossFadeDuration, 0, timeOffset);
-        m_currentBaseLayerAnimation = animation;
+        m_animator.CrossFadeInFixedTime(animation, crossFadeDuration, layer, timeOffset);
+        m_currentAnimationStates[layer] = animation;
         m_nextCrossfadeOutTime = m_baseCrossFadeDuration; 
         
     }
 
 
-    private void SetUpperBodyAnimation(int upperBodyAnimation,  int layer, float crossFadeDuration, float timeOffset = 0, bool exeptionForMultipleLayerAnimation = false)
+    private void SetUpperBodyAnimation(int upperBodyAnimation,  int layer, float crossFadeDuration, float timeOffset = 0)
     {
-
-        if (layer == 0 && upperBodyAnimation != AnimationTypes.Empty_UpperBody)
+        if (layer == 0 && upperBodyAnimation != AnimationTypes.Empty)
         { Debug.Log("This animationData should have a different animation layer, choose a bodypart beside wholeBody!"); return; }
 
-        if (layer == 0 && m_currentUpperBodyAnimation.y != 0)
+        for (int i = 1; i < m_currentAnimationStates.Length; i++)
         {
-            m_animator.CrossFadeInFixedTime(AnimationTypes.Empty_UpperBody, crossFadeDuration, (int)m_currentUpperBodyAnimation.y, timeOffset);
-            m_currentUpperBodyAnimation = new Vector2(AnimationTypes.Empty_UpperBody, 0);
-        }
-        else if (layer != 0)
-        {
-            m_animator.CrossFadeInFixedTime(upperBodyAnimation, crossFadeDuration, layer, timeOffset);
-            if (!exeptionForMultipleLayerAnimation)
-            {
-                if ((int)m_currentUpperBodyAnimation.y != 0)
-                m_animator.CrossFadeInFixedTime(AnimationTypes.Empty_UpperBody, m_nextUpperBodyCrossfadeOutTime, (int)m_currentUpperBodyAnimation.y, timeOffset);
-                m_currentUpperBodyAnimation = new Vector2(upperBodyAnimation, layer);
-            }
+            if (layer == 0 || (i != layer && m_currentAnimationStates[i] != AnimationTypes.Empty))
+                SetAnimation(AnimationTypes.Empty, crossFadeDuration, i, timeOffset);
+            else if (layer != 0 && i == layer)
+                SetAnimation(upperBodyAnimation, crossFadeDuration, i, timeOffset);
         }
 
         m_nextUpperBodyCrossfadeOutTime = m_baseCrossFadeDuration;
-
-
     }
 
     private void SetDamageAnimation(int upperBodyAnimation, int layer, float crossFadeDuration = 0f)

@@ -394,6 +394,9 @@ public class CharacterStatus : MonoBehaviour
     }
     public void ContinueEnergyRegenerationInTime(float pauseTime = 0.25f)
     {
+        if ((!m_isPauseEnergyRecoveryDueEmpty && !m_isPauseEnergyRecoveryDueAction) || m_pauseEnergyRecoveryCoroutine != null)
+            return;
+
         if (m_isPauseEnergyRecoveryDueEmpty)
             pauseTime = 1;
 

@@ -49,9 +49,9 @@ public class FootPlacing : MonoBehaviour
     [SerializeField] private float m_footRotationAdjustSpeed = 30f;
     [Space]
     [Tooltip("[Y Axis Dist of original ground to original Ankle heigh] Dist below x threshhold: considered to snap to ground normal. Dist above y threshhold: considered not snapped to ground normal. (best case: (0, 0.01f))")]
-    [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 1)] private Vector2 m_minFootDistToOrigHight = new Vector2(0.005f, 0.05f);
+    [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 0.5f)] private Vector2 m_minFootDistToOrigHight = new Vector2(0.005f, 0.05f);
     [Tooltip("[Angle in degree to World.up] Angle below x threshhold: considered to snap to ground normal. Angle above y threshhold: considered not snapped to ground normal. (best case: (1, 7f))")]
-    [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 90)] private Vector2 m_minFootAngleToOrigAngle = new Vector2(1, 7f);
+    [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 45)] private Vector2 m_minFootAngleToOrigAngle = new Vector2(1, 7f);
     [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_leftFootIsGroundedWeight = 1;
     [SerializeField][EditorAttributes.ReadOnly][Range(0, 1)] private float m_rightFootIsGroundedWeight = 1;
     [Space]

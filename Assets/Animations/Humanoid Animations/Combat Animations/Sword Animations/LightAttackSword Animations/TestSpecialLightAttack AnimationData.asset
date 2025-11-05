@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23e6ec3c2b118de46b7770dc1f3e46e9, type: 3}
-  m_Name: TestEvadeRight AnimationData
+  m_Name: TestSpecialLightAttack AnimationData
   m_EditorClassIdentifier: 
   ActionDescription: 
-  animationClip: {fileID: 7400000, guid: 32d015fd2e6f7684ba3a6070f246a8b7, type: 2}
-  AnimationMovementData: {fileID: 11400000, guid: 1e43119925b8246429eae356a2740780, type: 2}
+  animationClip: {fileID: 7400000, guid: a5b06008ddcdc36499f095a73fb5528e, type: 2}
+  AnimationMovementData: {fileID: 11400000, guid: 47975c951659abd4c8007a0c27f7d0cb, type: 2}
   bodyParts: 0
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
-  crossfadeOutBeginn: 0.15
+  crossfadeOutBeginn: 0.2
   CustomInterruptability: 5
-  InterruptabilityChangeBeforeEndTime: 0.02
+  InterruptabilityChangeBeforeEndTime: 0.4
   ChangedInterruptability: 1
-  MainActionMomentTime: 0
+  MainActionMomentTime: 0.27
   hitBoxActiveData: []
   IsPausingMidAir: 0
   PauseMidAirTime: 0

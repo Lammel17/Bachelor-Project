@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
-  m_Name: TestSprintLightAttack MovementData
+  m_Name: TestSpecialLightAttack MovementData
   m_EditorClassIdentifier: 
   MovementDescription: 
   moveInfluence: 1
@@ -25,7 +25,7 @@ MonoBehaviour:
     ignore: 0
     settings:
       valueType: 1
-      value: 6
+      value: 30
       valueSettings:
         startEnd: {x: 0.07496788, y: 0.3}
         curveValue:

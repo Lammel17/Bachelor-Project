@@ -17,8 +17,8 @@ MonoBehaviour:
   AnimationMovementData: {fileID: 11400000, guid: 0009b783e34dcce42a028d9b4bd24626, type: 2}
   bodyParts: 0
   crossfadeInTime: 0.2
-  crossfadeOutTime: 0.3
-  crossfadeOutBeginn: 0.2
+  crossfadeOutTime: 0.2
+  crossfadeOutBeginn: 0.15
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0.02
   ChangedInterruptability: 1

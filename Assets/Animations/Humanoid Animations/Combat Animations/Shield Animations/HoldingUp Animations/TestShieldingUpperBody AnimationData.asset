@@ -45,8 +45,8 @@ MonoBehaviour:
       IgnoreInfluence: 1
       m_newDirection: {x: 0, y: 0, z: 4.3}
       Weight_X: 0
-      Weight_Y: 0.465
-      Weight_Z: 0.465
+      Weight_Y: 0.444
+      Weight_Z: 0.452
     - Ignore: 0
       Element: 6
       IgnoreInfluence: 1

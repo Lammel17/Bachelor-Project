@@ -4,7 +4,7 @@ public class AnimationTypes
 {
     public static readonly int Reset                          = Animator.StringToHash("Reset");
 
-    public static readonly int Empty_UpperBody                = Animator.StringToHash("Empty_UpperBody");
+    public static readonly int Empty                          = Animator.StringToHash("Empty");
     public static readonly int Idle_1                         = Animator.StringToHash("Idle_1");
     public static readonly int Locomotion                     = Animator.StringToHash("Locomotion");
     public static readonly int Running                        = Animator.StringToHash("Running");

@@ -194,7 +194,7 @@ MonoBehaviour:
     nextSpecialLight: 0
     nextSpecialHeavy: 0
   SpecialLightAttack1:
-    AnimData: {fileID: 11400000, guid: e1c38a69f7c54ac4fa0eb5921e7d0f6b, type: 2}
+    AnimData: {fileID: 11400000, guid: 38b8aa28062e7b04a89273683ec3d15a, type: 2}
     PhysicalType: 0
     actionDamageData:
       OverallMultiplicator: 1
@@ -204,7 +204,7 @@ MonoBehaviour:
       MetaphysicFactor: 1
       AilmentsFactor: 1
       PoiseDamageFactor: 1
-    EnergyCost: 20
+    EnergyCost: 50
     SpecialEnergyCost: 0
     StaggerType: 3
     nextLight: 1
