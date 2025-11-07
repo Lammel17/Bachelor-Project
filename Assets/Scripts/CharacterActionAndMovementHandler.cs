@@ -33,6 +33,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     [SerializeField][Required] private CharacterStatus m_characterStatus;
     [SerializeField][Required] private GameObject m_chraracterMesh;
     [SerializeField][Required] private Animator m_animator;
+    [SerializeField] private LayerMask m_environmentLayer;
     private FootPlacing m_footPlacing;
     private PlayerCameraHolder m_playerCameraHolder; 
     private PlayerInputManager m_playerInputManager;
@@ -1240,6 +1241,21 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         float moveAccelerationByAction = m_moveAccelerationByAction;
         float nowMoveAcceleration = Mathf.Lerp(moveAccelerationByInput, moveAccelerationByAction, m_actionInfluenceOverMoveAcceleration);
 
+        //this is for the case of uneven ground, the player will walk slower when walking on a hill/stairs
+        RaycastHit groundHitDir;
+        RaycastHit groundHit;
+        if (m_isGrounded && Physics.Raycast(transform.position + (m_nowMoveDir * (nowSpeed + 0.2f) * 0.2f) + (Vector3.up * 0.5f), Vector3.down, out groundHitDir, 1, m_environmentLayer) /*&& Vector3.Angle(Vector3.up, groundHit.normal) >= 10*/)
+        {
+            Vector3 playerPos = (Physics.Raycast(m_chraracterMesh.transform.position + (Vector3.up * 0.5f), Vector3.down, out groundHit, 1, m_environmentLayer) ? groundHit.point : m_chraracterMesh.transform.position);
+            m_nowMoveDir = Quaternion.AngleAxis(-Mathf.Min(45, 90 - Vector3.Angle(Vector3.up, (groundHitDir.point - playerPos).normalized)), Vector3.Cross(Vector3.up, groundHitDir.point - playerPos)) * m_nowMoveDir;
+            //Debug.Log(m_nowMoveDir.magnitude);
+            //Debug.Log(UtilityFunctions.VectorXZ(m_nowMoveDir).magnitude);
+            //Debug.DrawLine(playerPos + Vector3.up * 0.5f, (playerPos + Vector3.up * 0.5f) + m_nowMoveDir.normalized * 5, Color.green);
+            //Debug.DrawLine(playerPos + m_nowMoveDir * nowSpeed * 0.2f + Vector3.up * 0.5f, (playerPos + m_nowMoveDir * nowSpeed * 0.2f + Vector3.up * 0.5f) + Vector3.up * 5, Color.blue);
+        }
+        //float terrainFactor = 1; // this is alternately the same as above, but only as a factor instead of rotationg the direction
+        //if (m_isGrounded && Physics.Raycast(m_chraracterMesh.transform.position + (m_nowMoveDir * (nowSpeed + 0.2f) * 0.2f) + (Vector3.up * 0.5f), Vector3.down, out groundHitDir, 1, m_environmentLayer) /*&& Vector3.Angle(Vector3.up, groundHit.normal) >= 10*/)
+        //    terrainFactor = Mathf.Cos(Mathf.Deg2Rad * Mathf.Abs(90 - Vector3.Angle(Vector3.up, (Physics.Raycast(m_chraracterMesh.transform.position + (Vector3.up * 0.5f), Vector3.down, out groundHit, 1, m_environmentLayer) ? groundHitDir.point - groundHit.point : m_chraracterMesh.transform.position).normalized)));
 
         Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, m_nowMoveDir * nowSpeed, Time.deltaTime * nowMoveAcceleration);
 
@@ -1262,7 +1278,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
     }
-
 
     #endregion
 

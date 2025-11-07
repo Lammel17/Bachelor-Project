@@ -60,7 +60,9 @@ public class FootPlacing : MonoBehaviour
     [Space]
     [Tooltip("[Y Axis Dist between the hip and the highest ground] Dist below x threshhold: considered as hip is too close to the new higher ground. Dist above y threshhold: considered as hip is far enough away of the higher ground. (best case: (0.3f, 0.5f))")]
     [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 1)] private Vector2 m_minDistHipGround = new Vector2(0.3f, 0.5f);
-    [SerializeField][EditorAttributes.ReadOnly][Range(0, 0.5f)] private float m_rootYAdjustment = 0;
+    [Tooltip("This weight should be 0 as much and often as possible, gets affected by the above value")]
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1f)] private float m_distHipToHighestGroundWeight = 0;
+    [SerializeField][EditorAttributes.ReadOnly][Range(0, 1f)] private float m_rootYAdjustment = 0;
     [Space]
     [Space]
     [Header("Overall Weighting")]
@@ -130,6 +132,7 @@ public class FootPlacing : MonoBehaviour
 
     public void SetWeightActive(bool active)
     {
+        return;
         // this is provisorical!!!!!!!!!!!!!!!!!!!
         if (active) 
             m_weightByGrounded  = 1;
@@ -183,13 +186,35 @@ public class FootPlacing : MonoBehaviour
             planarFootDirR *= m_lookingAheadStep * (1 - m_rightFootIsGroundedWeight);
         }
 
-        Vector3 raycastOriginL = new Vector3(m_footBoneLeft.position.x + planarFootDirL.x, transform.position.y + m_raycastHeightOffset, m_footBoneLeft.position.z + planarFootDirL.z);
-        Vector3 raycastOriginR = new Vector3(m_footBoneRight.position.x + planarFootDirR.x, transform.position.y + m_raycastHeightOffset, m_footBoneRight.position.z + planarFootDirR.z);
+        Vector3 raycastOriginL = new Vector3(m_footBoneLeft.position.x, transform.position.y + m_raycastHeightOffset, m_footBoneLeft.position.z) + planarFootDirL;
+        Vector3 raycastOriginR = new Vector3(m_footBoneRight.position.x, transform.position.y + m_raycastHeightOffset, m_footBoneRight.position.z) + planarFootDirR;
+
+
         if (Physics.Raycast(raycastOriginL, Vector3.down, out hitL, m_raycastHeightOffset * m_raycastLenght, m_environmentLayer))
-            hasGroundL = true;
+            hasGroundL = true; 
         if (Physics.Raycast(raycastOriginR, Vector3.down, out hitR, m_raycastHeightOffset * m_raycastLenght, m_environmentLayer))
             hasGroundR = true;
-        Debug.DrawLine(raycastOriginL, raycastOriginL + Vector3.down * m_raycastHeightOffset * 2, Color.red);
+
+        if (m_applyStepLooksAhead)
+        {
+            //will set the raycastOrigin ahead of the foot moving direction, but not when moving downstairs, bc then its not needed
+            if ((hitL.point.y < m_lastRootY - 0.1f || !hasGroundL))
+            {
+                raycastOriginL -= planarFootDirL;
+                hasGroundL = false;
+                if (Physics.Raycast(raycastOriginL, Vector3.down, out hitL, m_raycastHeightOffset * m_raycastLenght, m_environmentLayer))
+                    hasGroundL = true;
+            }
+            if ((hitR.point.y < m_lastRootY - 0.1f || !hasGroundR))
+            {
+                raycastOriginR -= planarFootDirR;
+                hasGroundR = false;
+                if (Physics.Raycast(raycastOriginR, Vector3.down, out hitR, m_raycastHeightOffset * m_raycastLenght, m_environmentLayer))
+                    hasGroundR = true;
+            }
+        }
+
+        Debug.DrawLine(raycastOriginL, raycastOriginL  + Vector3.down * m_raycastHeightOffset * 2, Color.red);
         Debug.DrawLine(raycastOriginR, raycastOriginR + Vector3.down * m_raycastHeightOffset * 2, Color.red);
 
 
@@ -203,20 +228,20 @@ public class FootPlacing : MonoBehaviour
         else                                            WeightGroundByConditions(ref m_rightGroundHeight, ref m_leftGroundHeight, ref m_rightAnkleHeight, ref m_leftAnkleHeight, m_thighBoneRight.position.y, m_thighBoneLeft.position.y );
 
         void WeightGroundByConditions(ref float higherGroundHeight, ref float lowerGroundHeight, ref float ankleHeightOfHigherGround, ref float ankleHeightOfLowerGround, float thightBoneHeightOfHigherGround, float thightBoneHeightOfLowerGround)
-        {   
+        {
             // those values are before they were set, so the thightbone is higher bc ist befor its set down.
             float closerHipDistToGround = thightBoneHeightOfHigherGround - higherGroundHeight - (higherGroundHeight - lowerGroundHeight);
 
             // for the case that booth feet would be projected lower than the characterController StepHeightOffset, then it should not 
-            float weight = Mathf.InverseLerp( -(m_maxStepHeight - 0.05f), -(m_maxStepHeight + 0.05f),higherGroundHeight - (m_player.position.y - m_skinWidth));
+            float weight = Mathf.InverseLerp(-(m_maxStepHeight - 0.05f), -(m_maxStepHeight + 0.05f), higherGroundHeight - (m_player.position.y - m_skinWidth));
 
 
             // for the case that the hightened foot side is too close to the hip, then the character should be liftet
-            float weightForLowerGroundHeight = Mathf.Max(Mathf.InverseLerp(m_minDistHipGround.y, m_minDistHipGround.x, closerHipDistToGround), weight);
-            lowerGroundHeight = Mathf.Lerp(lowerGroundHeight, m_player.position.y - m_skinWidth,  weightForLowerGroundHeight);
+            m_distHipToHighestGroundWeight = Mathf.Max(Mathf.InverseLerp(m_minDistHipGround.y, m_minDistHipGround.x, closerHipDistToGround), weight);
+            lowerGroundHeight = Mathf.Lerp(lowerGroundHeight, m_player.position.y - m_skinWidth, m_distHipToHighestGroundWeight);
             // for the case that the lower foot is way above ground to matter at all
             float weightForLowerGroundHeight_footTooHighAboveGround = Mathf.InverseLerp(m_footTooHighAboveGroundToMatterThreshhold.x, m_footTooHighAboveGroundToMatterThreshhold.y * 2, ankleHeightOfLowerGround);
-            lowerGroundHeight = Mathf.Lerp(lowerGroundHeight,  m_player.position.y - m_skinWidth, weightForLowerGroundHeight_footTooHighAboveGround);
+            lowerGroundHeight = Mathf.Lerp(lowerGroundHeight, m_player.position.y - m_skinWidth, weightForLowerGroundHeight_footTooHighAboveGround);
 
 
             // for the case that the higher foot would be projected on a platform higher than the characterController StepHeightOffset, then it should not
@@ -226,6 +251,7 @@ public class FootPlacing : MonoBehaviour
             float weightForHigherGroundHeight_footTooHighAboveGround = Mathf.InverseLerp(m_footTooHighAboveGroundToMatterThreshhold.x, m_footTooHighAboveGroundToMatterThreshhold.y * 2, ankleHeightOfHigherGround);
             higherGroundHeight = Mathf.Lerp(higherGroundHeight, m_player.position.y - m_skinWidth, weightForHigherGroundHeight_footTooHighAboveGround);
 
+            //Those are all references
         }
 
         #endregion

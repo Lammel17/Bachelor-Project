@@ -3619,7 +3619,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1307756032
 Transform:
   m_ObjectHideFlags: 0
@@ -4172,7 +4172,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1454971721
 Transform:
   m_ObjectHideFlags: 0
@@ -4927,14 +4927,15 @@ MonoBehaviour:
     m_Bits: 64
   m_lookingAheadStep: 0.0375
   m_lookingAheadSmoothening: 15
-  m_footHeightAdjustSpeed: 30
+  m_footHeightAdjustSpeed: 20
   m_footRotationAdjustSpeed: 30
   m_minFootDistToOrigHight: {x: 0.005, y: 0.05}
   m_minFootAngleToOrigAngle: {x: 1, y: 7}
   m_leftFootIsGroundedWeight: 1
   m_rightFootIsGroundedWeight: 1
-  m_rootHeightAdjustSpeed: 30
-  m_minDistHipGround: {x: 0.3, y: 0.5}
+  m_rootHeightAdjustSpeed: 20
+  m_minDistHipGround: {x: 0.29585397, y: 0.49585396}
+  m_distHipToHighestGroundWeight: 0
   m_rootYAdjustment: 0
   m_weightByGrounded: 1
   m_weightByLayingOnGroundScript: 1
@@ -5241,6 +5242,9 @@ MonoBehaviour:
   m_characterStatus: {fileID: 1756236767}
   m_chraracterMesh: {fileID: 422825766}
   m_animator: {fileID: 1060078877}
+  m_environmentLayer:
+    serializedVersion: 2
+    m_Bits: 64
   m_currentInteruptability: 0
   m_characterSettingsData: {fileID: 11400000, guid: 4593781a1969c944bb8badd437663ea0, type: 2}
   m_speedValues: {x: 2, y: 4, z: 6}
@@ -5259,16 +5263,15 @@ MonoBehaviour:
   m_isFreelyMoving: 1
   m_isTurningApplied: 0
   m_isSlidingApplied: 0
-  m_isAction: 0
-  m_isActionUpperBody: 0
   m_isActionLocked: 0
   m_isHoldShielding: 0
   m_isShielding: 0
   m_isGrounded: 1
   m_isMidAirPause: 0
   m_equipmentIsReady: 1
-  m_currentBaseLayerAnimation: 0
-  m_currentUpperBodyAnimation: {x: 0, y: 0}
+  m_currentActionAndLayer: {x: 0, y: 0}
+  m_currentAnimationStates: 
+  c_emptyAction: {x: -1.4592197e+9, y: 0}
   m_animSlowDownDuration: 0.2
 --- !u!114 &1756236771
 MonoBehaviour:
