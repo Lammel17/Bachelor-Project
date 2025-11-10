@@ -3759,7 +3759,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6906138895346458571, guid: 9fe0c6d37d1b3294f9a5c4af0c5aa93c, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -29.999756
+      value: -29.999817
       objectReference: {fileID: 0}
     - target: {fileID: 6906138895503271302, guid: 9fe0c6d37d1b3294f9a5c4af0c5aa93c, type: 3}
       propertyPath: m_IsActive
@@ -4789,6 +4789,7 @@ GameObject:
   - component: {fileID: 1756236761}
   - component: {fileID: 1756236763}
   - component: {fileID: 1756236770}
+  - component: {fileID: 1756236773}
   - component: {fileID: 1756236767}
   - component: {fileID: 1756236772}
   - component: {fileID: 1756236768}
@@ -5239,6 +5240,7 @@ MonoBehaviour:
   testMoveDirection: {fileID: 1268966254}
   testTurningDirection: {fileID: 2016108117}
   m_characterController: {fileID: 1756236763}
+  m_actionMovementHandler: {fileID: 1756236773}
   m_characterStatus: {fileID: 1756236767}
   m_chraracterMesh: {fileID: 422825766}
   m_animator: {fileID: 1060078877}
@@ -5255,7 +5257,7 @@ MonoBehaviour:
   m_maxTurningSpeed: 0
   m_turningStrenght: 0
   m_orientation: 0
-  m_isOrientationRotationForbidden: 0
+  m_disableSidewardMovement: 0
   m_isStandingStill: 1
   m_isLockOn: 0
   m_isHoldRunning: 0
@@ -5301,6 +5303,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_absorption: 1
   m_state: 0
+--- !u!114 &1756236773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756236756}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14b88f5ced806f248881f17a9b26349a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ActionMovementHandler
+  m_emptyFallbackAnimMoveData: {fileID: 11400000, guid: 6a1ea8ce925b6f24ea52a566a30e6c00, type: 2}
+  m_characterController: {fileID: 1756236763}
+  testMoveDirection: {fileID: 1268966254}
+  testTurningDirection: {fileID: 2016108117}
 --- !u!4 &1767695285 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2235624610593151950, guid: ff74c251c2e297e47be091b310ce6e54, type: 3}

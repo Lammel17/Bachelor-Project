@@ -27,7 +27,7 @@ public class AnimationMovementData : ScriptableObject
     [SerializeField] public TargetRelations targetRelations = TargetRelations.None;
     [SerializeField] public TurningRelations turningRelations = TurningRelations.None;
     [Tooltip("only needed if InputInfluence for TurningDir is used in any way")]
-    [SerializeField] public bool forbidAdditinalRotation = false;
+    [SerializeField] public bool m_disableSidewardMovement = false;
     [Space]
     [Header("Animation Parameters for Movement and Rotation")]
     [SerializeField] public Values[] variableValue = new Values[0];
