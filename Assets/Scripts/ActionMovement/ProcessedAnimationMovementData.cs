@@ -8,10 +8,10 @@ public class ProcessedAnimationMovementData
     public List<DataStartEnd> RangeValuesList;
     public List<DataCurves> CurveValuesList;
     public AnimationData AnimationData;
-    public List<Action> Effects;
+    public List<EffectQueue> Effects;
 
 
-    public ProcessedAnimationMovementData(List<DataStartEnd> startEndValueList, List<DataCurves> cureveValueList, AnimationData animData, List<Action> effects)
+    public ProcessedAnimationMovementData(List<DataStartEnd> startEndValueList, List<DataCurves> cureveValueList, AnimationData animData, List<EffectQueue> effects)
     {
         RangeValuesList = startEndValueList;
         CurveValuesList = cureveValueList;

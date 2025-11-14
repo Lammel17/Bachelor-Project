@@ -86,7 +86,10 @@ public class HitAndHurtBoxManagerOfEquipment : MonoBehaviour
             foreach (Collider coll in hbcd.HitColliders)
             {
                 if (coll != null)
+                {
                     coll.enabled = true;
+                    //Debug.Log(coll.gameObject.name);
+                }
             }
         }
     }

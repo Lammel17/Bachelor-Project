@@ -69,7 +69,7 @@ public class AnimationData : ScriptableObject
         [SerializeField] public int CollectionRefNumber;
         [SerializeField][GD.MinMaxSlider.MinMaxSlider(0, 1)] public Vector2 activeTime = new Vector2(0, 0);
 
-        //[SerializeField] public AnimationCurve activeTime = AnimationCurve.Linear(0, 0, 0, 0);
+        //[SerializeField] public DamageMultiplikatorData damageData; // is commented because it will not get read currently
     }
 
     //[Header("Invincibility")]

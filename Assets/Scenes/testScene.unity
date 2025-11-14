@@ -142,7 +142,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &40135809
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3759,7 +3759,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6906138895346458571, guid: 9fe0c6d37d1b3294f9a5c4af0c5aa93c, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -29.999817
+      value: -29.999939
       objectReference: {fileID: 0}
     - target: {fileID: 6906138895503271302, guid: 9fe0c6d37d1b3294f9a5c4af0c5aa93c, type: 3}
       propertyPath: m_IsActive
@@ -5010,7 +5010,7 @@ MonoBehaviour:
     ShieldData: {fileID: 0}
     ShieldLevelCurrentMax: {x: 1, y: 10}
   m_invulnerable: 0
-  m_infinteStamina: 1
+  m_infinteStamina: 0
   m_characterStatsSettingsData: {fileID: 11400000, guid: b95fb5ccfcca3e545aa02658a1da4fa8, type: 2}
   m_energyRecoverySpeed: 50
   m_energyRecoveryPause: 2
@@ -5317,6 +5317,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActionMovementHandler
   m_emptyFallbackAnimMoveData: {fileID: 11400000, guid: 6a1ea8ce925b6f24ea52a566a30e6c00, type: 2}
   m_characterController: {fileID: 1756236763}
+  m_state: 0
   testMoveDirection: {fileID: 1268966254}
   testTurningDirection: {fileID: 2016108117}
 --- !u!4 &1767695285 stripped

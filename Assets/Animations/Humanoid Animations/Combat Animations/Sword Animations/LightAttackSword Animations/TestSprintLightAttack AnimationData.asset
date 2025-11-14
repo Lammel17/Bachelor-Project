@@ -18,17 +18,18 @@ MonoBehaviour:
   bodyParts: 0
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2
-  crossfadeBeginn: 0.2
+  crossfadeOutBeginn: 0.2
   CustomInterruptability: 5
   InterruptabilityChangeBeforeEndTime: 0.4
   ChangedInterruptability: 1
   MainActionMomentTime: 0.27
+  hitBoxActiveData: []
   IsPausingMidAir: 0
   PauseMidAirTime: 0
   IsPausingGravity: 0
   PauseGravityTime: {x: 0, y: 0}
-  useLookAtData: 0
+  actionUsesLookAtTargetData: 0
+  useLookAtForwardData: 0
   lookAtData:
     m_applyAddRot: 1
-    m_addRotEuler: {x: 0, y: 0, z: 0}
     m_forwardCorrections: []

@@ -5,6 +5,7 @@ using static CharacterActionAndMovementHandler;
 using System.Collections;
 
 using System;
+using Unity.Collections;
 
 
 public class ActionMovementHandler : MonoBehaviour
@@ -19,18 +20,23 @@ public class ActionMovementHandler : MonoBehaviour
     private AnimationMovementData m_actionMovementData = null;
     private AnimationMovementData.TargetRelations m_actionTargetRelations = 0;
     private AnimationMovementData.TurningRelations m_actionTurningRelations = 0;
-    public event Action OnEndAction;
+    public event Action OnEndAndResetAction;
+    public event Action OnEndActionBeforeReset;
+    //public List<EffectQueue> m_effectQueue = new List<EffectQueue>();
+    [SerializeField] [EditorAttributes.ReadOnly] private State m_state = State.Stop;
 
     public bool IsLockOn { get => m_isLockOn; set => m_isLockOn = value; }
     public float AnimationSpeed { get => m_animationSpeed; set => m_animationSpeed = value; }
     public int ActionTurningRelation { get => (int)m_actionTurningRelations; }
     public Coroutine ActionCoroutine { get => m_ActionCoroutine; }
+    public float DesiredTurningAngle { get => m_turningAngle; }
 
-
-
-
-
-
+    private enum State
+    {
+        Stop,
+        Start,
+        InAction,
+    }
 
 
 
@@ -74,8 +80,9 @@ public class ActionMovementHandler : MonoBehaviour
 
 
 
-    public void StartAction(AnimationData animData, List<Action> effectList, float moveAcceleration, float turningStrenght, float maxTurningSpeed, Vector3 inputDirInWS, Vector3 characterForward)
+    public void StartAction(AnimationData animData, List<EffectQueue> effectList, float moveAcceleration, float turningStrenght, float maxTurningSpeed, Vector3 inputDirInWS, Vector3 characterForward)
     {
+        m_state = State.Start;
         m_actionMovementData = animData.AnimationMovementData;
         float animationDuration = animData.animationClip.length;
         float crossfadeOutTime = animData.crossfadeOutTime;
@@ -297,8 +304,8 @@ public class ActionMovementHandler : MonoBehaviour
                 float waitTime = timeTillEnd;
                 float relativeElapsedTime = elapsedTime / duration;
 
-                /*
 
+                /*
                 //INTERRUPTABILITY this is if a action is earlier interruptable than the lenght of the animation
                 if (m_currentInteruptability != processedData.AnimationData.ChangedInterruptability)
                 {
@@ -407,6 +414,39 @@ public class ActionMovementHandler : MonoBehaviour
                     //Debug.Log(relativeElapsedTime + timetillNextHitBoxChange / duration);
                 }
                 */
+                //Debug.Log($"duration {duration}");
+                //Debug.Log($"waitTime {waitTime}");
+                //Debug.Log($"relativeElapsedTime {relativeElapsedTime}");
+                //Debug.Log($"timeTillEnd {timeTillEnd}");
+                //Debug.Log($"effectQueue.relativeEffectTime {processedData.Effects[0].relativeEffectTime}");
+
+                foreach (EffectQueue effectQueue in processedData.Effects)
+                {
+                    //Debug.Log(effectQueue.relativeEffectTime);
+                    if (effectQueue.wasApplied)
+                        continue;
+                    else if (relativeElapsedTime >= effectQueue.relativeEffectTime)
+                    {
+                        
+                        //Debug.Log(relativeElapsedTime);
+                        //Debug.Log(relativeElapsedTime);
+                        //Debug.Log(GetComponent<CharacterActionAndMovementHandler>().CurrentInteruptability);
+
+                        effectQueue.effect?.Invoke();
+                        effectQueue.wasApplied = true;
+                        if (m_state != State.InAction && elapsedTime != 0) 
+                            yield break;
+                        //Debug.Log(GetComponent<CharacterActionAndMovementHandler>().CurrentInteruptability);
+                    }
+                    else
+                    {
+                        float timeUntilNextChange = (effectQueue.relativeEffectTime - relativeElapsedTime) * duration;
+                        waitTime = Mathf.Min(waitTime, timeUntilNextChange);
+                        //Debug.Log($"timeUntilNextChange {timeUntilNextChange}");
+
+                    }
+
+                }
 
                 //STARTEND VALUES
                 foreach (var rangeData in processedData.RangeValuesList)
@@ -419,7 +459,7 @@ public class ActionMovementHandler : MonoBehaviour
                     if (relativeElapsedTime < rangeData.startEnd.x) { waitForTimeByRangeValues = (rangeData.startEnd.x * duration) - elapsedTime; }//wait till range start
                     else if (relativeElapsedTime < rangeData.startEnd.y) { waitForTimeByRangeValues = (rangeData.startEnd.y * duration) - elapsedTime; }//wait till range end
 
-                    waitTime = Math.Min(waitTime, waitForTimeByRangeValues);
+                    waitTime = Mathf.Min(waitTime, waitForTimeByRangeValues);
                     SetValueByName(rangeData.name, valueInRange);
                 }
 
@@ -443,6 +483,7 @@ public class ActionMovementHandler : MonoBehaviour
             //if (processedData.AnimationData.AnimationMovementData.ActionDescription == "long") Debug.Log("U");
 
             yield return null;
+            m_state = State.InAction;
 
             delayByMidAir += Time.deltaTime * (1 - m_animationSpeed);
             elapsedTime = Time.time - (startTime + delayByMidAir); // time must be added after the first wait
@@ -452,6 +493,7 @@ public class ActionMovementHandler : MonoBehaviour
             //Debug.Log(elapsedTime);
         }
 
+        OnEndActionBeforeReset?.Invoke();
 
         EndAction();
 
@@ -461,6 +503,7 @@ public class ActionMovementHandler : MonoBehaviour
 
     public void EndAction()
     {
+        m_state = State.Stop;
 
         //reset influence of Action
         m_actionInfluenceOverMoveDirection = 0;
@@ -474,6 +517,7 @@ public class ActionMovementHandler : MonoBehaviour
         m_disableSidewardMovement = false;
         m_actionTargetRelations = 0;
         m_actionTurningRelations = 0;
+        //m_effectQueue = new List<EffectQueue>();
 
         //End Coroutines
         if (m_ActionCoroutine != null)
@@ -482,7 +526,7 @@ public class ActionMovementHandler : MonoBehaviour
             m_ActionCoroutine = null;
         }
 
-        OnEndAction.Invoke();
+        OnEndAndResetAction?.Invoke();
 
     }
 
@@ -499,30 +543,14 @@ public class ActionMovementHandler : MonoBehaviour
     private Vector3 m_nowMoveDir = Vector3.forward;
     private Vector3 m_prevMove = Vector3.zero;
 
-    public void RotatingPlayer(Vector3 m_desiredFacingRotationDirInWS, float m_maxTurningSpeed, float m_turningStrenght, Vector3 vectorToTarget)
+    public float GetRotation(Vector3 m_desiredFacingRotationDirInWS, float m_maxTurningSpeed, float m_turningStrenght, Vector3 vectorToTarget)
     {
-        //if no input, then it should not recalculate the desired facing direction, because what if i stand still and then lock on something behind me, it should not affect any calculation as long as i dont move
-        // also, actions like evading set their initial m_desiredFacingRotationDirInWS in their own Trigger function
-        //if (!m_isStandingStill)
-        //    m_desiredFacingRotationDirInWS = OrientationRotation() * m_inputDirInWS;
-        //else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && !m_isRunning)
-        //    m_desiredFacingRotationDirInWS = PlayerToTargetXZVector;
-        //else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && m_isRunning)
-        //    m_desiredFacingRotationDirInWS = m_desiredFacingRotationDirInWS;
-
-
         //FacingDir
         Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS;
         Vector3 desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByAction;
         if (m_isLockOn && (int)m_actionTargetRelations == 1/*TurningDirFollowsTarget*/) desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up), 0) * UtilityFunctions.VectorXZ(vectorToTarget);
         else if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/) desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up), 0) * m_nowMoveDir;
         Vector3 nowdesiredFacingRotationDirInWS = Vector3.Slerp(desiredFacingRotationDirInWSByInput.normalized, desiredFacingRotationDirInWSByAction.normalized, m_actionInfluenceOverDesiredFacingRotationDirInWS);
-
-        ////turningSpeedBy by movementSpeed
-        //float m_maxTurningSpeed = ((m_currentBaseSpeed <= m_speedValues.y) ?
-        //    UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.x, m_speedValues.y, m_maxTurningSpeedBaseValues.x, m_maxTurningSpeedBaseValues.y) :
-        //    !m_isTurningApplied ? UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.y, m_speedValues.z, m_maxTurningSpeedBaseValues.y, m_maxTurningSpeedBaseValues.z) : m_maxTurningSpeedBaseValues.z);
-
 
         //speed
         float maxTurningSpeedByInput = m_maxTurningSpeed;
@@ -536,6 +564,7 @@ public class ActionMovementHandler : MonoBehaviour
 
         float angle = Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up);
         float newAngle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up) * Time.deltaTime * nowTurningStrenght, -nowMaxTurningSpeed, nowMaxTurningSpeed); //Only ever 90° steps max per seconds, the turning speed
+        
         m_turningAngle = angle;
 
 
@@ -544,13 +573,15 @@ public class ActionMovementHandler : MonoBehaviour
         //Vector3 rotationCenterOffset = new Vector3(turnRotationPointOffsetXAxis, 0, 0);
 
         //RotateAround() isnt actually working when using Move()
-        transform.RotateAround(transform.position/* + (transform.rotation * rotationCenterOffset)*/, Vector3.up, newAngle);
+        //transform.RotateAround(transform.position/* + (transform.rotation * rotationCenterOffset)*/, Vector3.up, newAngle);
 
         testTurningDirection.transform.rotation = Quaternion.Euler(0, Vector3.SignedAngle(Vector3.forward, nowdesiredFacingRotationDirInWS, Vector3.up), 0);
 
+        return newAngle;
+
     }
 
-    public void MovingPlayer(Vector3 inputDirection, Vector3 vectorToTarget, float m_currentBaseSpeed, float m_moveAcceleration, Vector3 gravity)
+    public Vector3 GetMove(Vector3 inputDirection, float m_currentBaseSpeed, float m_moveAcceleration, Vector3 vectorToTarget)
     {
         //direction
         Vector3 directionByInput = inputDirection /*(!m_isFreelyMoving || m_isAboutSwitchDirectionType) ? m_inputDirInWS : transform.forward*/;
@@ -559,12 +590,6 @@ public class ActionMovementHandler : MonoBehaviour
         else if ((int)m_actionTurningRelations == 2/*MoveDirFollowsTurningDir*/) directionByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_directionByActionBaseValue, m_directionByAction, Vector3.up), 0) * transform.forward;
         Vector3 nowMoveDirection = Vector3.Lerp(directionByInput.normalized, directionByAction.normalized, m_actionInfluenceOverMoveDirection);
         if (nowMoveDirection != Vector3.zero) m_nowMoveDir = nowMoveDirection.normalized;
-
-        ////speedFactor by turningangle
-        //float speedFactorByAngle = ((m_isTurningApplied) ? Mathf.Lerp(1, 0, (Mathf.Max(Mathf.Abs(m_turningAngle) - 20, 0) / 50)) : 1);
-        ////speedFactor by turningangle
-        //float accelerationFactorByTurning = ((m_currentBaseSpeed > m_speedValues.y && m_isTurningApplied) || m_isSlidingApplied ? 0.2f : 1f);
-
 
         //speed
         float speedByInput = m_currentBaseSpeed /** speedFactorByAngle*/;
@@ -576,41 +601,15 @@ public class ActionMovementHandler : MonoBehaviour
         float moveAccelerationByAction = m_moveAccelerationByAction;
         float nowMoveAcceleration = Mathf.Lerp(moveAccelerationByInput, moveAccelerationByAction, m_actionInfluenceOverMoveAcceleration);
 
-        //this is for the case of uneven ground, the player will walk slower when walking on a hill/stairs
-        //RaycastHit groundHitDir;
-        //RaycastHit groundHit;
-        //if (m_isGrounded && Physics.Raycast(transform.position + (m_nowMoveDir * (nowSpeed + 0.2f) * 0.2f) + (Vector3.up * 0.5f), Vector3.down, out groundHitDir, 1, m_environmentLayer) /*&& Vector3.Angle(Vector3.up, groundHit.normal) >= 10*/)
-        //{
-        //    Vector3 playerPos = (Physics.Raycast(m_chraracterMesh.transform.position + (Vector3.up * 0.5f), Vector3.down, out groundHit, 1, m_environmentLayer) ? groundHit.point : m_chraracterMesh.transform.position);
-        //    m_nowMoveDir = Quaternion.AngleAxis(-Mathf.Min(45, 90 - Vector3.Angle(Vector3.up, (groundHitDir.point - playerPos).normalized)), Vector3.Cross(Vector3.up, groundHitDir.point - playerPos)) * m_nowMoveDir;
-            //Debug.Log(m_nowMoveDir.magnitude);
-            //Debug.Log(UtilityFunctions.VectorXZ(m_nowMoveDir).magnitude);
-            //Debug.DrawLine(playerPos + Vector3.up * 0.5f, (playerPos + Vector3.up * 0.5f) + m_nowMoveDir.normalized * 5, Color.green);
-            //Debug.DrawLine(playerPos + m_nowMoveDir * nowSpeed * 0.2f + Vector3.up * 0.5f, (playerPos + m_nowMoveDir * nowSpeed * 0.2f + Vector3.up * 0.5f) + Vector3.up * 5, Color.blue);
-        //}
-        //float terrainFactor = 1; // this is alternately the same as above, but only as a factor instead of rotationg the direction
-        //if (m_isGrounded && Physics.Raycast(m_chraracterMesh.transform.position + (m_nowMoveDir * (nowSpeed + 0.2f) * 0.2f) + (Vector3.up * 0.5f), Vector3.down, out groundHitDir, 1, m_environmentLayer) /*&& Vector3.Angle(Vector3.up, groundHit.normal) >= 10*/)
-        //    terrainFactor = Mathf.Cos(Mathf.Deg2Rad * Mathf.Abs(90 - Vector3.Angle(Vector3.up, (Physics.Raycast(m_chraracterMesh.transform.position + (Vector3.up * 0.5f), Vector3.down, out groundHit, 1, m_environmentLayer) ? groundHitDir.point - groundHit.point : m_chraracterMesh.transform.position).normalized)));
-
         Vector3 nowMove = UtilityFunctions.SmartLerp(m_prevMove, m_nowMoveDir * nowSpeed, Time.deltaTime * nowMoveAcceleration);
 
-        //Gravity
-        //if (m_currentGravity == 0)
-        //    m_velocityThroughGravity = 0;
-        //else if (m_characterController.isGrounded && m_velocityThroughGravity < 0)
-        //    m_velocityThroughGravity = -2f; // small downward force to keep grounded
-        //m_velocityThroughGravity += m_currentGravity * Time.deltaTime;
-        //Vector3 gravity = new Vector3(0, m_velocityThroughGravity, 0);
-
-        //Apply
-        m_characterController.Move((nowMove + gravity) * Time.deltaTime);
         m_prevMove = nowMove;
-
 
         //Display
         if (nowMove != Vector3.zero) testMoveDirection.transform.rotation = Quaternion.LookRotation(nowMove, Vector3.up);
         else testMoveDirection.transform.localScale = new Vector3(0.5f, 0.07f, Mathf.Min(Mathf.Max(nowSpeed / 2, 0.2f), 1.5f));
 
+        return nowMove;
 
     }
 

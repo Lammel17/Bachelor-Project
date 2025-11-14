@@ -109,7 +109,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private ShieldData.ShieldAction m_currentShieldActionData = null;
 
 
-    private Coroutine m_actionChangesInterruptabilityCoroutine;
+    //private Coroutine m_actionChangesInterruptabilityCoroutine;
     private Coroutine m_actionPayCostCouroutine;
     private Coroutine m_actionPauseCoroutine;
     private Coroutine m_gravityPauseCoroutine;
@@ -153,6 +153,17 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     #region PROPERTIES
     public Animator Animator { get => m_animator; }
+    public float AnimatorSpeed
+    {
+        get => m_animationSpeed;
+        set
+        {
+            if (value == m_animationSpeed)
+                return;
+            m_animationSpeed = value;
+            m_actionMovementHandler.AnimationSpeed = value;
+        }
+    }
     public CharacterMovesetData MovesetData { get => m_movesetData; }
     public Vector3 InputDirection { get => m_inputDir; set { if (value == Vector3.zero) return; m_inputDir = value.normalized; }} //is always normalized and never zero
     public float InputStrenght //is already snapped by inputmanager to either 0, 0.5 or 1
@@ -194,7 +205,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                     StopCoroutine(m_slowDownAnimSpeedCoroutine);
                     m_slowDownAnimSpeedCoroutine = null;
                 }
-                m_animationSpeed = 1;
+                AnimatorSpeed = 1;
                 m_animator.speed = m_animationSpeed;
             }
         } 
@@ -231,7 +242,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     public Vector3 TargetPos { get => Target.position; }
     public Vector3 PlayerToTargetXZVector 
     { 
-        get { if (m_target == null) { Debug.Log("No target, so no Direction to Target"); return transform.forward; }; return new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z).normalized; } 
+        get { if (m_target == null) {/* Debug.Log("No target, so no Direction to Target");*/ return transform.forward; }; return new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z).normalized; } 
     }
     public bool IsHoldRunning { get => m_isHoldRunning; set { m_isHoldRunning = value; } }
     public bool IsRunning
@@ -297,12 +308,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     private void OnEnable()
     {
-        m_actionMovementHandler.OnEndAction += EndActionResetValues;
+        m_actionMovementHandler.OnEndAndResetAction += EndActionResetValues;
+        m_actionMovementHandler.OnEndActionBeforeReset += ResetNextAttack;
     }
 
     private void OnDisable()
     {
-        
+        m_actionMovementHandler.OnEndAndResetAction -= EndActionResetValues;
+        m_actionMovementHandler.OnEndActionBeforeReset -= ResetNextAttack;
     }
 
 
@@ -999,17 +1012,86 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_characterStatus.PauseEnergyRegenerationByAction();
 
         //effects like pay stamina cost at that moment
-        List<Action> actionList = new List<Action>();
+        List<EffectQueue> effectList = new List<EffectQueue>();
+        if (effect != null)
+            effectList.Add(new EffectQueue(effect, animData.MainActionMomentTime));
         if (staminaCost != 0)
         {
             Action payActionCostsAction = () => { m_characterStatus.ExpendEnergyPoints(staminaCost); m_characterStatus.ExpendSpecialEnergyPoints(specialEnergyCost); m_actionPayCostCouroutine = null; };
-            actionList.Add(payActionCostsAction);
+            effectList.Add(new EffectQueue(payActionCostsAction, animData.MainActionMomentTime));
         }
-        if (effect != null)
-            actionList.Add(effect);
 
-        //HERE THE ACTION STARTS
-        m_actionMovementHandler.StartAction(animData, actionList, m_moveAcceleration, m_turningStrenght, m_maxTurningSpeed, m_inputDirInWS, transform.forward);
+        if (animData.InterruptabilityChangeBeforeEndTime != 0 && animData.ChangedInterruptability != m_currentInteruptability)
+        {
+            Action ChangeInteruptability = () =>
+            {
+                m_characterStatus.ContinueEnergyRegenerationInTime();
+                m_currentInteruptability = animData.ChangedInterruptability;
+                //m_actionChangesInterruptabilityCoroutine = null;
+                if (m_playerInputManager.CheckRecallLatestBufferedInput())
+                    m_actionMovementHandler.EndAction();
+            };
+            effectList.Add(new EffectQueue(ChangeInteruptability, (animData.animationClip.length - animData.InterruptabilityChangeBeforeEndTime - animData.crossfadeOutBeginn) / animData.animationClip.length));
+        }
+
+        if (animData.IsPausingGravity)
+        {
+            Action PauseGravity = () =>
+            {
+                Gravity = 0;
+                m_footPlacing.SetWeightActive(false);
+            };
+            effectList.Add(new EffectQueue(PauseGravity, animData.PauseGravityTime.x));
+            Action ContinueGravity = () => { Gravity = m_originalGravity; };
+            effectList.Add(new EffectQueue(PauseGravity, animData.PauseGravityTime.y));
+        }
+
+        if (animData.IsPausingMidAir)
+        {
+            Action PauseAnimation = () =>
+            {
+                if (!m_isGrounded)
+                {
+                    m_isMidAirPause = true;
+                    m_slowDownAnimSpeedCoroutine = StartCoroutine(SlowDownAnimSpeed());
+                }
+            };
+            effectList.Add(new EffectQueue(PauseAnimation, (animData.PauseMidAirTime - (m_animSlowDownDuration / 2) / animData.animationClip.length)));
+        }
+
+
+        ////HITBOXES On and Off
+        if (animData.hitBoxActiveData.Count != 0)
+        {
+            DamageData actionDamageData = null;
+            if (animData.hitBoxActiveData.Count != 0)
+                actionDamageData = m_currentWeaponAttackData != null ? m_characterStatus.GetActionDamageData(m_currentWeaponAttackData, transform.forward, m_movesetData.weapon.BasePhysicalType)
+                                                                     : m_characterStatus.GetActionDamageData(m_currentShieldActionData, transform.forward, m_movesetData.shield.PhysicalType);
+
+            foreach (AnimationData.HitBoxActiveData hitActiveData in animData.hitBoxActiveData)
+            {
+                Action ToggleHitBoxesActive = () =>
+                {
+                    if (m_currentWeaponAttackData != null && m_characterStatus.HitBoxManagerWeapon != null) m_characterStatus.HitBoxManagerWeapon.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, actionDamageData);
+                    if (m_currentShieldActionData != null && m_characterStatus.HitBoxManagerShield != null) m_characterStatus.HitBoxManagerShield.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, actionDamageData);
+                };
+                effectList.Add(new EffectQueue(ToggleHitBoxesActive, hitActiveData.activeTime.x));
+
+                Action ToggleHitBoxesDeactive = () =>
+                {
+                    if (m_currentWeaponAttackData != null && m_characterStatus.HitBoxManagerWeapon != null) m_characterStatus.HitBoxManagerWeapon.DeactivateHitboxCollection(hitActiveData.CollectionRefNumber);
+                    if (m_currentShieldActionData != null && m_characterStatus.HitBoxManagerShield != null) m_characterStatus.HitBoxManagerShield.DeactivateHitboxCollection(hitActiveData.CollectionRefNumber);
+                };
+                effectList.Add(new EffectQueue(ToggleHitBoxesDeactive, hitActiveData.activeTime.y));
+
+            }
+        }
+
+
+
+
+            //HERE THE ACTION STARTS
+            m_actionMovementHandler.StartAction(animData, effectList, m_moveAcceleration, m_turningStrenght, m_maxTurningSpeed, m_inputDirInWS, transform.forward);
     }
 
 
@@ -1150,7 +1232,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
 
-
     #region MOVING AND ROTATING
 
     private void SetBodyLookAtTarget(Transform transform)
@@ -1179,61 +1260,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     }
     private void RotatingPlayer()
     {
-        ////if no input, then it should not recalculate the desired facing direction, because what if i stand still and then lock on something behind me, it should not affect any calculation as long as i dont move
-        //// also, actions like evading set their initial m_desiredFacingRotationDirInWS in their own Trigger function
-        //if (!m_isStandingStill)
-        //    m_desiredFacingRotationDirInWS = OrientationRotation() * m_inputDirInWS;
-        //else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && !m_isRunning)
-        //    m_desiredFacingRotationDirInWS = PlayerToTargetXZVector;
-        //else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && m_isRunning)
-        //    m_desiredFacingRotationDirInWS = m_desiredFacingRotationDirInWS;
-
-
-        ////FacingDir
-        //Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS;
-        //Vector3 desiredFacingRotationDirInWSByAction = m_desiredFacingRotationDirInWSByAction;
-        //if (m_isLockOn && (int)m_actionTargetRelations == 1/*TurningDirFollowsTarget*/) desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up), 0) * PlayerToTargetXZVector;
-        //else if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/) desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up), 0) * m_nowMoveDir;
-        //Vector3 nowdesiredFacingRotationDirInWS = Vector3.Slerp(desiredFacingRotationDirInWSByInput.normalized, desiredFacingRotationDirInWSByAction.normalized, m_actionInfluenceOverDesiredFacingRotationDirInWS);
-
-        ////turningSpeedBy by movementSpeed
-        //m_maxTurningSpeed = ((m_currentBaseSpeed <= m_speedValues.y) ?
-        //    UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.x, m_speedValues.y, m_maxTurningSpeedBaseValues.x, m_maxTurningSpeedBaseValues.y) :
-        //    !m_isTurningApplied ? UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.y, m_speedValues.z, m_maxTurningSpeedBaseValues.y, m_maxTurningSpeedBaseValues.z) : m_maxTurningSpeedBaseValues.z);
-
-
-        ////speed
-        //float maxTurningSpeedByInput = m_maxTurningSpeed;
-        //float maxTurningSpeedByAction = m_maxTurningSpeedByInputByAction;
-        //float nowMaxTurningSpeed = Mathf.Lerp(maxTurningSpeedByInput, maxTurningSpeedByAction, m_actionInfluenceOverMaxTurningSpeed) * 60 * Time.deltaTime; //60 als faktor, damit maxspeed nicht so groß sein muss
-
-        ////acceleration
-        //float turningStrenghtByInput = m_turningStrenght;
-        //float turningStrenghtByAction = m_turningStrenghtByAction;
-        //float nowTurningStrenght = Mathf.Lerp(turningStrenghtByInput, turningStrenghtByAction, m_actionInfluenceOverTurningStrenght);
-
-        //float angle = Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up);
-        //float newAngle = Mathf.Clamp(Vector3.SignedAngle(transform.forward, nowdesiredFacingRotationDirInWS, Vector3.up) * Time.deltaTime * nowTurningStrenght, -nowMaxTurningSpeed, nowMaxTurningSpeed); //Only ever 90° steps max per seconds, the turning speed
-        //m_turningAngle = angle;
-
-
-        ////this makes the char rotate not around it center when walking and turning, but rotates around a pont slightly to the side
-        ////float turnRotationPointOffsetXAxis = !m_isAction && !m_isIgnoreTurningOffset ? (Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f) : 0;
-        ////Vector3 rotationCenterOffset = new Vector3(turnRotationPointOffsetXAxis, 0, 0);
-
-        ////RotateAround() isnt actually working when using Move()
-        //transform.RotateAround(transform.position/* + (transform.rotation * rotationCenterOffset)*/, Vector3.up, newAngle);
-
-        //testTurningDirection.transform.rotation = Quaternion.Euler(0, Vector3.SignedAngle(Vector3.forward, nowdesiredFacingRotationDirInWS, Vector3.up), 0);
-
-
-
-
-
-
-
-
-
         //if no input, then it should not recalculate the desired facing direction, because what if i stand still and then lock on something behind me, it should not affect any calculation as long as i dont move
         // also, actions like evading set their initial m_desiredFacingRotationDirInWS in their own Trigger function
         if (!m_isStandingStill)
@@ -1248,41 +1274,23 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.x, m_speedValues.y, m_maxTurningSpeedBaseValues.x, m_maxTurningSpeedBaseValues.y) :
             !m_isTurningApplied ? UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.y, m_speedValues.z, m_maxTurningSpeedBaseValues.y, m_maxTurningSpeedBaseValues.z) : m_maxTurningSpeedBaseValues.z);
 
+        float thisAngle = m_actionMovementHandler.GetRotation(m_desiredFacingRotationDirInWS, m_maxTurningSpeed, m_turningStrenght, PlayerToTargetXZVector);
+        m_turningAngle = m_actionMovementHandler.DesiredTurningAngle;
+        //this makes the char rotate not around it center when walking and turning, but rotates around a pont slightly to the side
+        //float turnRotationPointOffsetXAxis = !m_isAction && !m_isIgnoreTurningOffset ? (Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f) : 0;
+        //Vector3 rotationCenterOffset = new Vector3(turnRotationPointOffsetXAxis, 0, 0);
 
-
-        m_actionMovementHandler.RotatingPlayer(m_desiredFacingRotationDirInWS, m_maxTurningSpeed, m_turningStrenght, PlayerToTargetXZVector);
+        //RotateAround() isnt actually working when using Move()
+        transform.RotateAround(transform.position/* + (transform.rotation * rotationCenterOffset)*/, Vector3.up, thisAngle);
     }
 
     private void MovingPlayer()
     {
-        ////direction
-        //Vector3 directionByInput = (!m_isFreelyMoving || m_isAboutSwitchDirectionType) ? m_inputDirInWS : transform.forward;
-        //Vector3 directionByAction = m_directionByAction;
-        //if (m_isLockOn && (int)m_actionTargetRelations == 2/*MoveDirFollowsTarget*/)    directionByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_directionByActionBaseValue, m_directionByAction, Vector3.up), 0) * PlayerToTargetXZVector;
-        //else if ((int)m_actionTurningRelations == 2/*MoveDirFollowsTurningDir*/)        directionByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_directionByActionBaseValue, m_directionByAction, Vector3.up), 0) * transform.forward;
-        //Vector3 nowMoveDirection = Vector3.Lerp(directionByInput.normalized, directionByAction.normalized, m_actionInfluenceOverMoveDirection);
-        //if (nowMoveDirection != Vector3.zero) m_nowMoveDir = nowMoveDirection.normalized;
-
-        ////speedFactor by turningangle
-        //float speedFactorByAngle = ((m_isTurningApplied) ? Mathf.Lerp(1, 0, (Mathf.Max(Mathf.Abs(m_turningAngle) - 20, 0) / 50)) : 1);
-        ////speedFactor by turningangle
-        //float accelerationFactorByTurning = ((m_currentBaseSpeed > m_speedValues.y && m_isTurningApplied) || m_isSlidingApplied ? 0.2f : 1f);
-
-
-        ////speed
-        //float speedByInput = m_currentBaseSpeed * speedFactorByAngle;
-        //float speedByAction = m_speedByAction;
-        //float nowSpeed = Mathf.Lerp(speedByInput, speedByAction, m_actionInfluenceOverMoveSpeed);
-
-        ////acceleration
-        //float moveAccelerationByInput = m_moveAcceleration * accelerationFactorByTurning;
-        //float moveAccelerationByAction = m_moveAccelerationByAction;
-        //float nowMoveAcceleration = Mathf.Lerp(moveAccelerationByInput, moveAccelerationByAction, m_actionInfluenceOverMoveAcceleration);
 
         ////this is for the case of uneven ground, the player will walk slower when walking on a hill/stairs
         //RaycastHit groundHitDir;
         //RaycastHit groundHit;
-        //if (m_isGrounded && Physics.Raycast(transform.position + (m_nowMoveDir * (nowSpeed + 0.2f) * 0.2f) + (Vector3.up * 0.5f), Vector3.down, out groundHitDir, 1, m_environmentLayer) /*&& Vector3.Angle(Vector3.up, groundHit.normal) >= 10*/)
+        //if (m_isGrounded && Physics.Raycast(transform.position + (m_nowMoveDir * (m_currentBaseSpeed + 0.2f) * 0.2f) + (Vector3.up * 0.5f), Vector3.down, out groundHitDir, 1, m_environmentLayer))
         //{
         //    Vector3 playerPos = (Physics.Raycast(m_chraracterMesh.transform.position + (Vector3.up * 0.5f), Vector3.down, out groundHit, 1, m_environmentLayer) ? groundHit.point : m_chraracterMesh.transform.position);
         //    m_nowMoveDir = Quaternion.AngleAxis(-Mathf.Min(45, 90 - Vector3.Angle(Vector3.up, (groundHitDir.point - playerPos).normalized)), Vector3.Cross(Vector3.up, groundHitDir.point - playerPos)) * m_nowMoveDir;
@@ -1291,33 +1299,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         //    //Debug.DrawLine(playerPos + Vector3.up * 0.5f, (playerPos + Vector3.up * 0.5f) + m_nowMoveDir.normalized * 5, Color.green);
         //    //Debug.DrawLine(playerPos + m_nowMoveDir * nowSpeed * 0.2f + Vector3.up * 0.5f, (playerPos + m_nowMoveDir * nowSpeed * 0.2f + Vector3.up * 0.5f) + Vector3.up * 5, Color.blue);
         //}
-        ////float terrainFactor = 1; // this is alternately the same as above, but only as a factor instead of rotationg the direction
-        ////if (m_isGrounded && Physics.Raycast(m_chraracterMesh.transform.position + (m_nowMoveDir * (nowSpeed + 0.2f) * 0.2f) + (Vector3.up * 0.5f), Vector3.down, out groundHitDir, 1, m_environmentLayer) /*&& Vector3.Angle(Vector3.up, groundHit.normal) >= 10*/)
-        ////    terrainFactor = Mathf.Cos(Mathf.Deg2Rad * Mathf.Abs(90 - Vector3.Angle(Vector3.up, (Physics.Raycast(m_chraracterMesh.transform.position + (Vector3.up * 0.5f), Vector3.down, out groundHit, 1, m_environmentLayer) ? groundHitDir.point - groundHit.point : m_chraracterMesh.transform.position).normalized)));
-
-        //Vector3 nowMove =  UtilityFunctions.SmartLerp(m_prevMove, m_nowMoveDir * nowSpeed, Time.deltaTime * nowMoveAcceleration);
-
-        ////Gravity
-        //if (m_currentGravity == 0)
-        //    m_velocityThroughGravity = 0;
-        //else if (m_characterController.isGrounded && m_velocityThroughGravity < 0)
-        //    m_velocityThroughGravity = -2f; // small downward force to keep grounded
-        //m_velocityThroughGravity += m_currentGravity * Time.deltaTime;
-        //Vector3 gravity = new Vector3(0, m_velocityThroughGravity, 0);
-
-        ////Apply
-        //m_characterController.Move((nowMove + gravity) * Time.deltaTime);
-        //m_prevMove = nowMove;
 
 
-        ////Display
-        //if (nowMove != Vector3.zero) testMoveDirection.transform.rotation = Quaternion.LookRotation(nowMove, Vector3.up);
-        //else testMoveDirection.transform.localScale = new Vector3(0.5f, 0.07f, Mathf.Min(Mathf.Max(nowSpeed/2, 0.2f), 1.5f));
-
-
-
-
-
+        //this is for the case of uneven ground, the player will walk slower when walking on a hill/stairs
+        RaycastHit groundHitDir;
+        RaycastHit groundHit;
+        float terrainFactor = 1; // this is alternately the same as above, but only as a factor instead of rotationg the direction
+        if (m_isGrounded && Physics.Raycast(m_chraracterMesh.transform.position + (m_nowMoveDir * (m_currentBaseSpeed + 0.2f) * 0.2f) + (Vector3.up * 0.5f), Vector3.down, out groundHitDir, 1, m_environmentLayer))
+            terrainFactor = Mathf.Cos(Mathf.Deg2Rad * Mathf.Abs(90 - Vector3.Angle(Vector3.up, (Physics.Raycast(m_chraracterMesh.transform.position + (Vector3.up * 0.5f), Vector3.down, out groundHit, 1, m_environmentLayer) ? groundHitDir.point - groundHit.point : m_chraracterMesh.transform.position).normalized)));
 
         Vector3 inputDirection = (!m_isFreelyMoving || m_isAboutSwitchDirectionType) ? m_inputDirInWS : transform.forward;
         //speedFactor by turningangle
@@ -1332,8 +1321,10 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_velocityThroughGravity += m_currentGravity * Time.deltaTime;
         Vector3 gravity = new Vector3(0, m_velocityThroughGravity, 0);
 
-        m_actionMovementHandler.MovingPlayer(inputDirection, PlayerToTargetXZVector, m_currentBaseSpeed * speedFactorByAngle, m_moveAcceleration * accelerationFactorByTurning, gravity);
+        Vector3 nowMove = m_actionMovementHandler.GetMove(inputDirection, m_currentBaseSpeed * speedFactorByAngle * terrainFactor, m_moveAcceleration * accelerationFactorByTurning, PlayerToTargetXZVector);
 
+        m_characterController.Move((nowMove + gravity) * Time.deltaTime);
+        m_prevMove = nowMove;
     }
 
     #endregion
@@ -1350,7 +1341,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
 
 
-    
+
 
     //#region ACTION CALCULATIONS
 
@@ -1477,7 +1468,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     //                if (valueTypeIsConstant)            m_directionByAction = Quaternion.Euler(0, valueData.value, 0) * m_directionByActionBaseValue; 
     //                else if (valueTypeIsStartEnd)       RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
     //                else                                CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
-                    
+
     //                if (influenceValueTypeIsConstant)           m_actionInfluenceOverMoveDirection = influenceData.influence;
     //                else if (influenceValueTypeIsStartEnd)      RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd));
     //                else                                        CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
@@ -1587,7 +1578,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     //            case ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Speed:                   m_actionInfluenceOverMoveSpeed                          = newValue; break;
     //            case ProcessedAnimationMovementData.ValueName.Move_Acceleration:                        m_moveAccelerationByAction                              = newValue; break;
     //            case ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Acceleration:            m_actionInfluenceOverMoveAcceleration                   = newValue; break;
-                
+
     //            case ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle:
     //                m_desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, newValue, 0) * m_desiredFacingRotationDirInWSByActionBaseValue;
     //                break; 
@@ -1629,7 +1620,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     //                else
     //                    waitTime = Mathf.Min(timetillChangeInteruptability, waitTime);
     //            }
-                
+
     //            //EFFECT LIST //effects like pay stamina cost or switch weapons
     //            if (processedData.Effects != null)
     //            {
@@ -1744,7 +1735,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     //                float waitForTimeByCurveValues = timeSteps;
     //                if (relativeElapsedTime < curveData.startEnd.x) waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.x * duration) - elapsedTime); //wait till range start or timeToWait
     //                else if (relativeElapsedTime < curveData.startEnd.y) waitForTimeByCurveValues = Mathf.Min(waitForTimeByCurveValues, (curveData.startEnd.y * duration) - elapsedTime); //wait till range end or timeToWait                                                                        //wait till timeToWait
-                    
+
     //                waitTime = Mathf.Min(waitTime, waitForTimeByCurveValues);
     //                SetValueByName(curveData.name, curveValue);
     //            }
@@ -1801,7 +1792,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     //    m_currentActionAnimData = null;
     //    if (m_currentWeaponAttackData != null && m_characterStatus.HitBoxManagerWeapon != null) { m_currentWeaponAttackData = null; m_characterStatus.HitBoxManagerWeapon.DeactivateAllHitboxCollections();}
     //    if (m_currentShieldActionData != null && m_characterStatus.HitBoxManagerShield != null) { m_currentShieldActionData = null; m_characterStatus.HitBoxManagerShield.DeactivateAllHitboxCollections();}
-        
+
 
     //    if (m_isHoldShielding) IsShielding = true;
     //    SetBodyLookAtTarget(m_target);
@@ -1851,14 +1842,17 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     //}
     //#endregion
 
-    private void EndActionResetValues()
+    private void ResetNextAttack()
     {
         //End of Action
         //bool isRunning = m_isHoldRunning && m_inputStrenght != 0 && !m_isWalkingLocked;
         //if (isRunning) SetNextPossibleAttacks(currentAction: Running);
         SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
         SetNextPossibleShieldActions(currentAction: AnimationTypes.Reset);
+    }
 
+    private void EndActionResetValues()
+    {
         m_animator.SetTrigger("EndActionTrigger");
 
         m_currentInteruptability = AnimationInterruptableType.Always_Interruptable;
@@ -1878,11 +1872,11 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         SetLookAtForward(!m_isShielding ? false : m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.useLookAtForwardData, m_nextPossibleShieldActions.ShieldingUpperBody.AnimData.lookAtData);
 
 
-        if (m_actionChangesInterruptabilityCoroutine != null)
-        {
-            StopCoroutine(m_actionChangesInterruptabilityCoroutine);
-            m_actionChangesInterruptabilityCoroutine = null;
-        }
+        //if (m_actionChangesInterruptabilityCoroutine != null)
+        //{
+        //    StopCoroutine(m_actionChangesInterruptabilityCoroutine);
+        //    m_actionChangesInterruptabilityCoroutine = null;
+        //}
         if (m_actionPayCostCouroutine != null)
         {
             StopCoroutine(m_actionPayCostCouroutine);
@@ -1891,7 +1885,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_isMidAirPause)
         {
             m_isMidAirPause = false;
-            m_animationSpeed = 1;
+            AnimatorSpeed = 1;
             m_animator.speed = m_animationSpeed;
         }
         if (m_actionPauseCoroutine != null)
@@ -1953,7 +1947,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         {
             t = Mathf.Max( t - Time.deltaTime, 0);
             Debug.Log(t);
-            m_animationSpeed = t/ m_animSlowDownDuration;
+            AnimatorSpeed = t/ m_animSlowDownDuration;
             m_animator.speed = m_animationSpeed;
             yield return null;
         }
