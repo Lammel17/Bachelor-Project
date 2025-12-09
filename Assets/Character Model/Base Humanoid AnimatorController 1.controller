@@ -303,7 +303,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Shield_Almost_Stance_Break
+  m_Name: Shield_Stance_Stagger
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
@@ -3306,16 +3306,16 @@ AnimatorStateMachine:
     m_Position: {x: 390, y: 220, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -1258373740164655019}
-    m_Position: {x: 170, y: 340, z: 0}
+    m_Position: {x: 170, y: 190, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 4303834306671282980}
-    m_Position: {x: 170, y: 400, z: 0}
+    m_Position: {x: 170, y: 250, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1748260346577562654}
-    m_Position: {x: 170, y: 460, z: 0}
+    m_Position: {x: 170, y: 310, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -300347417415011798}
-    m_Position: {x: 170, y: 520, z: 0}
+    m_Position: {x: 170, y: 370, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 6046722295287064514}
     m_Position: {x: 390, y: 370, z: 0}

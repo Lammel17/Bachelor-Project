@@ -576,11 +576,11 @@ public class CharacterStatus : MonoBehaviour
             switch (staggerType)
             {
                 default: break;
-                case StaggerType.Flinch_Only: m_playerMovement.TriggerDamage(); break;
-                case StaggerType.Stun: m_playerMovement.TriggerStun(); break;
+                case StaggerType.Flinch_Only: m_playerMovement.TriggerFlinchAtDamage(); break;
                 case StaggerType.Stagger: m_playerMovement.TriggerStagger(); break;
-                case StaggerType.Thrown_Over: m_playerMovement.TriggerFallingOver(direction); break;
-                case StaggerType.Thrown_Over_Strong: m_playerMovement.TriggerFallingOver(direction); break;
+                case StaggerType.Stun: m_playerMovement.TriggerStun(); break;
+                case StaggerType.Falling_Over: m_playerMovement.TriggerFallingOver(direction); break;
+                case StaggerType.Thrown_Upwards: m_playerMovement.TriggerFallingOver(direction); break;
             }
         }
         //LIGHT STAGGER
@@ -589,16 +589,16 @@ public class CharacterStatus : MonoBehaviour
             switch (staggerType)
             {
                 default: break;
-                case StaggerType.Flinch_Only: m_playerMovement.TriggerDamage(); break;
-                case StaggerType.Stun: m_playerMovement.TriggerDamage(); break;
+                case StaggerType.Flinch_Only: m_playerMovement.TriggerFlinchAtDamage(); break;
                 case StaggerType.Stagger: m_playerMovement.TriggerStun(); break;
-                case StaggerType.Thrown_Over: m_playerMovement.TriggerStagger(); break;
-                case StaggerType.Thrown_Over_Strong: m_playerMovement.TriggerFallingOver(direction); break;
+                case StaggerType.Stun: m_playerMovement.TriggerFlinchAtDamage(); break;
+                case StaggerType.Falling_Over: m_playerMovement.TriggerStagger(); break;
+                case StaggerType.Thrown_Upwards: m_playerMovement.TriggerFallingOver(direction); break;
             }
         }
 
         else if (staggerType != StaggerType.None)
-            m_playerMovement.TriggerDamage();
+            m_playerMovement.TriggerFlinchAtDamage();
     }
     private void DecideStaggerShielding(int energyLost, StaggerType staggerType, Vector3 direction)
     {
@@ -611,10 +611,10 @@ public class CharacterStatus : MonoBehaviour
             {
                 default: break;
                 case StaggerType.Flinch_Only: m_playerMovement.TriggerShieldDeflect(); break;
-                case StaggerType.Stun: m_playerMovement.TriggerShieldStun(); break;
                 case StaggerType.Stagger: m_playerMovement.TriggerShieldBreak(); break;
-                case StaggerType.Thrown_Over: m_playerMovement.TriggerFallingOver(direction); break;
-                case StaggerType.Thrown_Over_Strong: m_playerMovement.TriggerFallingOver(direction); break;
+                case StaggerType.Stun: m_playerMovement.TriggerShieldStun(); break;
+                case StaggerType.Falling_Over: m_playerMovement.TriggerFallingOver(direction); break;
+                case StaggerType.Thrown_Upwards: m_playerMovement.TriggerFallingOver(direction); break;
             }
         }
         //LIGHT STAGGER
@@ -625,10 +625,10 @@ public class CharacterStatus : MonoBehaviour
             {
                 default: break;
                 case StaggerType.Flinch_Only: m_playerMovement.TriggerShieldDeflect(); break;
-                case StaggerType.Stun: m_playerMovement.TriggerDamage(); break;
                 case StaggerType.Stagger: m_playerMovement.TriggerShieldStun(); break;
-                case StaggerType.Thrown_Over: m_playerMovement.TriggerShieldBreak(); break;
-                case StaggerType.Thrown_Over_Strong: m_playerMovement.TriggerFallingOver(direction); break;
+                case StaggerType.Stun: m_playerMovement.TriggerFlinchAtDamage(); break;
+                case StaggerType.Falling_Over: m_playerMovement.TriggerShieldBreak(); break;
+                case StaggerType.Thrown_Upwards: m_playerMovement.TriggerFallingOver(direction); break;
             }
         }
 

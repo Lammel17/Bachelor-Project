@@ -26,13 +26,13 @@ public class CharacterMovesetData : ScriptableObject
     [Space]
     public AnimationData running;
     [Space]
-    [Header("Action Animations")]
-    [Space]
-    public AnimationData runningSliding;
     public AnimationData turningLeft;
     public AnimationData turningRight;
     public AnimationData turningRunningLeft;
     public AnimationData turningRunningRight;
+    public AnimationData runningSliding;
+    [Space]
+    [Header("Action Animations")]
     [Space]
     public int evadeCosts = 30;
     public AnimationData evadeForward;
@@ -49,6 +49,11 @@ public class CharacterMovesetData : ScriptableObject
     public ItemData item;
     [Space]
     public AnimationClip getHit;
+    public AnimationData stagger;
+    public AnimationData stun;
+    public AnimationData fallingForward;
+    public AnimationData fallingBackwards;
+    public AnimationData thrownUpward;
 
 
 

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ActionDescription: 
   animationClip: {fileID: 7400000, guid: a5b06008ddcdc36499f095a73fb5528e, type: 2}
-  AnimationMovementData: {fileID: 11400000, guid: 47975c951659abd4c8007a0c27f7d0cb, type: 2}
+  AnimationMovementData: {fileID: 11400000, guid: 2cf49a48287b3fd448e4558cc0c6c029, type: 2}
   bodyParts: 0
   crossfadeInTime: 0.2
   crossfadeOutTime: 0.2

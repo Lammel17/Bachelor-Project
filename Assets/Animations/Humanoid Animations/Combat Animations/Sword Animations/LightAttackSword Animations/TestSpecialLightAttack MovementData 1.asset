@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
-  m_Name: TestEvadeForward MovementData
+  m_Name: TestSpecialLightAttack MovementData 1
   m_EditorClassIdentifier: 
   MovementDescription: 
   moveDirPredefinition: 1
@@ -22,8 +22,28 @@ MonoBehaviour:
   moveDirection:
     isInUse: 0
     valueType: 0
-    value: 10
+    value: 0
     startEnd: {x: 0, y: 1}
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    influenceType: 0
+    influence: 1
+    influenceStartEnd: {x: 0, y: 1}
+    influenceCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  moveSpeed:
+    isInUse: 1
+    valueType: 2
+    value: 20
+    startEnd: {x: 0.09155134, y: 0.42}
     curve:
       serializedVersion: 2
       m_Curve:
@@ -37,8 +57,8 @@ MonoBehaviour:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.5
-        value: 1
+        time: 0.15924072
+        value: 0.99619675
         inSlope: 0
         outSlope: 0
         tangentMode: 136
@@ -66,66 +86,10 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  moveSpeed:
-    isInUse: 1
-    valueType: 2
-    value: 8
-    startEnd: {x: 0.09, y: 0.8012345}
-    curve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0.0017089844
-        value: 0.5033264
-        inSlope: 3.4396794
-        outSlope: 3.4396794
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      - serializedVersion: 3
-        time: 0.08961074
-        value: 1.0000486
-        inSlope: 0.0877555
-        outSlope: 0.0877555
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.07831282
-      - serializedVersion: 3
-        time: 0.77960455
-        value: 0.8458517
-        inSlope: -0.55667937
-        outSlope: -0.55667937
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.07700993
-        outWeight: 0.21644987
-      - serializedVersion: 3
-        time: 0.9925537
-        value: 0.50839233
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    influenceType: 2
-    influence: 1
-    influenceStartEnd: {x: 0, y: 1}
-    influenceCurve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
   moveAcceleration:
-    isInUse: 1
+    isInUse: 0
     valueType: 0
-    value: 30
+    value: 0
     startEnd: {x: 0, y: 1}
     curve:
       serializedVersion: 2

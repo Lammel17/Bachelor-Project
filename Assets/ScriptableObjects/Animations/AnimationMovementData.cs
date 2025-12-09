@@ -12,11 +12,6 @@ public class AnimationMovementData : ScriptableObject
     [SerializeField] public string MovementDescription = "";
 
     [Space]
-    [Tooltip("sets if the initial Influence value of dir, speed and acc is set to 0 or 1")]
-    [SerializeField] public InfluenceValuePredefinitions moveInfluence = InfluenceValuePredefinitions.NoInputInfluence;
-    [Tooltip("sets if the initial Influence value of dir, speed and acc is set to 0 or 1")]
-    [SerializeField] public InfluenceValuePredefinitions turningInfluence = InfluenceValuePredefinitions.NoInputInfluence;
-    [Space]
     [Header("Initial Directions by:")]
     [Tooltip("1: will use the latestInput ss starting orientation. 2: will use the latest actual Orientation as starting orientation.")]
     [SerializeField] public MoveDirectionPredefinitions moveDirPredefinition = MoveDirectionPredefinitions.LatestInput;
@@ -29,10 +24,37 @@ public class AnimationMovementData : ScriptableObject
     [Tooltip("only needed if InputInfluence for TurningDir is used in any way")]
     [SerializeField] public bool m_disableSidewardMovement = false;
     [Space]
-    [Header("Animation Parameters for Movement and Rotation")]
-    [SerializeField] public Values[] variableValue = new Values[0];
-
+    [Header("Movement Parameters")]
+    [Tooltip("sets if the initial Influence value of dir, speed and acc is set to 0 or 1")]
+    [LabelOverride("Inactive Parameters")][SerializeField] public InfluenceValuePredefinitions moveInfluence = InfluenceValuePredefinitions.NoInputInfluence;
+    [Space]
+    [SerializeField] public MovementValuesData moveDirection = new MovementValuesData();
+    [Space]
+    [SerializeField] public MovementValuesData moveSpeed = new MovementValuesData();
+    [Space]
+    [SerializeField] public MovementValuesData moveAcceleration = new MovementValuesData();
+    [Space]
+    [Header("Turning Parameters")]
+    [Tooltip("sets if the initial Influence value of dir, speed and acc is set to 0 or 1, ")]
+    [LabelOverride("Inactive Parameters")][SerializeField] public InfluenceValuePredefinitions turningInfluence = InfluenceValuePredefinitions.NoInputInfluence;
+    [Space]
+    [SerializeField] public MovementValuesData turningDirection = new MovementValuesData();
+    [Space]
+    [SerializeField] public MovementValuesData turningMaxSpeed = new MovementValuesData();
+    [Space]
+    [SerializeField] public MovementValuesData turningStrenght = new MovementValuesData();
+    [Space]
+    [Space]
+    [Space]
+    [Space]
+    [Space]
     public float timeStepsForCurves = 0.05f;
+    [Space]
+    [Space]
+    [Space]
+    [Space]
+    [Space]
+    [SerializeField][ReadOnly] private string tipp = "Base Player Values: 0/4/20 0/14/15 ";
 
     public enum MoveDirectionPredefinitions
     {
@@ -49,9 +71,11 @@ public class AnimationMovementData : ScriptableObject
 
     public enum InfluenceValuePredefinitions
     {
-        NoInputInfluence = 1,  
+        [InspectorName("Acts as Value 0")]
+        NoInputInfluence = 1,
+        [InspectorName("Gets Ignored")]
         FullInputInfluence
-        
+
     }
 
     public enum TurningRelations
@@ -68,88 +92,17 @@ public class AnimationMovementData : ScriptableObject
     }
 
 
-    public enum ValueName
-    {
-        Move_Direction_Angle,
-        Move_Speed,
-        Move_Acceleration,
-        Turning_Direction_Angle,
-        Max_Turning_Speed,
-        Turning_Strenght,
-    }
-    public enum ValueType
-    {
-        ConstantValue,
-        StartEndValue,
-        CurvedValue
-    }
-    public enum InfluenceValueType
-    {
-        ConstantInfluence,
-        StartEndInfluence,
-        CurvedInfluence
-    }
+    //public enum ValueName
+    //{
+    //    Move_Direction_Angle,
+    //    Move_Speed,
+    //    Move_Acceleration,
+    //    Turning_Direction_Angle,
+    //    Max_Turning_Speed,
+    //    Turning_Strenght,
+    //}
 
-
-    [System.Serializable]
-    public class Values
-    {
-
-        [SerializeField] public ValueName valueName;
-        public bool ignore = false;
-
-        public Settings settings;
-        [System.Serializable]
-        public class Settings
-        {
-            [Header("The Value and how it may change")]
-            [Tooltip("Constant: Only Value needed; StartEnd: Value and StartEnd needed; Curve: Value, StartEnd and Curve needed ")]
-            public ValueType valueType = ValueType.ConstantValue;
-            [Tooltip("Value is the Base Value or the MaxValue when Curve/ Or is the Angle when a Direction.")]
-            public float value = 0f;
-
-            [Tooltip("Settings only needed when Type is not Constant")]
-            public ValueSettings valueSettings;
-            [System.Serializable]
-            public class ValueSettings
-            {
-                //[Tooltip("Apply the last value in the animation as the new current value")]
-                //public bool applyValue = true;
-                [Tooltip("This is in what Part the Value/Curve starts and ends to the animation leght relatively. Outside the Range its 0. If Value is a Angle, it will rotate it in the given Range")]
-                [GD.MinMaxSlider.MinMaxSlider(0, 1)] public Vector2 startEnd = new Vector2(0f, 1f);
-                [Tooltip("1 is the Value, -1 is -Value. This curve starts and ends at StartEnd to the animation leght relatively. If Value is a Angle, it will rotate it (1 = 360°)")]
-                public AnimationCurve curveValue;
-            }
-
-
-
-            [Space]
-            public Influence customInfluenceOverInput;
-
-            [System.Serializable]
-            public class Influence
-            {
-                [Tooltip("Constant: Only Value needed; StartEnd: Value and StartEnd needed; Curve: Value, StartEnd and Curve needed ")]
-                public InfluenceValueType influenceType = InfluenceValueType.ConstantInfluence;
-                [Tooltip("Value is the Base Value or the MaxValue when Curve")]
-                [Range(0, 1)] public float influence = 1f;
-
-                [Tooltip("Settings only needed when Type is not Constant")]
-                public ValueSettings influenceSettings;
-                [System.Serializable]
-                public class InfluenceSettings
-                {
-                    [Tooltip("This is in what Part the Value/Curve starts and ends to the animation leght relatively. Outside the Range its 0.")]
-                    [GD.MinMaxSlider.MinMaxSlider(0, 1)] public Vector2 influenceStartEnd = new Vector2(0f, 1f);
-                    [Tooltip("1 is the Value, -1 is -Value. This curve starts and ends at StartEnd to the animation leght relatively.")]
-                    public AnimationCurve influenceCurve;
-                }
-            }
-
-        }
-
-
-    }
+    
 
 
 

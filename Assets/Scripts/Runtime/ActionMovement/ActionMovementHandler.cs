@@ -11,7 +11,6 @@ using Unity.Collections;
 public class ActionMovementHandler : MonoBehaviour
 {
     [SerializeField] private AnimationMovementData m_emptyFallbackAnimMoveData;
-    [SerializeField] private CharacterController m_characterController; 
     private Coroutine m_ActionCoroutine = null;
     private bool m_disableSidewardMovement = false;
     private AnimationData m_currentActionAnimData = null;
@@ -153,90 +152,64 @@ public class ActionMovementHandler : MonoBehaviour
         m_maxTurningSpeedByInputByAction = maxTurningSpeed; // is set to current maxspeed
         m_actionInfluenceOverMaxTurningSpeed = startTurningInfluence;
 
-
-
-        foreach (var value in m_actionMovementData.variableValue)
+        if (m_actionMovementData.moveDirection.isInUse)
         {
-            if (value.ignore)
-                continue;
-            AnimationMovementData.Values.Settings valueData = value.settings;
-            AnimationMovementData.Values.Settings.Influence influenceData = value.settings.customInfluenceOverInput;
-            bool valueTypeIsConstant = valueData.valueType == AnimationMovementData.ValueType.ConstantValue;
-            bool valueTypeIsStartEnd = valueData.valueType == AnimationMovementData.ValueType.StartEndValue;
-            bool influenceValueTypeIsConstant = influenceData.influenceType == AnimationMovementData.InfluenceValueType.ConstantInfluence;
-            bool influenceValueTypeIsStartEnd = influenceData.influenceType == AnimationMovementData.InfluenceValueType.StartEndInfluence;
-
-            switch (value.valueName)
-            {
-                //MOVING
-                case AnimationMovementData.ValueName.Move_Direction_Angle:
-                    if (valueTypeIsConstant) m_directionByAction = Quaternion.Euler(0, valueData.value, 0) * m_directionByActionBaseValue;
-                    else if (valueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Move_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
-
-                    if (influenceValueTypeIsConstant) m_actionInfluenceOverMoveDirection = influenceData.influence;
-                    else if (influenceValueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
-
-                    break;
-                case AnimationMovementData.ValueName.Move_Speed:
-                    if (valueTypeIsConstant) m_speedByAction = valueData.value;
-                    else if (valueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Move_Speed, valueData.value, valueData.valueSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Move_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
-
-                    if (influenceValueTypeIsConstant) m_actionInfluenceOverMoveSpeed = influenceData.influence;
-                    else if (influenceValueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Speed, influenceData.influence, influenceData.influenceSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Speed, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
-
-                    break;
-                case AnimationMovementData.ValueName.Move_Acceleration:
-                    if (valueTypeIsConstant) m_moveAccelerationByAction = valueData.value;
-                    else if (valueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Move_Acceleration, valueData.value, valueData.valueSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Move_Acceleration, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
-
-                    if (influenceValueTypeIsConstant) m_actionInfluenceOverMoveAcceleration = influenceData.influence;
-                    else if (influenceValueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Acceleration, influenceData.influence, influenceData.influenceSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Move_Acceleration, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
-
-                    break;
-
-                //TURNING
-                case AnimationMovementData.ValueName.Turning_Direction_Angle:
-
-                    if (valueTypeIsConstant) m_desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, valueData.value, 0) * m_desiredFacingRotationDirInWSByActionBaseValue;
-                    else if (valueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
-
-                    if (influenceValueTypeIsConstant) m_actionInfluenceOverDesiredFacingRotationDirInWS = influenceData.influence;
-                    else if (influenceValueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Direction_Angle, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
-
-                    break;
-                case AnimationMovementData.ValueName.Turning_Strenght:
-
-                    if (valueTypeIsConstant) m_turningStrenghtByAction = valueData.value;
-                    else if (valueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Turning_Strenght, valueData.value, valueData.valueSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Turning_Strenght, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
-
-                    if (influenceValueTypeIsConstant) m_actionInfluenceOverTurningStrenght = influenceData.influence;
-                    else if (influenceValueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Strenght, influenceData.influence, influenceData.influenceSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Turning_Strenght, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
-
-                    break;
-                case AnimationMovementData.ValueName.Max_Turning_Speed:
-
-                    if (valueTypeIsConstant) m_maxTurningSpeedByInputByAction = valueData.value;
-                    else if (valueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.Max_Turning_Speed, valueData.value, valueData.valueSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.Max_Turning_Speed, valueData.value, valueData.valueSettings.startEnd, valueData.valueSettings.curveValue));
-
-                    if (influenceValueTypeIsConstant) m_actionInfluenceOverMaxTurningSpeed = influenceData.influence;
-                    else if (influenceValueTypeIsStartEnd) RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(ProcessedAnimationMovementData.ValueName.InfluenceOn_Max_Turning_Speed, influenceData.influence, influenceData.influenceSettings.startEnd));
-                    else CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(ProcessedAnimationMovementData.ValueName.InfluenceOn_Max_Turning_Speed, influenceData.influence, influenceData.influenceSettings.startEnd, influenceData.influenceSettings.curveValue));
-
-                    break;
-
-            }
+            MovementValuesData valueData = m_actionMovementData.moveDirection;
+            if (IsApplyValueForFirstFrame(valueData, false))    m_directionByAction = Quaternion.Euler(0, valueData.value, 0) * m_directionByActionBaseValue;
+            if (IsApplyValueForFirstFrame(valueData, true))     m_actionInfluenceOverMoveDirection = valueData.influence;
+            ProcessData(valueData, ProcessedAnimationMovementData.ValueName.Move_Direction_Angle);
         }
+        if (m_actionMovementData.moveSpeed.isInUse)
+        {
+            MovementValuesData valueData = m_actionMovementData.moveSpeed;
+            if (IsApplyValueForFirstFrame(valueData, false))    m_speedByAction = valueData.value;
+            if (IsApplyValueForFirstFrame(valueData, true))     m_actionInfluenceOverMoveSpeed = valueData.influence;
+            ProcessData(valueData, ProcessedAnimationMovementData.ValueName.Move_Speed);
+        }
+        if (m_actionMovementData.moveAcceleration.isInUse)
+        {
+            MovementValuesData valueData = m_actionMovementData.moveAcceleration;
+            if (IsApplyValueForFirstFrame(valueData, false))    m_moveAccelerationByAction = valueData.value;
+            if (IsApplyValueForFirstFrame(valueData, true))     m_actionInfluenceOverMoveAcceleration = valueData.influence;
+            ProcessData(valueData, ProcessedAnimationMovementData.ValueName.Move_Acceleration);
+        }
+
+        if (m_actionMovementData.turningDirection.isInUse)
+        {
+            MovementValuesData valueData = m_actionMovementData.turningDirection;
+            if (IsApplyValueForFirstFrame(valueData, false))    m_desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, valueData.value, 0) * m_desiredFacingRotationDirInWSByActionBaseValue;
+            if (IsApplyValueForFirstFrame(valueData, true))     m_actionInfluenceOverDesiredFacingRotationDirInWS = valueData.influence;
+            ProcessData(valueData, ProcessedAnimationMovementData.ValueName.Turning_Direction_Angle);
+        }
+        if (m_actionMovementData.turningMaxSpeed.isInUse)
+        {
+            MovementValuesData valueData = m_actionMovementData.turningMaxSpeed;
+            if (IsApplyValueForFirstFrame(valueData, false))    m_maxTurningSpeedByInputByAction = valueData.value;
+            if (IsApplyValueForFirstFrame(valueData, true))     m_actionInfluenceOverMaxTurningSpeed = valueData.influence;
+            ProcessData(valueData, ProcessedAnimationMovementData.ValueName.Max_Turning_Speed);
+        }
+        if (m_actionMovementData.turningStrenght.isInUse)
+        {
+            MovementValuesData valueData = m_actionMovementData.turningStrenght;
+            if (IsApplyValueForFirstFrame(valueData, false))    m_turningStrenghtByAction = valueData.value;
+            if (IsApplyValueForFirstFrame(valueData, true))     m_actionInfluenceOverTurningStrenght = valueData.influence;
+            ProcessData(valueData, ProcessedAnimationMovementData.ValueName.Turning_Strenght);
+        }
+        
+        void ProcessData(MovementValuesData valueData, ProcessedAnimationMovementData.ValueName valueName)
+        {
+            if (valueData.valueType == ValueType.StartEndValue)                     RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(valueName, valueData.value, valueData.startEnd));
+            else if (valueData.valueType == ValueType.CurvedValue)                  CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(valueName, valueData.value, valueData.startEnd, valueData.curve));
+
+            if (valueData.influenceType == InfluenceValueType.StartEndInfluence)    RangeValuesList.Add(new ProcessedAnimationMovementData.DataStartEnd(valueName + 1, valueData.influence, valueData.influenceStartEnd));
+            else if (valueData.influenceType == InfluenceValueType.CurvedInfluence) CurveValuesList.Add(new ProcessedAnimationMovementData.DataCurves(valueName + 1, valueData.influence, valueData.influenceStartEnd, valueData.influenceCurve));
+        }
+        bool IsApplyValueForFirstFrame(MovementValuesData valueData, bool influence)
+        {
+            if (!influence)     return !(valueData.valueType == ValueType.CurvedValue || valueData.startEnd.x != 0);
+            else                return !(valueData.influenceType == InfluenceValueType.CurvedInfluence || valueData.influenceStartEnd.x != 0);
+        }
+
 
         m_currentActionAnimData = animData;
         ProcessedAnimationMovementData processedData = new ProcessedAnimationMovementData(RangeValuesList, CurveValuesList, animData, effectList); //This could be saved somewhere in future!
@@ -253,23 +226,6 @@ public class ActionMovementHandler : MonoBehaviour
         float delayByMidAir = 0;
 
         float duration = processedData.AnimationData.animationClip.length; //what about blendtrees, do they affect it?
-
-        DamageData actionDamageData = null;
-        //List<int> activeHitBoxActiveDataList = new List<int>();
-        //if (processedData.AnimationData.hitBoxActiveData.Count != 0)
-        //    actionDamageData = m_currentWeaponAttackData != null ? m_characterStatus.GetActionDamageData(m_currentWeaponAttackData, transform.forward, m_movesetData.weapon.BasePhysicalType)
-        //                                                         : m_characterStatus.GetActionDamageData(m_currentShieldActionData, transform.forward, m_movesetData.shield.PhysicalType);
-        Action pauseMidAirAction = null;
-        //if (processedData.AnimationData.IsPausingMidAir) pauseMidAirAction = () =>
-        //{
-        //    if (!m_isGrounded)
-        //    {
-        //        m_isMidAirPause = true;
-        //        m_slowDownAnimSpeedCoroutine = StartCoroutine(SlowDownAnimSpeed());
-        //        //m_animationSpeed = 0;
-        //        //m_animator.speed = m_animationSpeed;
-        //    }
-        //};
 
         void SetValueByName(ProcessedAnimationMovementData.ValueName name, float newValue)
         {
@@ -304,148 +260,22 @@ public class ActionMovementHandler : MonoBehaviour
                 float waitTime = timeTillEnd;
                 float relativeElapsedTime = elapsedTime / duration;
 
-
-                /*
-                //INTERRUPTABILITY this is if a action is earlier interruptable than the lenght of the animation
-                if (m_currentInteruptability != processedData.AnimationData.ChangedInterruptability)
-                {
-                    //processedData.AnimationData.InterruptabilityChangeBeforeEndTime;
-                    float timetillChangeInteruptability = timeTillEnd - processedData.AnimationData.InterruptabilityChangeBeforeEndTime;
-                    if (timetillChangeInteruptability <= 0)
-                    {
-                        m_characterStatus.ContinueEnergyRegenerationInTime();
-                        m_currentInteruptability = processedData.AnimationData.ChangedInterruptability;
-                        m_actionChangesInterruptabilityCoroutine = null;
-                        if (m_playerInputManager.CheckRecallLatestBufferedInput())
-                        {
-                            EndActionReset();
-                            yield break;
-                        }
-                    }
-                    else
-                        waitTime = Mathf.Min(timetillChangeInteruptability, waitTime);
-                }
-
-                //EFFECT LIST //effects like pay stamina cost or switch weapons
-                if (processedData.Effects != null)
-                {
-                    //float timetillEffectTime = timeTillEnd - duration * (1 - processedData.AnimationData.MainActionMomentTime);
-                    float timetillEffectTime = (duration * processedData.AnimationData.MainActionMomentTime) - ((duration - processedData.AnimationData.crossfadeOutBeginn) - timeTillEnd);
-                    if (timetillEffectTime <= 0)
-                    {
-                        foreach (Action effect in processedData.Effects)
-                        {
-                            effect.Invoke();
-                        }
-                        processedData.Effects = null;
-                    }
-                    else
-                        waitTime = Mathf.Min(timetillEffectTime, waitTime);
-                }
-
-                //PAUSE GRAVITY On and Off
-                if (processedData.AnimationData.IsPausingMidAir)
-                {
-                    float timeTillGravityChange = waitTime;
-                    if (relativeElapsedTime >= processedData.AnimationData.PauseGravityTime.x && relativeElapsedTime < processedData.AnimationData.PauseGravityTime.y && Gravity != 0)
-                    {
-                        Gravity = 0;
-                        m_footPlacing.SetWeightActive(false);
-                    }
-                    else if (relativeElapsedTime > processedData.AnimationData.PauseGravityTime.y && Gravity == 0)
-                    {
-                        Gravity = m_originalGravity;
-                    }
-
-                    if (relativeElapsedTime < processedData.AnimationData.PauseGravityTime.x)
-                        timeTillGravityChange = (processedData.AnimationData.PauseGravityTime.x - relativeElapsedTime) * duration;
-                    else if (relativeElapsedTime < processedData.AnimationData.PauseGravityTime.y)
-                        timeTillGravityChange = (processedData.AnimationData.PauseGravityTime.y - relativeElapsedTime) * duration;
-
-                    waitTime = Mathf.Min(timeTillGravityChange, waitTime);
-
-                }
-
-                //PAUSE Animation when MidAir 
-                if (processedData.AnimationData.IsPausingMidAir)
-                {
-                    if (pauseMidAirAction != null && relativeElapsedTime >= (processedData.AnimationData.PauseMidAirTime - (m_animSlowDownDuration / 2) / duration))
-                    {
-                        pauseMidAirAction.Invoke();
-                        pauseMidAirAction = null;
-                    }
-
-                    if (relativeElapsedTime < (processedData.AnimationData.PauseMidAirTime - (m_animSlowDownDuration / 2) / duration))
-                        waitTime = Mathf.Min(((processedData.AnimationData.PauseMidAirTime - (m_animSlowDownDuration / 2) / duration) - relativeElapsedTime) * duration, waitTime);
-                }
-
-
-                //HITBOXES On and Off
-                if (processedData.AnimationData.hitBoxActiveData.Count != 0)
-                {
-                    int activeDataIndex = 0;
-                    float timetillNextHitBoxChange = timeTillEnd;
-                    foreach (AnimationData.HitBoxActiveData hitActiveData in processedData.AnimationData.hitBoxActiveData)
-                    {
-                        if (relativeElapsedTime < hitActiveData.activeTime.x)   //before Hitbox activation
-                        { timetillNextHitBoxChange = Mathf.Min((hitActiveData.activeTime.x - relativeElapsedTime) * duration, timetillNextHitBoxChange); }
-                        else if (relativeElapsedTime < hitActiveData.activeTime.y) //while Hitbox activation
-                        {
-                            timetillNextHitBoxChange = Mathf.Min((hitActiveData.activeTime.y - relativeElapsedTime) * duration, timetillNextHitBoxChange);
-                            if (!activeHitBoxActiveDataList.Contains(activeDataIndex))
-                            {
-                                if (m_currentWeaponAttackData != null && m_characterStatus.HitBoxManagerWeapon != null) m_characterStatus.HitBoxManagerWeapon.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, actionDamageData);
-                                if (m_currentShieldActionData != null && m_characterStatus.HitBoxManagerShield != null) m_characterStatus.HitBoxManagerShield.ActivateHitboxCollection(hitActiveData.CollectionRefNumber, actionDamageData);
-                                activeHitBoxActiveDataList.Add(activeDataIndex);
-                            }
-                        }
-                        else if (relativeElapsedTime >= hitActiveData.activeTime.y)//after Hitbox activation
-                        {
-                            if (activeHitBoxActiveDataList.Contains(activeDataIndex))
-                            {
-                                if (m_currentWeaponAttackData != null && m_characterStatus.HitBoxManagerWeapon != null) m_characterStatus.HitBoxManagerWeapon.DeactivateHitboxCollection(hitActiveData.CollectionRefNumber);
-                                if (m_currentShieldActionData != null && m_characterStatus.HitBoxManagerShield != null) m_characterStatus.HitBoxManagerShield.DeactivateHitboxCollection(hitActiveData.CollectionRefNumber);
-                                activeHitBoxActiveDataList.Remove(activeDataIndex);
-                            }
-                        }
-                        activeDataIndex++;
-                    }
-                    waitTime = Mathf.Min(timetillNextHitBoxChange, waitTime);
-                    //Debug.Log(relativeElapsedTime + timetillNextHitBoxChange / duration);
-                }
-                */
-                //Debug.Log($"duration {duration}");
-                //Debug.Log($"waitTime {waitTime}");
-                //Debug.Log($"relativeElapsedTime {relativeElapsedTime}");
-                //Debug.Log($"timeTillEnd {timeTillEnd}");
-                //Debug.Log($"effectQueue.relativeEffectTime {processedData.Effects[0].relativeEffectTime}");
-
                 foreach (EffectQueue effectQueue in processedData.Effects)
                 {
-                    //Debug.Log(effectQueue.relativeEffectTime);
                     if (effectQueue.wasApplied)
                         continue;
                     else if (relativeElapsedTime >= effectQueue.relativeEffectTime)
                     {
-                        
-                        //Debug.Log(relativeElapsedTime);
-                        //Debug.Log(relativeElapsedTime);
-                        //Debug.Log(GetComponent<CharacterActionAndMovementHandler>().CurrentInteruptability);
-
                         effectQueue.effect?.Invoke();
                         effectQueue.wasApplied = true;
                         if (m_state != State.InAction && elapsedTime != 0) 
                             yield break;
-                        //Debug.Log(GetComponent<CharacterActionAndMovementHandler>().CurrentInteruptability);
                     }
                     else
                     {
                         float timeUntilNextChange = (effectQueue.relativeEffectTime - relativeElapsedTime) * duration;
                         waitTime = Mathf.Min(waitTime, timeUntilNextChange);
-                        //Debug.Log($"timeUntilNextChange {timeUntilNextChange}");
-
                     }
-
                 }
 
                 //STARTEND VALUES
@@ -543,7 +373,7 @@ public class ActionMovementHandler : MonoBehaviour
     private Vector3 m_nowMoveDir = Vector3.forward;
     private Vector3 m_prevMove = Vector3.zero;
 
-    public float GetRotation(Vector3 m_desiredFacingRotationDirInWS, float m_maxTurningSpeed, float m_turningStrenght, Vector3 vectorToTarget)
+    public float GetRotation(ref Vector3 m_desiredFacingRotationDirInWS, ref float m_maxTurningSpeed, ref float m_turningStrenght, ref Vector3 vectorToTarget)
     {
         //FacingDir
         Vector3 desiredFacingRotationDirInWSByInput = m_desiredFacingRotationDirInWS;
@@ -551,7 +381,7 @@ public class ActionMovementHandler : MonoBehaviour
         if (m_isLockOn && (int)m_actionTargetRelations == 1/*TurningDirFollowsTarget*/) desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up), 0) * UtilityFunctions.VectorXZ(vectorToTarget);
         else if ((int)m_actionTurningRelations == 1/*TurningDirFollowsMoveDir*/) desiredFacingRotationDirInWSByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_desiredFacingRotationDirInWSByActionBaseValue, m_desiredFacingRotationDirInWSByAction, Vector3.up), 0) * m_nowMoveDir;
         Vector3 nowdesiredFacingRotationDirInWS = Vector3.Slerp(desiredFacingRotationDirInWSByInput.normalized, desiredFacingRotationDirInWSByAction.normalized, m_actionInfluenceOverDesiredFacingRotationDirInWS);
-
+        
         //speed
         float maxTurningSpeedByInput = m_maxTurningSpeed;
         float maxTurningSpeedByAction = m_maxTurningSpeedByInputByAction;
@@ -581,7 +411,7 @@ public class ActionMovementHandler : MonoBehaviour
 
     }
 
-    public Vector3 GetMove(Vector3 inputDirection, float m_currentBaseSpeed, float m_moveAcceleration, Vector3 vectorToTarget)
+    public Vector3 GetMove(ref Vector3 inputDirection, ref float m_currentBaseSpeed, ref float m_moveAcceleration, ref Vector3 vectorToTarget)
     {
         //direction
         Vector3 directionByInput = inputDirection /*(!m_isFreelyMoving || m_isAboutSwitchDirectionType) ? m_inputDirInWS : transform.forward*/;
@@ -590,7 +420,7 @@ public class ActionMovementHandler : MonoBehaviour
         else if ((int)m_actionTurningRelations == 2/*MoveDirFollowsTurningDir*/) directionByAction = Quaternion.Euler(0, Vector3.SignedAngle(m_directionByActionBaseValue, m_directionByAction, Vector3.up), 0) * transform.forward;
         Vector3 nowMoveDirection = Vector3.Lerp(directionByInput.normalized, directionByAction.normalized, m_actionInfluenceOverMoveDirection);
         if (nowMoveDirection != Vector3.zero) m_nowMoveDir = nowMoveDirection.normalized;
-
+ 
         //speed
         float speedByInput = m_currentBaseSpeed /** speedFactorByAngle*/;
         float speedByAction = m_speedByAction;

@@ -20,18 +20,19 @@ public class ShieldData : ScriptableObject
     public SimpleShieldAction shieldIdle;
     public SimpleShieldAction shieldingUpperBody;
     public ShieldAction m_STILL_UNKNOWN; //????????????????????????????????????????????
-    public SimpleShieldAction ShiledAlmostStanceBreak;
-    public SimpleShieldAction ShiledStanceBreak;
+    public AnimationData ShieldDeflect;
+    public SimpleShieldAction ShieldStanceStagger;
+    public SimpleShieldAction ShieldStanceBreak;
 
     [Header("ShieldActions")]
     public CombatUtils.PhysicalDamageType PhysicalType = CombatUtils.PhysicalDamageType.Slice;
     public DamageTableData DamageTabel;
     [Space]
-    public ShieldAction ShiledSpecialLight1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_1);
-    public ShieldAction ShiledSpecialLight2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_2);
+    public ShieldAction ShieldSpecialLight1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_1);
+    public ShieldAction ShieldSpecialLight2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_2);
 
-    public ShieldAction ShiledSpecialHeavy1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_3);
-    public ShieldAction ShiledSpecialHeavy2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_4);
+    public ShieldAction ShieldSpecialHeavy1 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_3);
+    public ShieldAction ShieldSpecialHeavy2 = new ShieldAction(ShieldSpecialLight.end, ShieldSpecialHeavy.end, AnimationTypes.Special_Shield_4);
 
     [Space]
     public AnimationData SwitchShield;

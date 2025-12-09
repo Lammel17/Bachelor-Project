@@ -12,124 +12,160 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5602a910334a8f441a7ef1e8bc11d142, type: 3}
   m_Name: TestLightAttack1 MovementData 1
   m_EditorClassIdentifier: 
-  MovementDescription: long
-  moveInfluence: 1
-  turningInfluence: 1
+  MovementDescription: 
   moveDirPredefinition: 1
   turningDirPredefinition: 1
   targetRelations: 0
   turningRelations: 1
   m_disableSidewardMovement: 0
-  variableValue:
-  - valueName: 1
-    ignore: 0
-    settings:
-      valueType: 2
-      value: 10
-      valueSettings:
-        startEnd: {x: 0.03, y: 0.75207937}
-        curveValue:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 0.21307595
-            value: 0.99529535
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 0.7810733
-            value: 0.95725656
-            inSlope: -0.36242893
-            outSlope: -0.36242893
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0.09225065
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      customInfluenceOverInput:
-        influenceType: 0
-        influence: 1
-        influenceSettings:
-          startEnd: {x: 0, y: 0}
-          curveValue:
-            serializedVersion: 2
-            m_Curve: []
-            m_PreInfinity: 0
-            m_PostInfinity: 0
-            m_RotationOrder: 0
-  - valueName: 0
-    ignore: 0
-    settings:
-      valueType: 1
-      value: 90
-      valueSettings:
-        startEnd: {x: 0.5049565, y: 1}
-        curveValue:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 136
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 0.5
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 136
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 136
-            weightedMode: 0
-            inWeight: 0.33333334
-            outWeight: 0.33333334
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      customInfluenceOverInput:
-        influenceType: 0
-        influence: 1
-        influenceSettings:
-          startEnd: {x: 0, y: 0}
-          curveValue:
-            serializedVersion: 2
-            m_Curve: []
-            m_PreInfinity: 0
-            m_PostInfinity: 0
-            m_RotationOrder: 0
+  moveInfluence: 2
+  moveDirection:
+    isInUse: 0
+    valueType: 0
+    value: 0
+    startEnd: {x: 0, y: 1}
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    influenceType: 0
+    influence: 1
+    influenceStartEnd: {x: 0, y: 1}
+    influenceCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  moveSpeed:
+    isInUse: 1
+    valueType: 0
+    value: 8
+    startEnd: {x: 0, y: 1}
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    influenceType: 0
+    influence: 1
+    influenceStartEnd: {x: 0, y: 1}
+    influenceCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 136
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.5
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 136
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 136
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  moveAcceleration:
+    isInUse: 0
+    valueType: 0
+    value: 0
+    startEnd: {x: 0, y: 1}
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    influenceType: 0
+    influence: 1
+    influenceStartEnd: {x: 0, y: 1}
+    influenceCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  turningInfluence: 1
+  turningDirection:
+    isInUse: 0
+    valueType: 0
+    value: 0
+    startEnd: {x: 0, y: 1}
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    influenceType: 0
+    influence: 1
+    influenceStartEnd: {x: 0, y: 1}
+    influenceCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  turningMaxSpeed:
+    isInUse: 0
+    valueType: 0
+    value: 0
+    startEnd: {x: 0, y: 1}
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    influenceType: 0
+    influence: 1
+    influenceStartEnd: {x: 0, y: 1}
+    influenceCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  turningStrenght:
+    isInUse: 0
+    valueType: 0
+    value: 0
+    startEnd: {x: 0, y: 1}
+    curve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    influenceType: 0
+    influence: 1
+    influenceStartEnd: {x: 0, y: 1}
+    influenceCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
   timeStepsForCurves: 0.05
+  tipp: 'Base Player Values: 0/4/20 0/14/15 '

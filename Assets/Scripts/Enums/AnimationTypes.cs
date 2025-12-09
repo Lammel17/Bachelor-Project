@@ -57,16 +57,19 @@ public class AnimationTypes
     public static readonly int Special_Shield_2               = Animator.StringToHash("Special_Shield_2");
     public static readonly int Special_Shield_3               = Animator.StringToHash("Special_Shield_3");
     public static readonly int Special_Shield_4               = Animator.StringToHash("Special_Shield_4");
-    public static readonly int Almost_Stance_Break            = Animator.StringToHash("Almost_Stance_Break");
-    public static readonly int Stance_Break                   = Animator.StringToHash("Stance_Break");
+    public static readonly int Shield_Stance_Stagger          = Animator.StringToHash("Shield_Stance_Stagger");
+    public static readonly int Shield_Stance_Break            = Animator.StringToHash("Shield_Stance_Break");
 
+    public static readonly int Get_Hit                        = Animator.StringToHash("Get_Hit");
+    public static readonly int Stagger                        = Animator.StringToHash("Stagger");
+    public static readonly int Stun                           = Animator.StringToHash("Stun");
     public static readonly int Falling_Forward                = Animator.StringToHash("Falling_Forward");
     public static readonly int Standing_Up_Forward            = Animator.StringToHash("Standing_Up_Forward");
     public static readonly int Falling_Backward               = Animator.StringToHash("Falling_Backward");
     public static readonly int Standing_Up_Backward           = Animator.StringToHash("Standing_Up_Backward");
+    public static readonly int Thrown_Upwards                 = Animator.StringToHash("Thrown_Upwards");
 
     public static readonly int Falling_Mid_Air                = Animator.StringToHash("Falling_Mid_Air");
     public static readonly int Landing                        = Animator.StringToHash("Landing");
 
-    public static readonly int Get_Hit                        = Animator.StringToHash("Get_Hit");
 }

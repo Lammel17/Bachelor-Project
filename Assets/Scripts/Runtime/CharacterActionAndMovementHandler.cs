@@ -69,12 +69,17 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private float m_currentBaseSpeed = 0; //standing, slow, walk, running
     private float m_animationSpeed = 1; //slow, walk, running
 
+    private float m_currentMoveSpeedReference = 0;
+    private float m_currentMoveAccelerationReference = 0;
+    private Vector3 m_playerToTargetXZVector = Vector3.forward;
+
     //Values Depending on Camera
     private Quaternion m_cameraYAxisRotationInWS = Quaternion.identity;
     private Transform m_target;
     private float m_targetDist = 0;
     private enum Orientation { Forward, Left, Right, Backward };
     [Space]
+    [SerializeField][EditorAttributes.ReadOnly] private BodyPosition m_bodyPosition = BodyPosition.Standing;
     [SerializeField][EditorAttributes.ReadOnly] private Orientation m_orientation = Orientation.Forward;
     //bools
     [SerializeField][EditorAttributes.ReadOnly] private bool m_disableSidewardMovement = false;
@@ -149,6 +154,14 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             specialShieldLight = s12;
             specialShieldHeavy = s34;
         }
+    }
+    public enum BodyPosition
+    {
+        Standing,
+        Laying_Forward,
+        Laying_Backwards,
+        Kneeling_Sitting,
+        Levitating,
     }
 
     #region PROPERTIES
@@ -240,10 +253,6 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         } 
     }
     public Vector3 TargetPos { get => Target.position; }
-    public Vector3 PlayerToTargetXZVector 
-    { 
-        get { if (m_target == null) {/* Debug.Log("No target, so no Direction to Target");*/ return transform.forward; }; return new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z).normalized; } 
-    }
     public bool IsHoldRunning { get => m_isHoldRunning; set { m_isHoldRunning = value; } }
     public bool IsRunning
     {
@@ -375,7 +384,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     {
         if (m_movesetData == null || m_movesetData.shield == null)
             return;
-        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_movesetData.shield.shieldIdle, m_movesetData.shield.shieldingUpperBody, m_movesetData.shield.ShiledSpecialLight1, m_movesetData.shield.ShiledSpecialHeavy1);
+        m_nextPossibleShieldActions = new NextPossibleShieldActions(m_movesetData.shield.shieldIdle, m_movesetData.shield.shieldingUpperBody, m_movesetData.shield.ShieldSpecialLight1, m_movesetData.shield.ShieldSpecialHeavy1);
     }
 
 
@@ -435,7 +444,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     #region INITIAL FRAME VALUES
 
     private Coroutine SwitchFreelyMoving;
-    bool m_isAboutSwitchDirectionType = false;
+    bool m_isAboutSwitchOrientation = false;
 
     private void SetValues() //moveDir, threshholds, TargetDist, etc
     {
@@ -456,26 +465,29 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_isFreelyMoving = !m_isLockOn || m_isRunning || m_isStandingStill;
         if (prevFreelyMoving != m_isFreelyMoving) //Only for one thing, that when locked on and then start running, that the movement is for 0.2s set to input instead of forward
         {
-            m_isAboutSwitchDirectionType = true;
-            SwitchFreelyMoving = StartCoroutine(UtilityFunctions.Wait(0.2f, () => { m_isAboutSwitchDirectionType = false; /*Debug.Log*/ }));
+            m_isAboutSwitchOrientation = true;
+            SwitchFreelyMoving = StartCoroutine(UtilityFunctions.Wait(0.2f, () => { m_isAboutSwitchOrientation = false; /*Debug.Log*/ }));
         }
 
         //TargetDist
-        if (m_isLockOn) 
+        if (m_isLockOn)
+        {
+            m_playerToTargetXZVector = new Vector3(TargetPos.x - transform.position.x, 0, TargetPos.z - transform.position.z).normalized;
             m_targetDist = (TargetPos - transform.position).magnitude;
+        }
 
         //VALUES
         if (m_isFreelyMoving)
         {
             // InputDirRelativeToCam is relative to cameraRotation, so it should not affect the InputDirRelativeToCam when for example standing still
-            m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward; 
+            m_inputDirInWS = !m_isStandingStill ? m_cameraYAxisRotationInWS * m_inputDir : transform.forward;
             m_orientation = Orientation.Forward;
             return;
         }
         else
         {
             //playerToTargetAndContextRotationSlerp: weil wenn man nah am target stand und vorwärts lief, dann zirkulierte man ewig um es rum anstatt straight drauf zu zu lenken, daher nun halb halb
-            Quaternion playerToTargetLookRotation = Quaternion.LookRotation(PlayerToTargetXZVector, Vector3.up);
+            Quaternion playerToTargetLookRotation = Quaternion.LookRotation(m_playerToTargetXZVector, Vector3.up);
             Quaternion playerToTargetAndCameraForwardSlerp = Quaternion.Slerp(m_cameraYAxisRotationInWS, playerToTargetLookRotation, 0.5f);
             m_inputDirInWS = playerToTargetAndCameraForwardSlerp * m_inputDir;
 
@@ -515,46 +527,148 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
 
     #region TRIGGER ACTIONS
 
-    public void TriggerDamage()
+    public void TriggerFlinchAtDamage()
     {
         //does not Affect anything
         SetDamageAnimation(AnimationTypes.Get_Hit, 5, 0);
     }
-    public void TriggerStun()
-    {
-        //cancels animation and stuns for less than a second, caused by amount of poise damage when below 40% poise
-        Debug.Log("TriggerStun");
-    }
     public void TriggerStagger()
     {
-        //cancels animation and stuns for more than a second, cause by depleated poise
+        //cancels animation and stuns for less than a second, caused by amount of poise damage when below 40% poise
         Debug.Log("TriggerStagger");
 
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        AnimationInterruptableType staggerInterruptability = AnimationInterruptableType.Not_Interruptable;
+        if ((int)m_currentInteruptability >= (int)staggerInterruptability) return;
+        AnimationData animData = m_movesetData.stagger;
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+
+        ///////////////////////////////////////////
+
+        if (m_actionMovementHandler.ActionCoroutine != null)
+            m_actionMovementHandler.EndAction();
+
+        SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
+        m_currentInteruptability = staggerInterruptability;
+
+        InitAction(AnimationTypes.Stagger, animData.bodyParts, animData, m_movesetData.evadeCosts);
     }
-    public void TriggerFallingOver(Vector3 direction)
+    public void TriggerStun()
+    {
+        //cancels animation and stuns for more than a second, cause by depleated poise
+        Debug.Log("TriggerStun");
+
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        AnimationInterruptableType stunInterruptability = AnimationInterruptableType.Not_Interruptable;
+        if ((int)m_currentInteruptability >= (int)stunInterruptability) return;
+        AnimationData animData = m_movesetData.stun;
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+
+        ///////////////////////////////////////////
+
+        if (m_actionMovementHandler.ActionCoroutine != null)
+            m_actionMovementHandler.EndAction();
+
+        SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
+        m_currentInteruptability = stunInterruptability;
+
+        InitAction(AnimationTypes.Stun, animData.bodyParts, animData, m_movesetData.evadeCosts);
+    }
+    public void TriggerFallingOver(Vector3 directionWS)
     {
         // cancels animation and throws character away
         Debug.Log("TriggerFallingOver");
 
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        AnimationInterruptableType staggerInterruptability = AnimationInterruptableType.Not_Interruptable;
+        if ((int)m_currentInteruptability >= (int)staggerInterruptability) return;
+        AnimationData animData;
+        int animHash;
+        if (Vector3.Angle(directionWS, transform.forward) <= 90) { animData = m_movesetData.fallingForward; animHash = (int)AnimationTypes.Falling_Forward; }
+        else                                                     { animData = m_movesetData.fallingBackwards; animHash = (int)AnimationTypes.Falling_Backward; }
+
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+
+        ///////////////////////////////////////////
+
+        if (m_actionMovementHandler.ActionCoroutine != null)
+            m_actionMovementHandler.EndAction();
+
+        SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
+        m_currentInteruptability = staggerInterruptability;
+
+        InitAction(animHash, animData.bodyParts, animData, m_movesetData.evadeCosts);
     }
+    public void TriggerThrownUpwards(Vector3 direction)
+    {
+        // cancels animation and throws character away
+        Debug.Log("TriggerThrownUpwards");
+
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        AnimationInterruptableType ThrownUpInterruptability = AnimationInterruptableType.Not_Interruptable;
+        if ((int)m_currentInteruptability >= (int)ThrownUpInterruptability) return;
+        AnimationData animData = m_movesetData.thrownUpward;
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+
+        ///////////////////////////////////////////
+
+        if (m_actionMovementHandler.ActionCoroutine != null)
+            m_actionMovementHandler.EndAction();
+
+        SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
+        m_currentInteruptability = ThrownUpInterruptability;
+
+        InitAction(AnimationTypes.Thrown_Upwards, animData.bodyParts, animData, m_movesetData.evadeCosts);
+    }
+
     public void TriggerShieldDeflect()
     {
-        //does not Affect anything
+        //does not Affect anything, same as flinch
         //SetDamageAnimation(AnimationTypes.Shield_Deflect, 5, 0);
         Debug.Log("TriggerShieldDeflect");
-
+        SetDamageAnimation(AnimationTypes.Get_Hit, 5, 0);
     }
     public void TriggerShieldStun()
     {
         // cancels animation and stuns for less than a second, character is still blocking, caused by amount of energy consumption when below 40% energy
         Debug.Log("TriggerShieldStun");
 
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        AnimationInterruptableType ShieldStaggerInterruptability = AnimationInterruptableType.Not_Interruptable;
+        if ((int)m_currentInteruptability >= (int)ShieldStaggerInterruptability) return;
+        AnimationData animData = m_movesetData.shield.ShieldStanceStagger.AnimData;
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+
+        ///////////////////////////////////////////
+
+        if (m_actionMovementHandler.ActionCoroutine != null)
+            m_actionMovementHandler.EndAction();
+
+        SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
+        m_currentInteruptability = ShieldStaggerInterruptability;
+
+        InitAction(AnimationTypes.Shield_Stance_Stagger, animData.bodyParts, animData, m_movesetData.evadeCosts);
     }
     public void TriggerShieldBreak()
     {
         // cancels animation and stuns for more than a second, character is not blocking, cause by depleated energy
         Debug.Log("TriggerShieldBreak");
 
+        if (m_movesetData == null) { Debug.Log("MISSING Moveset DATA"); return; }
+        AnimationInterruptableType ShieldBreakInterruptability = AnimationInterruptableType.Not_Interruptable;
+        if ((int)m_currentInteruptability >= (int)ShieldBreakInterruptability) return;
+        AnimationData animData = m_movesetData.shield.ShieldStanceBreak.AnimData;
+        if (animData == null) { Debug.Log("MISSING ANIMATION DATA"); return; }
+
+        ///////////////////////////////////////////
+
+        if (m_actionMovementHandler.ActionCoroutine != null)
+            m_actionMovementHandler.EndAction();
+
+        SetNextPossibleWeaponAttacks(currentAction: AnimationTypes.Reset);
+        m_currentInteruptability = ShieldBreakInterruptability;
+
+        InitAction(AnimationTypes.Shield_Stance_Break, animData.bodyParts, animData, m_movesetData.evadeCosts);
     }
     public void TriggerDie()
     {
@@ -1042,8 +1156,11 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                 m_footPlacing.SetWeightActive(false);
             };
             effectList.Add(new EffectQueue(PauseGravity, animData.PauseGravityTime.x));
-            Action ContinueGravity = () => { Gravity = m_originalGravity; };
-            effectList.Add(new EffectQueue(PauseGravity, animData.PauseGravityTime.y));
+            Action ContinueGravity = () => 
+            {
+                Gravity = m_originalGravity;
+            };
+            effectList.Add(new EffectQueue(ContinueGravity, animData.PauseGravityTime.y));
         }
 
         if (animData.IsPausingMidAir)
@@ -1056,7 +1173,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
                     m_slowDownAnimSpeedCoroutine = StartCoroutine(SlowDownAnimSpeed());
                 }
             };
-            effectList.Add(new EffectQueue(PauseAnimation, (animData.PauseMidAirTime - (m_animSlowDownDuration / 2) / animData.animationClip.length)));
+            effectList.Add(new EffectQueue(PauseAnimation, (animData.PauseMidAirTime - ((m_animSlowDownDuration/2) / animData.animationClip.length))));
         }
 
 
@@ -1187,7 +1304,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
     private void SetNextPossibleShieldActions(ShieldData.ShieldAction currentActionData = null, int currentAction = 0)
     {
         if (currentAction == AnimationTypes.Reset)
-            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_movesetData.shield.shieldIdle, m_movesetData.shield.shieldingUpperBody, m_movesetData.shield.ShiledSpecialLight1, m_movesetData.shield.ShiledSpecialHeavy1);
+            m_nextPossibleShieldActions = new NextPossibleShieldActions(m_movesetData.shield.shieldIdle, m_movesetData.shield.shieldingUpperBody, m_movesetData.shield.ShieldSpecialLight1, m_movesetData.shield.ShieldSpecialHeavy1);
 
         else if (currentActionData != null)
             m_nextPossibleShieldActions = new NextPossibleShieldActions(m_movesetData.shield.shieldIdle, m_movesetData.shield.shieldingUpperBody, GetNextShieldSpecialLight(currentActionData.nextSpecialLight), GetNextShieldSpecialHeavy(currentActionData.nextSpecialHeavy));
@@ -1196,21 +1313,21 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         {
             switch (specialLight)
             {
-                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_1: if (m_movesetData.shield.ShiledSpecialLight1.AnimData != null) return m_movesetData.shield.ShiledSpecialLight1; break;
-                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_2: if (m_movesetData.shield.ShiledSpecialLight2.AnimData != null) return m_movesetData.shield.ShiledSpecialLight2; break;
+                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_1: if (m_movesetData.shield.ShieldSpecialLight1.AnimData != null) return m_movesetData.shield.ShieldSpecialLight1; break;
+                case ShieldData.ShieldSpecialLight.Shield_Special_Light_Action_2: if (m_movesetData.shield.ShieldSpecialLight2.AnimData != null) return m_movesetData.shield.ShieldSpecialLight2; break;
             }
             //Debug.Log("Warning: Next Possible Special Light Attack in line has no AnimationData, so the next will be the first one again");
-            return m_movesetData.shield.ShiledSpecialLight1;
+            return m_movesetData.shield.ShieldSpecialLight1;
         }
         ShieldData.ShieldAction GetNextShieldSpecialHeavy(ShieldData.ShieldSpecialHeavy specialHeavy)
         {
             switch (specialHeavy)
             {
-                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_1: if (m_movesetData.shield.ShiledSpecialHeavy1.AnimData != null) return m_movesetData.shield.ShiledSpecialHeavy1; break;
-                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_2: if (m_movesetData.shield.ShiledSpecialHeavy2.AnimData != null) return m_movesetData.shield.ShiledSpecialHeavy2; break;
+                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_1: if (m_movesetData.shield.ShieldSpecialHeavy1.AnimData != null) return m_movesetData.shield.ShieldSpecialHeavy1; break;
+                case ShieldData.ShieldSpecialHeavy.Shield_Special_Heavy_Action_2: if (m_movesetData.shield.ShieldSpecialHeavy2.AnimData != null) return m_movesetData.shield.ShieldSpecialHeavy2; break;
             }
             //Debug.Log("Warning: Next Possible Special Heavy Attack in line has no AnimationData, so the next will be the first one again");
-            return m_movesetData.shield.ShiledSpecialHeavy1;
+            return m_movesetData.shield.ShieldSpecialHeavy1;
         }
     }
     public int GetInterruptabilityShieldLightSpecial()
@@ -1265,7 +1382,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (!m_isStandingStill)
             m_desiredFacingRotationDirInWS = OrientationRotation() * m_inputDirInWS;
         else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && !m_isRunning)
-            m_desiredFacingRotationDirInWS = PlayerToTargetXZVector;
+            m_desiredFacingRotationDirInWS = m_playerToTargetXZVector;
         else if (m_isLockOn && m_isStandingStill && !m_isStandingPrev && m_isRunning)
             m_desiredFacingRotationDirInWS = m_desiredFacingRotationDirInWS;
 
@@ -1274,7 +1391,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
             UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.x, m_speedValues.y, m_maxTurningSpeedBaseValues.x, m_maxTurningSpeedBaseValues.y) :
             !m_isTurningApplied ? UtilityFunctions.RefitToNewRange(m_prevMove.magnitude, m_speedValues.y, m_speedValues.z, m_maxTurningSpeedBaseValues.y, m_maxTurningSpeedBaseValues.z) : m_maxTurningSpeedBaseValues.z);
 
-        float thisAngle = m_actionMovementHandler.GetRotation(m_desiredFacingRotationDirInWS, m_maxTurningSpeed, m_turningStrenght, PlayerToTargetXZVector);
+        float thisAngle = m_actionMovementHandler.GetRotation(ref m_desiredFacingRotationDirInWS, ref m_maxTurningSpeed, ref m_turningStrenght, ref m_playerToTargetXZVector);
         m_turningAngle = m_actionMovementHandler.DesiredTurningAngle;
         //this makes the char rotate not around it center when walking and turning, but rotates around a pont slightly to the side
         //float turnRotationPointOffsetXAxis = !m_isAction && !m_isIgnoreTurningOffset ? (Mathf.Sign(newAngle) * m_prevMove.magnitude / 1.8f) : 0;
@@ -1308,7 +1425,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         if (m_isGrounded && Physics.Raycast(m_chraracterMesh.transform.position + (m_nowMoveDir * (m_currentBaseSpeed + 0.2f) * 0.2f) + (Vector3.up * 0.5f), Vector3.down, out groundHitDir, 1, m_environmentLayer))
             terrainFactor = Mathf.Cos(Mathf.Deg2Rad * Mathf.Abs(90 - Vector3.Angle(Vector3.up, (Physics.Raycast(m_chraracterMesh.transform.position + (Vector3.up * 0.5f), Vector3.down, out groundHit, 1, m_environmentLayer) ? groundHitDir.point - groundHit.point : m_chraracterMesh.transform.position).normalized)));
 
-        Vector3 inputDirection = (!m_isFreelyMoving || m_isAboutSwitchDirectionType) ? m_inputDirInWS : transform.forward;
+        //m_inputDirInWS = (m_isAboutSwitchOrientation && m_isFreelyMoving) ?  transform.forward : m_inputDirInWS;
         //speedFactor by turningangle
         float speedFactorByAngle = ((m_isTurningApplied) ? Mathf.Lerp(1, 0, (Mathf.Max(Mathf.Abs(m_turningAngle) - 20, 0) / 50)) : 1);
         //speedFactor by turningangle
@@ -1321,7 +1438,11 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         m_velocityThroughGravity += m_currentGravity * Time.deltaTime;
         Vector3 gravity = new Vector3(0, m_velocityThroughGravity, 0);
 
-        Vector3 nowMove = m_actionMovementHandler.GetMove(inputDirection, m_currentBaseSpeed * speedFactorByAngle * terrainFactor, m_moveAcceleration * accelerationFactorByTurning, PlayerToTargetXZVector);
+        Debug.Log(m_currentMoveSpeedReference);
+        m_currentMoveSpeedReference = m_currentBaseSpeed * speedFactorByAngle * terrainFactor;
+        m_currentMoveAccelerationReference = m_moveAcceleration * accelerationFactorByTurning;
+
+        Vector3 nowMove = m_actionMovementHandler.GetMove(ref m_inputDirInWS, ref m_currentMoveSpeedReference, ref m_currentMoveAccelerationReference, ref m_playerToTargetXZVector);
 
         m_characterController.Move((nowMove + gravity) * Time.deltaTime);
         m_prevMove = nowMove;
@@ -1946,7 +2067,7 @@ public class CharacterActionAndMovementHandler : MonoBehaviour
         while ((t > 0 && m_slowDownAnimSpeedCoroutine != null) || t == m_animSlowDownDuration)
         {
             t = Mathf.Max( t - Time.deltaTime, 0);
-            Debug.Log(t);
+            //Debug.Log(t);
             AnimatorSpeed = t/ m_animSlowDownDuration;
             m_animator.speed = m_animationSpeed;
             yield return null;

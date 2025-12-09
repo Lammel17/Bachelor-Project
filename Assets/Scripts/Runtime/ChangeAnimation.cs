@@ -172,13 +172,13 @@ public class ChangeAnimation : MonoBehaviour
         CheckClipAndChange(shieldMoveset.shieldIdle.AnimData, "EmptyShieldIdle");
         CheckClipAndChange(shieldMoveset.shieldingUpperBody.AnimData, "EmptyShieldingUpperBody");
 
-        CheckClipAndChange(shieldMoveset.ShiledSpecialLight1.AnimData, "EmptyShieldSpecial1");
-        CheckClipAndChange(shieldMoveset.ShiledSpecialLight2.AnimData, "EmptyShieldSpecial2");
-        CheckClipAndChange(shieldMoveset.ShiledSpecialHeavy1.AnimData, "EmptyShieldSpecial3");
-        CheckClipAndChange(shieldMoveset.ShiledSpecialHeavy2.AnimData, "EmptyShieldSpecial4");
+        CheckClipAndChange(shieldMoveset.ShieldSpecialLight1.AnimData, "EmptyShieldSpecial1");
+        CheckClipAndChange(shieldMoveset.ShieldSpecialLight2.AnimData, "EmptyShieldSpecial2");
+        CheckClipAndChange(shieldMoveset.ShieldSpecialHeavy1.AnimData, "EmptyShieldSpecial3");
+        CheckClipAndChange(shieldMoveset.ShieldSpecialHeavy2.AnimData, "EmptyShieldSpecial4");
 
-        CheckClipAndChange(shieldMoveset.ShiledAlmostStanceBreak.AnimData, "EmptyShieldAlmostStanceBreak");
-        CheckClipAndChange(shieldMoveset.ShiledStanceBreak.AnimData, "EmptyShieldStanceBreak");
+        CheckClipAndChange(shieldMoveset.ShieldStanceStagger.AnimData, "EmptyShieldStanceStun");
+        CheckClipAndChange(shieldMoveset.ShieldStanceBreak.AnimData, "EmptyShieldStanceBreak");
 
         //SwitchShield
         CheckClipAndChange(shieldMoveset.SwitchShield, "EmptySwitchShield");
